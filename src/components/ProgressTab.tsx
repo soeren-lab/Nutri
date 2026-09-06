@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Award, BarChart3, Flame, History, Scale, Trophy } from "lucide-react";
 import { SettingsGroup, SettingsRow } from "@/components/settings/SettingsList";
+import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { useAchievements } from "@/hooks/use-achievements";
 import { useBodyMeasurements } from "@/hooks/use-body-measurements";
+import { useExperimentalMode } from "@/hooks/use-experimental-mode";
 import { useUserRank } from "@/hooks/use-user-rank";
 import { startOfWeek, toISODate } from "@/lib/meal-plan";
 import { currentStreak, todayDate } from "@/lib/progress";
@@ -12,8 +14,9 @@ function fmt(n: number): string {
   return n.toFixed(1).replace(".", ",");
 }
 
-/** Fortschritt als Einstellungs-Liste mit Unterseiten. */
+/** Fortschritt als Einstellungs-Liste mit Unterseiten (Experimental: Dashboard). */
 export function ProgressTab() {
+  const { enabled: glassEnabled } = useExperimentalMode();
   const { rank, totalPoints } = useUserRank();
   const history = useQuery(seasonHistoryQuery());
   const { days, achievements, unlockedCount } = useAchievements();
@@ -27,12 +30,30 @@ export function ProgressTab() {
 
   const weightParts = [
     latestWeight?.weight_kg != null ? `${fmt(Number(latestWeight.weight_kg))} kg` : null,
-    trend
-      ? `${trend.delta > 0 ? "+" : ""}${fmt(trend.delta)} kg letzte ${trend.days} Tage`
-      : null,
+    trend ? `${trend.delta > 0 ? "+" : ""}${fmt(trend.delta)} kg letzte ${trend.days} Tage` : null,
   ].filter(Boolean) as string[];
 
   const seasonCount = history.data?.length ?? 0;
+
+  if (glassEnabled) {
+    return (
+      <ProgressDashboard
+        streak={streak}
+        rank={rank}
+        totalPoints={totalPoints}
+        weekDays={weekDays}
+        weekHits={weekHits}
+        achievements={achievements}
+        unlockedCount={unlockedCount}
+        weightSubtitle={weightParts.length ? weightParts.join(" · ") : "Noch keine Einträge"}
+        seasonSubtitle={
+          seasonCount === 0
+            ? "Noch keine abgeschlossene Season"
+            : `${seasonCount} ${seasonCount === 1 ? "abgeschlossene Season" : "abgeschlossene Seasons"}`
+        }
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

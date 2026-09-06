@@ -37,6 +37,9 @@ app-icon-upload/icon.png
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Claude Code local tooling (lock files, uploaded skills) – nicht einchecken
+.claude/
 *.suo
 *.ntvs*
 *.njsproj

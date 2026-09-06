@@ -1,7 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, MoreVertical, Flame, Globe, RefreshCw, EyeOff, ArrowUpDown, Check, X } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  MoreVertical,
+  Flame,
+  Globe,
+  RefreshCw,
+  EyeOff,
+  ArrowUpDown,
+  Check,
+  X,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,12 +80,9 @@ import {
   type NutrientFilters,
 } from "@/lib/ingredient-filters";
 import { CommunityTab } from "@/components/CommunityTab";
+import { GlassScreenHeader } from "@/components/GlassScreenHeader";
 
-import {
-  findSimilarPublished,
-  publishIngredient,
-  unpublishIngredient,
-} from "@/lib/community";
+import { findSimilarPublished, publishIngredient, unpublishIngredient } from "@/lib/community";
 
 /** True, wenn eine veröffentlichte Zutat seit dem letzten Publish verändert wurde. */
 function hasUnpublishedChanges(m: IngredientMaster): boolean {
@@ -87,7 +96,6 @@ import {
   DEFAULT_INGREDIENT_CATEGORY,
   groupByCategory,
 } from "@/lib/categories";
-
 
 export const Route = createFileRoute("/_authenticated/ingredients")({
   loader: ({ context }) => {
@@ -108,12 +116,7 @@ function IngredientsPage() {
   const [tab, setTab] = useState<"ingredients" | "brands" | "community">("ingredients");
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Zutaten</h1>
-        <p className="text-sm text-muted-foreground">
-          Stammzutaten, Marken und Community-Hub
-        </p>
-      </div>
+      <GlassScreenHeader title="Zutaten" subtitle="Stammzutaten, Marken und Community-Hub" />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <TabsList className="grid h-auto w-full max-w-sm grid-cols-3 gap-1 rounded-2xl border border-border bg-muted/70 p-1 shadow-inner">
@@ -165,13 +168,10 @@ function IngredientsTab() {
     () => (showArchived ? fullList : fullList.filter((m) => !m.archived)),
     [fullList, showArchived],
   );
-  const archivedCount = useMemo(
-    () => fullList.filter((m) => m.archived).length,
-    [fullList],
-  );
+  const archivedCount = useMemo(() => fullList.filter((m) => m.archived).length, [fullList]);
 
   const brandName = (id: string | null) =>
-    id ? brands.find((b) => b.id === id)?.name ?? null : null;
+    id ? (brands.find((b) => b.id === id)?.name ?? null) : null;
 
   const availableCategories = useMemo(() => {
     const set = new Set<string>(INGREDIENT_CATEGORIES);
@@ -199,10 +199,7 @@ function IngredientsTab() {
 
   const grouped = useMemo(() => {
     if (!useGrouped) return null;
-    const g = groupByCategory(
-      filtered,
-      (m) => m.category || DEFAULT_INGREDIENT_CATEGORY,
-    );
+    const g = groupByCategory(filtered, (m) => m.category || DEFAULT_INGREDIENT_CATEGORY);
     return g.map((section) => ({
       ...section,
       items: [...section.items].sort((a, b) => a.name.localeCompare(b.name, "de")),
@@ -216,7 +213,6 @@ function IngredientsTab() {
       return next;
     });
   }
-
 
   function openNew() {
     setEditing(undefined);
@@ -247,15 +243,12 @@ function IngredientsTab() {
     );
   }
 
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           {list.length} Stammzutat{list.length === 1 ? "" : "en"}
-          {archivedCount > 0 && !showArchived && (
-            <> · {archivedCount} archiviert</>
-          )}
+          {archivedCount > 0 && !showArchived && <> · {archivedCount} archiviert</>}
         </p>
         <Button onClick={openNew} className="gap-1.5">
           <Plus className="h-4 w-4" /> Zutat
@@ -298,10 +291,7 @@ function IngredientsTab() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <IngredientFilterSheet
-          filters={nutrientFilters}
-          onApply={setNutrientFilters}
-        />
+        <IngredientFilterSheet filters={nutrientFilters} onApply={setNutrientFilters} />
       </div>
 
       {nutrientCount > 0 && (
@@ -337,11 +327,8 @@ function IngredientsTab() {
       )}
 
       {(searchActive || filterActive) && (
-        <p className="text-sm text-muted-foreground">
-          {filtered.length} Treffer
-        </p>
+        <p className="text-sm text-muted-foreground">{filtered.length} Treffer</p>
       )}
-
 
       {list.length === 0 ? (
         <EmptyState
@@ -372,9 +359,7 @@ function IngredientsTab() {
           ))}
         </div>
       ) : (
-        <ul className="space-y-2">
-          {filtered.map(renderRow)}
-        </ul>
+        <ul className="space-y-2">{filtered.map(renderRow)}</ul>
       )}
 
       <IngredientMasterFormDialog
@@ -463,10 +448,10 @@ function BrandsTab() {
       </div>
 
       <SearchInputWithBeam
-            placeholder="Marken durchsuchen…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        placeholder="Marken durchsuchen…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
       {brands.length === 0 ? (
         <EmptyState
@@ -484,10 +469,7 @@ function BrandsTab() {
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <ul className="divide-y divide-border">
             {filtered.map((b) => (
-              <li
-                key={b.id}
-                className="flex items-center justify-between gap-2 px-4 py-3"
-              >
+              <li key={b.id} className="flex items-center justify-between gap-2 px-4 py-3">
                 <Link
                   to="/brands/$id"
                   params={{ id: b.id }}
@@ -514,8 +496,8 @@ function BrandsTab() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Marke löschen?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          „{b.name}" wird entfernt. Löschen ist nur möglich, wenn keine
-                          Zutat mehr diese Marke verwendet.
+                          „{b.name}" wird entfernt. Löschen ist nur möglich, wenn keine Zutat mehr
+                          diese Marke verwendet.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -561,11 +543,7 @@ function BrandsTab() {
               />
             </div>
             <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setFormOpen(false)}
-              >
+              <Button type="button" variant="ghost" onClick={() => setFormOpen(false)}>
                 Abbrechen
               </Button>
               <Button type="submit" disabled={saveMut.isPending}>

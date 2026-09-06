@@ -31,7 +31,7 @@ export function CategoryBadge({
             e.stopPropagation();
             onRemove();
           }}
-          className="ml-0.5 -mr-1 rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+          className="ml-0.5 -mr-1 rounded-full p-0.5 hover:bg-foreground/10"
           aria-label={`${name} entfernen`}
         >
           <X className="h-3 w-3" />

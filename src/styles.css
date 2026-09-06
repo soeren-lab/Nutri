@@ -2,8 +2,10 @@
 @source "../src";
 @import "tw-animate-css";
 
-/* Dark Mode: aktuell über die Systemeinstellung ODER die Klasse .dark
-   (Toggle folgt im nächsten Schritt). */
+/* Dark Mode: über die Systemeinstellung, die Klasse .dark ODER .glass (der
+   Experimental-Modus ist immer dunkel, soll also automatisch von allen
+   bestehenden dark:-Utilities profitieren, ohne dass jede Stelle einzeln
+   angefasst werden muss). */
 @custom-variant dark {
   @media (prefers-color-scheme: dark) {
     &:not(.light *) {
@@ -11,6 +13,9 @@
     }
   }
   &:is(.dark *) {
+    @slot;
+  }
+  &:is(.glass *) {
     @slot;
   }
 }
@@ -170,7 +175,76 @@
   --shadow-card: 0 2px 12px -4px hsl(258 60% 3% / 0.75);
 }
 
+/*
+ * Experimental Glass-Look – dunkles Glassmorphism (Admin-only, siehe
+ * src/hooks/use-experimental-mode.ts). Steht bewusst NACH .dark, damit die
+ * Klasse gewinnt, falls Systemvoreinstellung/.dark gleichzeitig aktiv sind.
+ * Ignoriert die Hell/Dunkel-Wahl vollständig – Glass ist immer dunkel.
+ */
+.glass {
+  --background: hsl(258 32% 6%);
+  --foreground: hsl(258 30% 96%);
+  --card: hsl(258 25% 20% / 0.5);
+  --card-foreground: hsl(258 30% 96%);
+  --popover: hsl(258 25% 20% / 0.6);
+  --popover-foreground: hsl(258 30% 96%);
+  --primary: hsl(262 92% 72%);
+  --primary-foreground: hsl(258 40% 10%);
+  --primary-gradient: linear-gradient(135deg, hsl(262 92% 72%), hsl(320 70% 68%));
+  --secondary: hsl(258 20% 22% / 0.5);
+  --secondary-foreground: hsl(258 26% 92%);
+  --muted: hsl(258 18% 22% / 0.5);
+  --muted-foreground: hsl(255 16% 72%);
+  --accent: hsl(320 70% 68%);
+  --accent-foreground: hsl(258 40% 10%);
+  --destructive: hsl(0 78% 66%);
+  --destructive-foreground: hsl(0 40% 12%);
+  --border: hsl(258 30% 90% / 0.12);
+  --input: hsl(258 20% 30% / 0.5);
+  --ring: hsl(262 95% 78%);
 
+  --status-sat: 72%;
+  --status-light: 62%;
+  --status-warn: hsl(38 95% 65%);
+  --status-danger: hsl(2 85% 68%);
+
+  --beam-from: #c4a6ff;
+  --beam-to: #f0abfc;
+  --beam-glow: 0 0 18px -2px hsl(262 92% 72% / 0.55);
+
+  --shadow-card: 0 8px 30px -12px hsl(258 70% 2% / 0.85);
+  --glow-primary: hsl(262 92% 72% / 0.35);
+  --glow-primary-strong: hsl(262 92% 72% / 0.6);
+
+  /* Glass-spezifisch: Blur-Stärke + Ambient-Glow-Blobs (siehe GlassAmbientGlow.tsx) */
+  --glass-blur: 20px;
+  --glow-1: hsl(280 70% 55% / 0.5);
+  --glow-2: hsl(255 65% 50% / 0.4);
+  --glow-3: hsl(320 60% 55% / 0.35);
+
+  color-scheme: dark;
+}
+
+/*
+ * Trübglas-Effekt: bestehende Token-Klassen bekommen unter .glass zusätzlich
+ * einen Blur, ohne dass Komponenten einzeln angefasst werden müssen. Bewusst
+ * NICHT in @layer gewrapped, damit die background-color-Regel für
+ * Dialog/Sheet/AlertDialog (die "bg-background" statt "bg-card" nutzen,
+ * für den Glass-Look aber transparent sein müssen) die Tailwind-Utility
+ * zuverlässig schlägt – unlayered CSS gewinnt immer gegen @layer utilities.
+ */
+.glass .bg-card,
+.glass .bg-popover {
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.glass [role="dialog"],
+.glass [role="alertdialog"] {
+  background-color: var(--popover);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
 
 @layer base {
   * {

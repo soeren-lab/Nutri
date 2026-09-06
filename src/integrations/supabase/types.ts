@@ -1324,6 +1324,7 @@ export type Database = {
           age: number | null;
           avatar_url: string | null;
           created_at: string;
+          experimental_glass_ui: boolean;
           goal: string;
           goal_rate: string;
           height_cm: number | null;
@@ -1351,6 +1352,7 @@ export type Database = {
           age?: number | null;
           avatar_url?: string | null;
           created_at?: string;
+          experimental_glass_ui?: boolean;
           goal?: string;
           goal_rate?: string;
           height_cm?: number | null;
@@ -1378,6 +1380,7 @@ export type Database = {
           age?: number | null;
           avatar_url?: string | null;
           created_at?: string;
+          experimental_glass_ui?: boolean;
           goal?: string;
           goal_rate?: string;
           height_cm?: number | null;

@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Dices, Heart, LayoutGrid, List, Palette, Plus } from "lucide-react";
+import { Dices, Heart, LayoutGrid, List, Palette, Plus, SlidersHorizontal } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { recipesQuery } from "@/lib/recipes";
 import { RecipeCard } from "@/components/RecipeCard";
 import { RecipeCardVibrant } from "@/components/RecipeCardVibrant";
@@ -18,6 +19,7 @@ import { useRecipeFilters } from "@/hooks/use-recipe-filters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RecipeCommunityTab } from "@/components/RecipeCommunityTab";
 import { RandomRecipeDialog } from "@/components/RandomRecipeDialog";
+import { GlassScreenHeader } from "@/components/GlassScreenHeader";
 
 export const Route = createFileRoute("/_authenticated/recipes/")({
   loader: ({ context }) => {
@@ -50,12 +52,10 @@ function RecipesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Rezepte</h1>
-        <p className="text-sm text-muted-foreground">
-          {recipes.length} Rezept{recipes.length === 1 ? "" : "e"} in deiner Sammlung
-        </p>
-      </div>
+      <GlassScreenHeader
+        title="Rezepte"
+        subtitle={`${recipes.length} Rezept${recipes.length === 1 ? "" : "e"} in deiner Sammlung`}
+      />
 
       <Tabs defaultValue="mine" className="space-y-6">
         <TabsList className="w-full">
@@ -90,60 +90,75 @@ function RecipesPage() {
                 onChange={(e) => setSearch(e.target.value)}
                 containerClassName="flex-1"
               />
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label="Zufälliges Rezept"
-                onClick={() => setRandomOpen(true)}
-                disabled={recipes.length === 0}
-              >
-                <Dices className="h-4 w-4" />
-              </Button>
-              <SortDropdown value={sortBy} onChange={setSortBy} />
-              <div className="flex shrink-0 items-center rounded-md border border-border p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("grid")}
-                  aria-label="Rasteransicht"
-                  aria-pressed={viewMode === "grid"}
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded transition-colors",
-                    viewMode === "grid"
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("list")}
-                  aria-label="Listenansicht"
-                  aria-pressed={viewMode === "list"}
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded transition-colors",
-                    viewMode === "list"
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <List className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("vibrant")}
-                  aria-label="Bunte Kartenansicht"
-                  aria-pressed={viewMode === "vibrant"}
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded transition-colors",
-                    viewMode === "vibrant"
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <Palette className="h-4 w-4" />
-                </button>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label="Filter & Ansicht">
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-64 space-y-3">
+                  <div>
+                    <p className="mb-1.5 text-xs font-medium text-muted-foreground">Sortierung</p>
+                    <SortDropdown value={sortBy} onChange={setSortBy} />
+                  </div>
+                  <div>
+                    <p className="mb-1.5 text-xs font-medium text-muted-foreground">Ansicht</p>
+                    <div className="flex items-center gap-1 rounded-md border border-border p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("grid")}
+                        aria-label="Rasteransicht"
+                        aria-pressed={viewMode === "grid"}
+                        className={cn(
+                          "flex h-8 flex-1 items-center justify-center rounded transition-colors",
+                          viewMode === "grid"
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        <LayoutGrid className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("list")}
+                        aria-label="Listenansicht"
+                        aria-pressed={viewMode === "list"}
+                        className={cn(
+                          "flex h-8 flex-1 items-center justify-center rounded transition-colors",
+                          viewMode === "list"
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        <List className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("vibrant")}
+                        aria-label="Bunte Kartenansicht"
+                        aria-pressed={viewMode === "vibrant"}
+                        className={cn(
+                          "flex h-8 flex-1 items-center justify-center rounded transition-colors",
+                          viewMode === "vibrant"
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        <Palette className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-1.5"
+                    onClick={() => setRandomOpen(true)}
+                    disabled={recipes.length === 0}
+                  >
+                    <Dices className="h-4 w-4" /> Zufälliges Rezept
+                  </Button>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
@@ -237,13 +252,13 @@ function RecipesPage() {
               ))}
             </div>
           )}
-         </TabsContent>
-       </Tabs>
+        </TabsContent>
+      </Tabs>
 
-       <RandomRecipeDialog open={randomOpen} onOpenChange={setRandomOpen} />
-     </div>
-   );
- }
+      <RandomRecipeDialog open={randomOpen} onOpenChange={setRandomOpen} />
+    </div>
+  );
+}
 
 function RecipesSkeleton() {
   return (

@@ -6,6 +6,7 @@ import { CookbookCard } from "@/components/CookbookCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { GlassScreenHeader } from "@/components/GlassScreenHeader";
 
 export const Route = createFileRoute("/_authenticated/cookbooks/")({
   loader: ({ context }) => {
@@ -29,19 +30,17 @@ function CookbooksPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Kochbücher</h1>
-          <p className="text-sm text-muted-foreground">
-            {cookbooks.length} Kochbuch{cookbooks.length === 1 ? "" : "ücher"} in deiner Sammlung
-          </p>
-        </div>
-        <Button asChild size="sm" className="gap-1.5">
-          <Link to="/cookbooks/new">
-            <Plus className="h-4 w-4" /> Kochbuch
-          </Link>
-        </Button>
-      </div>
+      <GlassScreenHeader
+        title="Kochbücher"
+        subtitle={`${cookbooks.length} Kochbuch${cookbooks.length === 1 ? "" : "ücher"} in deiner Sammlung`}
+        action={
+          <Button asChild size="sm" className="gap-1.5">
+            <Link to="/cookbooks/new">
+              <Plus className="h-4 w-4" /> Kochbuch
+            </Link>
+          </Button>
+        }
+      />
 
       {cookbooks.length === 0 ? (
         <EmptyState

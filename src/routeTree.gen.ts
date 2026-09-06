@@ -47,6 +47,7 @@ import { Route as AuthenticatedProfileSettingsPlanRouteImport } from './routes/_
 import { Route as AuthenticatedProfileSettingsPatchNotesRouteImport } from './routes/_authenticated/profile.settings.patch-notes'
 import { Route as AuthenticatedProfileSettingsPasswordRouteImport } from './routes/_authenticated/profile.settings.password'
 import { Route as AuthenticatedProfileSettingsExportRouteImport } from './routes/_authenticated/profile.settings.export'
+import { Route as AuthenticatedProfileSettingsExperimentalRouteImport } from './routes/_authenticated/profile.settings.experimental'
 import { Route as AuthenticatedProfileSettingsEmailRouteImport } from './routes/_authenticated/profile.settings.email'
 import { Route as AuthenticatedProfileSettingsDeleteRouteImport } from './routes/_authenticated/profile.settings.delete'
 import { Route as AuthenticatedProfileSettingsBodyRouteImport } from './routes/_authenticated/profile.settings.body'
@@ -270,6 +271,12 @@ const AuthenticatedProfileSettingsExportRoute =
     path: '/profile/settings/export',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProfileSettingsExperimentalRoute =
+  AuthenticatedProfileSettingsExperimentalRouteImport.update({
+    id: '/profile/settings/experimental',
+    path: '/profile/settings/experimental',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfileSettingsEmailRoute =
   AuthenticatedProfileSettingsEmailRouteImport.update({
     id: '/profile/settings/email',
@@ -332,6 +339,7 @@ export interface FileRoutesByFullPath {
   '/profile/settings/body': typeof AuthenticatedProfileSettingsBodyRoute
   '/profile/settings/delete': typeof AuthenticatedProfileSettingsDeleteRoute
   '/profile/settings/email': typeof AuthenticatedProfileSettingsEmailRoute
+  '/profile/settings/experimental': typeof AuthenticatedProfileSettingsExperimentalRoute
   '/profile/settings/export': typeof AuthenticatedProfileSettingsExportRoute
   '/profile/settings/password': typeof AuthenticatedProfileSettingsPasswordRoute
   '/profile/settings/patch-notes': typeof AuthenticatedProfileSettingsPatchNotesRoute
@@ -377,6 +385,7 @@ export interface FileRoutesByTo {
   '/profile/settings/body': typeof AuthenticatedProfileSettingsBodyRoute
   '/profile/settings/delete': typeof AuthenticatedProfileSettingsDeleteRoute
   '/profile/settings/email': typeof AuthenticatedProfileSettingsEmailRoute
+  '/profile/settings/experimental': typeof AuthenticatedProfileSettingsExperimentalRoute
   '/profile/settings/export': typeof AuthenticatedProfileSettingsExportRoute
   '/profile/settings/password': typeof AuthenticatedProfileSettingsPasswordRoute
   '/profile/settings/patch-notes': typeof AuthenticatedProfileSettingsPatchNotesRoute
@@ -424,6 +433,7 @@ export interface FileRoutesById {
   '/_authenticated/profile/settings/body': typeof AuthenticatedProfileSettingsBodyRoute
   '/_authenticated/profile/settings/delete': typeof AuthenticatedProfileSettingsDeleteRoute
   '/_authenticated/profile/settings/email': typeof AuthenticatedProfileSettingsEmailRoute
+  '/_authenticated/profile/settings/experimental': typeof AuthenticatedProfileSettingsExperimentalRoute
   '/_authenticated/profile/settings/export': typeof AuthenticatedProfileSettingsExportRoute
   '/_authenticated/profile/settings/password': typeof AuthenticatedProfileSettingsPasswordRoute
   '/_authenticated/profile/settings/patch-notes': typeof AuthenticatedProfileSettingsPatchNotesRoute
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/profile/settings/body'
     | '/profile/settings/delete'
     | '/profile/settings/email'
+    | '/profile/settings/experimental'
     | '/profile/settings/export'
     | '/profile/settings/password'
     | '/profile/settings/patch-notes'
@@ -516,6 +527,7 @@ export interface FileRouteTypes {
     | '/profile/settings/body'
     | '/profile/settings/delete'
     | '/profile/settings/email'
+    | '/profile/settings/experimental'
     | '/profile/settings/export'
     | '/profile/settings/password'
     | '/profile/settings/patch-notes'
@@ -562,6 +574,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile/settings/body'
     | '/_authenticated/profile/settings/delete'
     | '/_authenticated/profile/settings/email'
+    | '/_authenticated/profile/settings/experimental'
     | '/_authenticated/profile/settings/export'
     | '/_authenticated/profile/settings/password'
     | '/_authenticated/profile/settings/patch-notes'
@@ -862,6 +875,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileSettingsExportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile/settings/experimental': {
+      id: '/_authenticated/profile/settings/experimental'
+      path: '/profile/settings/experimental'
+      fullPath: '/profile/settings/experimental'
+      preLoaderRoute: typeof AuthenticatedProfileSettingsExperimentalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile/settings/email': {
       id: '/_authenticated/profile/settings/email'
       path: '/profile/settings/email'
@@ -925,6 +945,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileSettingsBodyRoute: typeof AuthenticatedProfileSettingsBodyRoute
   AuthenticatedProfileSettingsDeleteRoute: typeof AuthenticatedProfileSettingsDeleteRoute
   AuthenticatedProfileSettingsEmailRoute: typeof AuthenticatedProfileSettingsEmailRoute
+  AuthenticatedProfileSettingsExperimentalRoute: typeof AuthenticatedProfileSettingsExperimentalRoute
   AuthenticatedProfileSettingsExportRoute: typeof AuthenticatedProfileSettingsExportRoute
   AuthenticatedProfileSettingsPasswordRoute: typeof AuthenticatedProfileSettingsPasswordRoute
   AuthenticatedProfileSettingsPatchNotesRoute: typeof AuthenticatedProfileSettingsPatchNotesRoute
@@ -968,6 +989,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedProfileSettingsDeleteRoute,
   AuthenticatedProfileSettingsEmailRoute:
     AuthenticatedProfileSettingsEmailRoute,
+  AuthenticatedProfileSettingsExperimentalRoute:
+    AuthenticatedProfileSettingsExperimentalRoute,
   AuthenticatedProfileSettingsExportRoute:
     AuthenticatedProfileSettingsExportRoute,
   AuthenticatedProfileSettingsPasswordRoute:

@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CreditCard,
   Download,
+  FlaskConical,
   FileText,
   Image,
   Lock,
@@ -12,17 +13,12 @@ import {
   Palette,
   Scale,
   ScrollText,
-  
   Trash2,
   Utensils,
   Wrench,
   Zap,
 } from "lucide-react";
-import {
-  SettingsActionRow,
-  SettingsGroup,
-  SettingsRow,
-} from "@/components/settings/SettingsList";
+import { SettingsActionRow, SettingsGroup, SettingsRow } from "@/components/settings/SettingsList";
 import { UsernameDisplay } from "@/components/UsernameDisplay";
 import { CURRENT_PLAN, PLAN_LABELS } from "@/lib/plans";
 import { useAuth } from "@/hooks/use-auth";
@@ -43,10 +39,7 @@ export function SettingsListTab() {
   const { isAdmin } = useIsAdmin();
   const { templates } = useQuickEntryTemplates();
   const { data: recipes = [] } = useQuery(recipesQuery());
-  const sideDishCount = useMemo(
-    () => findSideDishCandidates(recipes).length,
-    [recipes],
-  );
+  const sideDishCount = useMemo(() => findSideDishCandidates(recipes).length, [recipes]);
 
   return (
     <div className="space-y-6">
@@ -98,9 +91,7 @@ export function SettingsListTab() {
           to="/profile/settings/quick-entries"
           icon={Zap}
           title="Meine Schnelleinträge"
-          subtitle={
-            templates.length === 1 ? "1 Vorlage" : `${templates.length} Vorlagen`
-          }
+          subtitle={templates.length === 1 ? "1 Vorlage" : `${templates.length} Vorlagen`}
         />
         {sideDishCount > 0 && (
           <SettingsRow
@@ -122,25 +113,13 @@ export function SettingsListTab() {
       </SettingsGroup>
 
       <SettingsGroup title="Rechtliches">
-        <SettingsRow
-          to="/legal/datenschutz"
-          icon={FileText}
-          title="Datenschutzerklärung"
-        />
-        <SettingsRow
-          to="/legal/agb"
-          icon={ScrollText}
-          title="Nutzungsbedingungen (AGB)"
-        />
+        <SettingsRow to="/legal/datenschutz" icon={FileText} title="Datenschutzerklärung" />
+        <SettingsRow to="/legal/agb" icon={ScrollText} title="Nutzungsbedingungen (AGB)" />
         <SettingsRow to="/legal/impressum" icon={Scale} title="Impressum" />
       </SettingsGroup>
 
       <SettingsGroup title="Daten">
-        <SettingsRow
-          to="/profile/settings/export"
-          icon={Download}
-          title="Daten exportieren"
-        />
+        <SettingsRow to="/profile/settings/export" icon={Download} title="Daten exportieren" />
       </SettingsGroup>
 
       <SettingsGroup>
@@ -153,6 +132,12 @@ export function SettingsListTab() {
             to="/profile/settings/patch-notes"
             icon={Wrench}
             title="Patch Notes verwalten"
+          />
+          <SettingsRow
+            to="/profile/settings/experimental"
+            icon={FlaskConical}
+            title="Experimental"
+            subtitle="Neue Glass-Oberfläche"
           />
         </SettingsGroup>
       )}

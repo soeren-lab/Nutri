@@ -39,3 +39,12 @@ export function applyTheme(pref: ThemePreference, animate = false) {
   root.classList.remove("light", "dark");
   if (pref !== "system") root.classList.add(pref);
 }
+
+/**
+ * Schaltet den experimentellen Glass-Look app-weit um (unabhängig von
+ * Hell/Dunkel – Glass ist immer dunkel).
+ */
+export function applyGlassMode(enabled: boolean) {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("glass", enabled);
+}

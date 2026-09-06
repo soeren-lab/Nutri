@@ -13,13 +13,14 @@ import {
   Link as LinkIcon,
   AlertTriangle,
   ChevronRight,
-
+  Flame,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { PublishButton } from "@/components/PublishButton";
 import { SharedWithBadge } from "@/components/SharedWithBadge";
 import { ShareWithFriendsDialog } from "@/components/ShareWithFriendsDialog";
+import { useExperimentalMode } from "@/hooks/use-experimental-mode";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -52,11 +53,7 @@ import {
 import { VariantChips } from "@/components/VariantChips";
 import { FlexibleIngredientPicker } from "@/components/FlexibleIngredientPicker";
 import { useIngredientsMaster } from "@/hooks/use-ingredients-master";
-import {
-  applyGroupChoices,
-  pendingGroupIngredients,
-  type GroupChoices,
-} from "@/lib/productGroups";
+import { applyGroupChoices, pendingGroupIngredients, type GroupChoices } from "@/lib/productGroups";
 import type { ResolvedIngredient } from "@/lib/resolveIngredient";
 import {
   defaultSelection,
@@ -85,6 +82,7 @@ export const Route = createFileRoute("/_authenticated/recipes/$id/")({
 });
 
 function RecipeDetailPage() {
+  const { enabled: glassEnabled } = useExperimentalMode();
   const { id } = Route.useParams();
   const { user } = Route.useRouteContext();
   const { data: rawRecipe } = useSuspenseQuery(recipeQuery(id));
@@ -153,190 +151,272 @@ function RecipeDetailPage() {
   const openGroups = pendingGroupIngredients(recipe, variantSelection);
 
   const totalTime = (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0);
+  const totals = nutritionPerServing(recipe, variantSelection);
+  const cats =
+    recipe.categories && recipe.categories.length > 0
+      ? recipe.categories
+      : recipe.category
+        ? [recipe.category]
+        : [];
+
+  const communityHub = isOwner && (
+    <div
+      className={cn(
+        "space-y-2 rounded-xl p-3",
+        glassEnabled ? "border border-primary/20 bg-card" : "border border-border bg-muted/40",
+      )}
+    >
+      <div className="text-sm font-medium">Community-Hub</div>
+      <p className="text-xs text-muted-foreground">
+        Veröffentlichen macht dieses Rezept inklusive Komponenten, Varianten und Zutaten für andere
+        sichtbar.
+      </p>
+      <PublishButton
+        target={{
+          kind: "recipe",
+          id: recipe.id,
+          name: recipe.title,
+          isPublished: recipe.is_published,
+          publishedVersion: recipe.published_version ?? 0,
+        }}
+      />
+
+      <div className="space-y-2 border-t border-border pt-3">
+        <div className="text-sm font-medium">Privat mit Freunden teilen</div>
+        <p className="text-xs text-muted-foreground">
+          Nur ausgewählte Freunde sehen dieses Rezept in deinem Profil – ohne
+          Community-Veröffentlichung.
+        </p>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="gap-1.5"
+          onClick={() => setShareOpen(true)}
+        >
+          <Users className="h-4 w-4" />
+          Mit Freund teilen
+        </Button>
+        <SharedWithBadge contentType="recipe" contentId={recipe.id} />
+      </div>
+    </div>
+  );
+
+  const shareDialog = (
+    <ShareWithFriendsDialog
+      open={shareOpen}
+      onOpenChange={setShareOpen}
+      contentType="recipe"
+      contentId={recipe.id}
+      contentName={recipe.title}
+    />
+  );
+
+  const editDeleteButtons = isOwner && (
+    <>
+      <Button asChild variant="outline" size="icon" aria-label="Bearbeiten">
+        <Link to="/recipes/$id/edit" params={{ id: recipe.id }}>
+          <Pencil className="h-4 w-4" />
+        </Link>
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="outline" size="icon" aria-label="Löschen">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rezept löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Diese Aktion kann nicht rückgängig gemacht werden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+              Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 
   return (
     <div className="space-y-6">
-      <Button asChild variant="ghost" size="sm" className="-ml-2 gap-1">
-        <Link to="/recipes">
-          <ChevronLeft className="h-4 w-4" /> Zurück
-        </Link>
-      </Button>
-
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={recipe.title}
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-              className="absolute inset-0 h-full w-full object-cover object-center"
-            />
-          ) : null}
-          {!imageUrl && (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-              <ImageIcon className="h-12 w-12" />
+      {glassEnabled ? (
+        <div className="overflow-hidden rounded-3xl border border-primary/20 bg-card shadow-[0_8px_40px_-12px_var(--glow-primary)]">
+          <div className="relative aspect-[4/3] w-full overflow-hidden [background:var(--primary-gradient)]">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={recipe.title}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+                className="absolute inset-0 h-full w-full object-cover object-center"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-white/70">
+                <ImageIcon className="h-14 w-14" />
+              </div>
+            )}
+            <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                className="rounded-full bg-black/30 text-white backdrop-blur transition-colors hover:bg-black/40"
+              >
+                <Link to="/recipes" aria-label="Zurück">
+                  <ChevronLeft className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => favMut.mutate()}
+                aria-label={isFav ? "Aus Favoriten entfernen" : "Zu Favoriten"}
+                className="rounded-full bg-black/30 text-white backdrop-blur transition-colors hover:bg-black/40"
+              >
+                <Heart className={cn("h-5 w-5", isFav && "fill-rose-500 text-rose-500")} />
+              </Button>
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className="space-y-4 p-5 sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{recipe.title}</h1>
-              {(() => {
-                const cats =
-                  recipe.categories && recipe.categories.length > 0
-                    ? recipe.categories
-                    : recipe.category
-                      ? [recipe.category]
-                      : [];
-                if (cats.length === 0) return null;
-                return (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="space-y-4 p-5 sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                {cats.length > 0 && (
+                  <div className="mb-2 flex flex-wrap gap-1.5">
                     {cats.map((c) => (
                       <CategoryBadge key={c} name={c} />
                     ))}
                   </div>
-                );
-              })()}
+                )}
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{recipe.title}</h1>
+              </div>
+              {editDeleteButtons && <div className="flex gap-1">{editDeleteButtons}</div>}
             </div>
-            <div className="flex gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => favMut.mutate()}
-                aria-label={isFav ? "Aus Favoriten entfernen" : "Zu Favoriten"}
-              >
-                <Heart className={cn("h-4 w-4", isFav && "fill-primary text-primary")} />
-              </Button>
-              {isOwner && (
-                <>
-                  <Button asChild variant="outline" size="icon" aria-label="Bearbeiten">
-                    <Link to="/recipes/$id/edit" params={{ id: recipe.id }}>
-                      <Pencil className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="icon" aria-label="Löschen">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Rezept löschen?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Diese Aktion kann nicht rückgängig gemacht werden.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} disabled={deleting}>
-                          Löschen
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
+
+            {recipe.description && (
+              <p className="text-sm text-muted-foreground">{recipe.description}</p>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              {totalTime > 0 && <StatChip icon={Clock} value={String(totalTime)} label="Minuten" />}
+              {recipe.servings != null && (
+                <StatChip icon={Users} value={String(recipe.servings)} label="Portionen" />
+              )}
+              {totals.calories != null && (
+                <StatChip icon={Flame} value={String(totals.calories)} label="kcal/Portion" />
               )}
             </div>
           </div>
-
-          {recipe.description && (
-            <p className="text-sm text-muted-foreground">{recipe.description}</p>
-          )}
-
-          {isOwner && (
-            <div className="space-y-2 rounded-xl border border-border bg-muted/40 p-3">
-              <div className="text-sm font-medium">Community-Hub</div>
-              <p className="text-xs text-muted-foreground">
-                Veröffentlichen macht dieses Rezept inklusive Komponenten, Varianten und
-                Zutaten für andere sichtbar.
-              </p>
-              <PublishButton
-                target={{
-                  kind: "recipe",
-                  id: recipe.id,
-                  name: recipe.title,
-                  isPublished: recipe.is_published,
-                  publishedVersion: recipe.published_version ?? 0,
-                }}
-              />
-
-              <div className="space-y-2 border-t border-border pt-3">
-                <div className="text-sm font-medium">Privat mit Freunden teilen</div>
-                <p className="text-xs text-muted-foreground">
-                  Nur ausgewählte Freunde sehen dieses Rezept in deinem Profil – ohne
-                  Community-Veröffentlichung.
-                </p>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5"
-                  onClick={() => setShareOpen(true)}
-                >
-                  <Users className="h-4 w-4" />
-                  Mit Freund teilen
-                </Button>
-                <SharedWithBadge contentType="recipe" contentId={recipe.id} />
-              </div>
-            </div>
-          )}
-
-          <ShareWithFriendsDialog
-            open={shareOpen}
-            onOpenChange={setShareOpen}
-            contentType="recipe"
-            contentId={recipe.id}
-            contentName={recipe.title}
-          />
-
-
-
-          <div className="flex flex-wrap gap-4 border-t border-border pt-4 text-sm">
-
-            {recipe.servings != null && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Users className="h-4 w-4" />
-                <span>{recipe.servings} Portionen</span>
-              </div>
-            )}
-            {totalTime > 0 && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>
-                  {totalTime} min
-                  {recipe.prep_time_minutes != null && recipe.cook_time_minutes != null && (
-                    <>
-                      {" "}
-                      ({recipe.prep_time_minutes} + {recipe.cook_time_minutes})
-                    </>
-                  )}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <Button
-            asChild
-            size="lg"
-            className="w-full gap-2 bg-gradient-to-br from-primary to-accent text-primary-foreground"
-          >
-            <Link to="/recipes/$id/cook" params={{ id: recipe.id }}>
-              <ChefHat className="h-5 w-5" /> Kochen starten
+        </div>
+      ) : (
+        <>
+          <Button asChild variant="ghost" size="sm" className="-ml-2 gap-1">
+            <Link to="/recipes">
+              <ChevronLeft className="h-4 w-4" /> Zurück
             </Link>
           </Button>
-        </div>
-      </div>
+
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={recipe.title}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                />
+              ) : null}
+              {!imageUrl && (
+                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                  <ImageIcon className="h-12 w-12" />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 p-5 sm:p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                    {recipe.title}
+                  </h1>
+                  {cats.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {cats.map((c) => (
+                        <CategoryBadge key={c} name={c} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => favMut.mutate()}
+                    aria-label={isFav ? "Aus Favoriten entfernen" : "Zu Favoriten"}
+                  >
+                    <Heart className={cn("h-4 w-4", isFav && "fill-primary text-primary")} />
+                  </Button>
+                  {editDeleteButtons}
+                </div>
+              </div>
+
+              {recipe.description && (
+                <p className="text-sm text-muted-foreground">{recipe.description}</p>
+              )}
+
+              {communityHub}
+              {shareDialog}
+
+              <div className="flex flex-wrap gap-4 border-t border-border pt-4 text-sm">
+                {recipe.servings != null && (
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Users className="h-4 w-4" />
+                    <span>{recipe.servings} Portionen</span>
+                  </div>
+                )}
+                {totalTime > 0 && (
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      {totalTime} min
+                      {recipe.prep_time_minutes != null && recipe.cook_time_minutes != null && (
+                        <>
+                          {" "}
+                          ({recipe.prep_time_minutes} + {recipe.cook_time_minutes})
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <Button
+                asChild
+                size="lg"
+                className="w-full gap-2 bg-gradient-to-br from-primary to-accent text-primary-foreground"
+              >
+                <Link to="/recipes/$id/cook" params={{ id: recipe.id }}>
+                  <ChefHat className="h-5 w-5" /> Kochen starten
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
 
       {(() => {
         const hasComponents = recipe.components.length > 0;
         const servings = recipe.servings && recipe.servings > 0 ? recipe.servings : 1;
-        // Einheitlich für ALLE Rezepte: Werte pro Portion.
-        const totals = nutritionPerServing(recipe, variantSelection);
+        // Einheitlich für ALLE Rezepte: Werte pro Portion (bereits oben berechnet).
         const hasAny =
           totals.calories != null ||
           totals.protein_g != null ||
@@ -480,9 +560,7 @@ function RecipeDetailPage() {
                             <td className="py-2 pr-3 text-right tabular-nums">
                               {ing.fiber_g ?? "–"}
                             </td>
-                            <td className="py-2 text-right tabular-nums">
-                              {ing.sugar_g ?? "–"}
-                            </td>
+                            <td className="py-2 text-right tabular-nums">{ing.sugar_g ?? "–"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -494,7 +572,6 @@ function RecipeDetailPage() {
           </section>
         );
       })()}
-
 
       <div className="grid gap-6 md:grid-cols-[1fr_2fr]">
         <section className="rounded-2xl border border-border bg-card p-5">
@@ -582,6 +659,22 @@ function RecipeDetailPage() {
           </ol>
         </section>
       </div>
+
+      {glassEnabled && (
+        <>
+          {communityHub}
+          {shareDialog}
+          <Button
+            asChild
+            size="lg"
+            className="w-full gap-2 [background:var(--primary-gradient)] text-primary-foreground"
+          >
+            <Link to="/recipes/$id/cook" params={{ id: recipe.id }}>
+              <ChefHat className="h-5 w-5" /> Kochen starten
+            </Link>
+          </Button>
+        </>
+      )}
     </div>
   );
 }
@@ -603,12 +696,7 @@ function IngredientRows({
       ) : (
         rows.map((ing) =>
           ing.productGroup ? (
-            <FlexibleIngredientRow
-              key={ing.id}
-              ing={ing}
-              choices={choices}
-              onPick={onPick}
-            />
+            <FlexibleIngredientRow key={ing.id} ing={ing} choices={choices} onPick={onPick} />
           ) : (
             <li key={ing.id} className="border-b border-border/70 pb-2 last:border-0">
               <div className="flex justify-between gap-3">
@@ -622,6 +710,25 @@ function IngredientRows({
         )
       )}
     </ul>
+  );
+}
+
+/** Kompakter Stat-Chip (Zeit/Portionen/kcal) für den Glass-Hero. */
+function StatChip({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: typeof Clock;
+  value: string;
+  label: string;
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center gap-0.5 rounded-xl border border-border bg-muted/50 px-3 py-2 text-center">
+      <Icon className="h-4 w-4 text-primary" />
+      <span className="text-sm font-bold tabular-nums leading-none">{value}</span>
+      <span className="text-[10px] text-muted-foreground">{label}</span>
+    </div>
   );
 }
 
@@ -671,4 +778,3 @@ function FlexibleIngredientRow({
     </li>
   );
 }
-
