@@ -23,6 +23,26 @@ function interleave<T>(a: readonly T[], b: readonly T[]): T[] {
 }
 
 /**
+ * Lädt die eigentlichen Bilddaten (nicht nur die signierte URL) über ein
+ * echtes `<img>`-Element, statt per `fetch()`. Nur so setzt der Browser
+ * `request.destination === "image"` – genau das Kriterium, nach dem der
+ * Service Worker (vite.config.ts, Cache `images-v2`) entscheidet, ob eine
+ * Antwort gecacht wird. Eine bereits im TanStack-Query-Cache liegende
+ * signierte URL allein reicht nicht: das `<img>`-Tag der jeweiligen Seite
+ * lädt die Bytes erst beim tatsächlichen Rendern, und ohne dieses Preload
+ * hätte der Service Worker sie nie gesehen, wenn das Bild vorher noch nie
+ * sichtbar gerendert wurde.
+ */
+function preloadImageBytes(url: string): Promise<void> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve(); // ein einzelnes Bild darf den Sync nie blockieren
+    img.src = url;
+  });
+}
+
+/**
  * Wärmt den Offline-Cache proaktiv für alle eigenen Rezepte und Zutaten
  * (Detail-Daten inkl. Zubereitungsschritte + signierte Bild-URLs) vor –
  * nicht nur für Seiten, die tatsächlich besucht wurden. `recipes.index.tsx`
@@ -80,10 +100,11 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
       const path = recipe.image_url;
       recipeImageTasks.push(() =>
         queryClient.fetchQuery(signedImageQuery(path)).then(
-          (url) => {
+          async (url) => {
             console.warn(
               `[Offline-Sync] Rezeptbild ok: ${recipe.title} -> ${url ? "URL erhalten" : "null"}`,
             );
+            if (url) await preloadImageBytes(url);
           },
           (err) => {
             console.warn(
@@ -102,10 +123,11 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
       const path = master.image_url;
       ingredientImageTasks.push(() =>
         queryClient.fetchQuery(signedIngredientImageQuery(path)).then(
-          (url) => {
+          async (url) => {
             console.warn(
               `[Offline-Sync] Zutatbild ok: ${master.name} -> ${url ? "URL erhalten" : "null"}`,
             );
+            if (url) await preloadImageBytes(url);
           },
           (err) => {
             console.warn(`[Offline-Sync] Zutatbild FEHLGESCHLAGEN: ${master.name} (${path})`, err);
