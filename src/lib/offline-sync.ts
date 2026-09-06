@@ -46,13 +46,20 @@ function interleave<T>(a: readonly T[], b: readonly T[]): T[] {
  */
 export async function warmOfflineCache(queryClient: QueryClient): Promise<void> {
   if (typeof window === "undefined") return;
+  console.warn("[Offline-Sync] warmOfflineCache gestartet");
   const userId = await currentUserId();
-  if (!userId) return;
+  if (!userId) {
+    console.warn("[Offline-Sync] Kein Nutzer angemeldet, breche ab");
+    return;
+  }
 
   const [recipes, ingredients] = await Promise.all([
     queryClient.fetchQuery(recipesQuery()),
     queryClient.fetchQuery(ingredientsMasterQuery(false)),
   ]);
+  console.warn(
+    `[Offline-Sync] ${recipes.length} eigene Rezepte, ${ingredients.length} eigene Zutaten gefunden`,
+  );
   // Eigene Favoriten – kostet wenig, wird aber von der Rezept-Detailseite
   // per useSuspenseQuery zwingend gebraucht (siehe recipes.$id.index.tsx).
   await queryClient.fetchQuery(favoritesQuery(userId)).catch(() => {});
@@ -65,7 +72,22 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
     detailTasks.push(() => queryClient.fetchQuery(recipeQuery(recipe.id)).then(() => {}));
     if (recipe.image_url) {
       const path = recipe.image_url;
-      recipeImageTasks.push(() => queryClient.fetchQuery(signedImageQuery(path)).then(() => {}));
+      recipeImageTasks.push(() =>
+        queryClient.fetchQuery(signedImageQuery(path)).then(
+          (url) => {
+            console.warn(
+              `[Offline-Sync] Rezeptbild ok: ${recipe.title} -> ${url ? "URL erhalten" : "null"}`,
+            );
+          },
+          (err) => {
+            console.warn(
+              `[Offline-Sync] Rezeptbild FEHLGESCHLAGEN: ${recipe.title} (${path})`,
+              err,
+            );
+            throw err;
+          },
+        ),
+      );
     }
   }
 
@@ -73,10 +95,24 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
     if (master.image_url && !isExternalImagePath(master.image_url)) {
       const path = master.image_url;
       ingredientImageTasks.push(() =>
-        queryClient.fetchQuery(signedIngredientImageQuery(path)).then(() => {}),
+        queryClient.fetchQuery(signedIngredientImageQuery(path)).then(
+          (url) => {
+            console.warn(
+              `[Offline-Sync] Zutatbild ok: ${master.name} -> ${url ? "URL erhalten" : "null"}`,
+            );
+          },
+          (err) => {
+            console.warn(`[Offline-Sync] Zutatbild FEHLGESCHLAGEN: ${master.name} (${path})`, err);
+            throw err;
+          },
+        ),
       );
     }
   }
+
+  console.warn(
+    `[Offline-Sync] ${recipeImageTasks.length} Rezeptbilder, ${ingredientImageTasks.length} Zutatenbilder, ${detailTasks.length} Rezept-Details zum Laden`,
+  );
 
   // Bilder zuerst, und Rezept-/Zutatenbilder abwechselnd statt hintereinander –
   // sonst sind bei vielen Rezepten die Zutatenbilder (oder umgekehrt) noch
@@ -88,5 +124,7 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
     CONCURRENCY,
     (task) => task(),
   );
+  console.warn("[Offline-Sync] Bilder-Durchlauf fertig, starte Rezept-Details");
   await mapWithConcurrency(detailTasks, CONCURRENCY, (task) => task());
+  console.warn("[Offline-Sync] warmOfflineCache fertig");
 }

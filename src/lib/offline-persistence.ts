@@ -28,9 +28,7 @@ const OFFLINE_QUERY_PREFIXES: QueryKey[] = [
 ];
 
 function isOfflineScoped(queryKey: QueryKey): boolean {
-  return OFFLINE_QUERY_PREFIXES.some((prefix) =>
-    prefix.every((part, i) => queryKey[i] === part),
-  );
+  return OFFLINE_QUERY_PREFIXES.some((prefix) => prefix.every((part, i) => queryKey[i] === part));
 }
 
 /**
@@ -93,15 +91,21 @@ export function setupOfflinePersistence(queryClient: QueryClient): Promise<void>
   // Reihenfolge nötig) mit eigenem catch, damit ein Sync-Fehler nie zu einer
   // unbehandelten Promise-Ablehnung wird.
   function warmCache() {
-    void warmOfflineCache(queryClient).catch(() => {});
+    void warmOfflineCache(queryClient).catch((err) => {
+      console.warn("[Offline-Sync] warmOfflineCache abgebrochen", err);
+    });
   }
 
   void restored.then(() => {
+    console.warn(
+      `[Offline-Persistence] Boot: onlineManager.isOnline()=${onlineManager.isOnline()}`,
+    );
     if (onlineManager.isOnline()) {
       void queryClient.resumePausedMutations().then(syncOfflineDomain);
       warmCache();
     }
     onlineManager.subscribe((isOnline) => {
+      console.warn(`[Offline-Persistence] onlineManager-Änderung: isOnline=${isOnline}`);
       if (isOnline) {
         void queryClient.resumePausedMutations().then(syncOfflineDomain);
         warmCache();
