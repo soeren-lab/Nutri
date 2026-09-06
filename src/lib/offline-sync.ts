@@ -11,6 +11,17 @@ import { mapWithConcurrency } from "@/lib/concurrency";
 
 const CONCURRENCY = 6;
 
+/** Wechselt sich zwischen zwei Aufgabenlisten ab, statt sie hintereinanderzuhängen. */
+function interleave<T>(a: readonly T[], b: readonly T[]): T[] {
+  const out: T[] = [];
+  const max = Math.max(a.length, b.length);
+  for (let i = 0; i < max; i++) {
+    if (i < a.length) out.push(a[i]);
+    if (i < b.length) out.push(b[i]);
+  }
+  return out;
+}
+
 /**
  * Wärmt den Offline-Cache proaktiv für alle eigenen Rezepte und Zutaten
  * (Detail-Daten inkl. Zubereitungsschritte + signierte Bild-URLs) vor –
@@ -36,24 +47,38 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
   // per useSuspenseQuery zwingend gebraucht (siehe recipes.$id.index.tsx).
   await queryClient.ensureQueryData(favoritesQuery(userId)).catch(() => {});
 
-  const tasks: Array<() => Promise<void>> = [];
+  const recipeImageTasks: Array<() => Promise<void>> = [];
+  const ingredientImageTasks: Array<() => Promise<void>> = [];
+  const detailTasks: Array<() => Promise<void>> = [];
 
   for (const recipe of recipes) {
-    tasks.push(() => queryClient.ensureQueryData(recipeQuery(recipe.id)).then(() => {}));
+    detailTasks.push(() => queryClient.ensureQueryData(recipeQuery(recipe.id)).then(() => {}));
     if (recipe.image_url) {
       const path = recipe.image_url;
-      tasks.push(() => queryClient.ensureQueryData(signedImageQuery(path)).then(() => {}));
+      recipeImageTasks.push(() =>
+        queryClient.ensureQueryData(signedImageQuery(path)).then(() => {}),
+      );
     }
   }
 
   for (const master of ingredients) {
     if (master.image_url && !isExternalImagePath(master.image_url)) {
       const path = master.image_url;
-      tasks.push(() =>
+      ingredientImageTasks.push(() =>
         queryClient.ensureQueryData(signedIngredientImageQuery(path)).then(() => {}),
       );
     }
   }
 
-  await mapWithConcurrency(tasks, CONCURRENCY, (task) => task());
+  // Bilder zuerst, und Rezept-/Zutatenbilder abwechselnd statt hintereinander –
+  // sonst sind bei vielen Rezepten die Zutatenbilder (oder umgekehrt) noch
+  // lange nicht an der Reihe, wenn der Nutzer währenddessen schon offline
+  // geht. Die volle Rezept-Detailansicht (inkl. Zubereitungsschritte) ist für
+  // die reinen Karten-/Übersichtsseiten nicht nötig und darf daher warten.
+  await mapWithConcurrency(
+    interleave(recipeImageTasks, ingredientImageTasks),
+    CONCURRENCY,
+    (task) => task(),
+  );
+  await mapWithConcurrency(detailTasks, CONCURRENCY, (task) => task());
 }

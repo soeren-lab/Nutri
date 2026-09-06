@@ -120,6 +120,14 @@ function RecipeDetailPage() {
     setDeleting(true);
     try {
       await deleteRecipe(recipe.id);
+      // Aktives gcTime: Infinity (offline-persistence.ts) heißt: ohne diesen
+      // Schritt würde der Detail- und Bild-Cache eines gelöschten Rezepts
+      // nie mehr automatisch entfernt – weder aus dem Live-Cache noch beim
+      // nächsten Speicherzyklus aus IndexedDB.
+      qc.removeQueries({ queryKey: ["recipes", recipe.id] });
+      if (recipe.image_url) {
+        qc.removeQueries({ queryKey: ["signed-image", recipe.image_url] });
+      }
       await qc.invalidateQueries({ queryKey: ["recipes"] });
       toast.success("Rezept gelöscht");
       navigate({ to: "/recipes" });

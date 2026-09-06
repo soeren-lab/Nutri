@@ -54,7 +54,12 @@ export function setupOfflinePersistence(queryClient: QueryClient): Promise<void>
   const [, restored] = persistQueryClient({
     queryClient,
     persister,
-    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 Tage
+    // Kein Ablauf: bei einer 30-Tage-Grenze hätte ein Nutzer, der die App
+    // wochenlang nicht öffnet, beim nächsten Start den kompletten Offline-
+    // Cache verloren – genau der Fall, den Offline-Verfügbarkeit eigentlich
+    // abdecken soll. Der Server bleibt ohnehin die Quelle der Wahrheit und
+    // synchronisiert automatisch, sobald wieder online (warmOfflineCache).
+    maxAge: Infinity,
     dehydrateOptions: {
       // Es zählt, ob überhaupt schon einmal gute Daten da waren – nicht, ob
       // der ZULETZT versuchte Fetch erfolgreich war. Ein einzelner Fehlschlag
