@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { cleanupBatchGroup } from "@/lib/batch";
 import { lateNoticeFor, recalculatePointsForDate } from "@/lib/points";
 import { ingredientsMasterQuery } from "@/lib/ingredients-master";
+import { MUTATION_KEYS } from "@/lib/offline-mutations";
 import type { RecipeListItem } from "@/types/recipe";
 import type { IngredientMasterRow } from "@/lib/meal-plan";
 
@@ -146,6 +147,7 @@ export function useMealPlan(weekStart: Date) {
   }
 
   const planRecipe = useMutation({
+    mutationKey: MUTATION_KEYS.planRecipe,
     onMutate: async (v: {
       date: Date;
       slot: MealSlot;
@@ -236,6 +238,7 @@ export function useMealPlan(weekStart: Date) {
   });
 
   const planFood = useMutation({
+    mutationKey: MUTATION_KEYS.planFood,
     onMutate: async (v: { date: Date; slot: MealSlot; ingredientId: string; amount: number; unit: string }) => {
       if (!user) return;
       const snapshot = await foodSnapshot(v.ingredientId, v.amount, v.unit, qc).catch(() => null);
@@ -304,6 +307,7 @@ export function useMealPlan(weekStart: Date) {
   });
 
   const planQuick = useMutation({
+    mutationKey: MUTATION_KEYS.planQuick,
     onMutate: (v: {
       date: Date;
       slot: MealSlot;
@@ -414,6 +418,7 @@ export function useMealPlan(weekStart: Date) {
   };
 
   const update = useMutation({
+    mutationKey: MUTATION_KEYS.updateMealPlanEntry,
     onMutate: async (v: UpdatePatch) => {
       const { id, ...patch } = v;
       const entry = entries.find((e) => e.id === id);
@@ -490,6 +495,7 @@ export function useMealPlan(weekStart: Date) {
   });
 
   const remove = useMutation({
+    mutationKey: MUTATION_KEYS.removeMealPlanEntry,
     onMutate: (id: string) => {
       removeEntryFromCache(qc, id);
     },

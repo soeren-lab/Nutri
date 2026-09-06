@@ -188,7 +188,8 @@ export async function getIngredientSignedUrl(path: string): Promise<string | nul
   const { data, error } = await supabase.storage
     .from("ingredient-images")
     .createSignedUrl(path, 60 * 60 * 24 * 7);
-  if (error) return null;
+  // Werfen statt null: siehe getSignedImageUrl in recipes.ts.
+  if (error) throw error;
   return data.signedUrl;
 }
 

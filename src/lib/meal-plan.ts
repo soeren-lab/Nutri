@@ -73,6 +73,15 @@ export type MealSlot = (typeof MEAL_SLOTS)[number];
 export const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] as const;
 
 /** ISO-Datum (YYYY-MM-DD) in lokaler Zeitzone. */
+/**
+ * Nach einem Persist/Restore-Zyklus (IndexedDB) kommen Date-Objekte in
+ * Mutation-Variablen als ISO-String zurück (JSON kennt kein Date) – diese
+ * Hilfsfunktion macht daraus wieder ein echtes Date, egal was ankommt.
+ */
+export function asDate(d: Date | string): Date {
+  return d instanceof Date ? d : new Date(d);
+}
+
 export function toISODate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");

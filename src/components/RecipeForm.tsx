@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { onlineManager, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { Plus, Loader2, ImageIcon, Upload, Layers, Link2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -986,6 +986,15 @@ export function RecipeForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        // Ein Bild-Upload lässt sich nicht offline puffern (File-Objekte
+        // überleben keine IndexedDB-Persistierung) – lieber ehrlich vorher
+        // abbrechen als die Änderung später stillschweigend zu verlieren.
+        if (imageFile && !onlineManager.isOnline()) {
+          toast.error("Bild-Uploads benötigen eine Internetverbindung", {
+            description: "Bitte mit Netzverbindung erneut speichern.",
+          });
+          return;
+        }
         mutation.mutate(buildMutationIds());
       }}
       className="space-y-6"

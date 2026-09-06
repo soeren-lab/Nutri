@@ -32,6 +32,7 @@ import { CategoryBadge } from "@/components/CategoryBadge";
 import { IngredientThumb } from "@/components/IngredientThumb";
 import { useAuth } from "@/hooks/use-auth";
 import { groupByCategory } from "@/lib/categories";
+import { MUTATION_KEYS } from "@/lib/offline-mutations";
 import { recipesQuery } from "@/lib/recipes";
 import {
   addManualItem,
@@ -96,6 +97,12 @@ function ShoppingListPage() {
   }
 
   const toggle = useMutation({
+    mutationKey: MUTATION_KEYS.toggleShoppingItem,
+    onMutate: (v: { id: string; checked: boolean }) => {
+      qc.setQueryData<ShoppingListItem[]>(["shopping-list"], (old) =>
+        old?.map((i) => (i.id === v.id ? { ...i, is_checked: v.checked } : i)),
+      );
+    },
     mutationFn: (v: { id: string; checked: boolean }) => setItemChecked(v.id, v.checked),
     onSuccess: invalidate,
     onError: (e: Error) => toast.error(e.message),

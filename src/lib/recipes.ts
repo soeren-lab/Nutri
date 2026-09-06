@@ -316,6 +316,10 @@ export async function getSignedImageUrl(path: string): Promise<string | null> {
   const { data, error } = await supabase.storage
     .from("recipe-images")
     .createSignedUrl(path, 60 * 60 * 24 * 7);
-  if (error) return null;
+  // Werfen statt null zurückzugeben: TanStack Query behält bei einem
+  // fehlgeschlagenen Refetch die zuletzt erfolgreiche URL im Cache bei –
+  // das ist es, was ein offline fehlschlagendes Neu-Signieren übersteht.
+  // Ein "erfolgreiches" null würde diesen guten Stand sonst überschreiben.
+  if (error) throw error;
   return data.signedUrl;
 }

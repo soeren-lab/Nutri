@@ -1,14 +1,24 @@
 import { get, set, del } from "idb-keyval";
 import { persistQueryClient } from "@tanstack/query-persist-client-core";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import type { Query, QueryClient, QueryKey } from "@tanstack/react-query";
+import { onlineManager, type Query, type QueryClient, type QueryKey } from "@tanstack/react-query";
 
 /**
- * Nur diese drei Bereiche werden lokal (IndexedDB) gecacht/wiederhergestellt
- * und offline geschrieben – Rezepte, Zutaten, Planer. Alles andere (Freunde,
- * Punkte, Community, ...) bleibt bewusst rein im Speicher/online-only.
+ * Diese Bereiche werden lokal (IndexedDB) gecacht/wiederhergestellt und
+ * offline geschrieben – Rezepte, Zutaten, Planer, Einkaufsliste sowie die
+ * signierten Bild-URLs dazu (siehe getSignedImageUrl/getIngredientSignedUrl:
+ * ohne Persistenz verschwinden Rezept-/Zutatenbilder nach einem Neustart
+ * offline komplett, auch wenn sie vorher schon geladen waren). Alles andere
+ * (Freunde, Punkte, Community, ...) bleibt bewusst rein im Speicher/online-only.
  */
-const OFFLINE_QUERY_PREFIXES: QueryKey[] = [["recipes"], ["ingredients_master"], ["meal-plan"]];
+const OFFLINE_QUERY_PREFIXES: QueryKey[] = [
+  ["recipes"],
+  ["ingredients_master"],
+  ["meal-plan"],
+  ["shopping-list"],
+  ["signed-image"],
+  ["signed-ingredient-image"],
+];
 
 function isOfflineScoped(queryKey: QueryKey): boolean {
   return OFFLINE_QUERY_PREFIXES.some((prefix) =>
@@ -17,7 +27,7 @@ function isOfflineScoped(queryKey: QueryKey): boolean {
 }
 
 /**
- * Richtet Offline-Persistenz für Rezepte/Zutaten/Planer ein:
+ * Richtet Offline-Persistenz für die oben gelisteten Bereiche ein:
  * - Erfolgreiche Query-Ergebnisse landen in IndexedDB und werden beim
  *   nächsten App-Start sofort angezeigt, auch ganz ohne Netzwerk.
  * - Pausierte (offline ausgelöste) Mutationen überleben ebenfalls einen
@@ -39,11 +49,13 @@ export function setupOfflinePersistence(queryClient: QueryClient): Promise<void>
     persister,
     maxAge: 1000 * 60 * 60 * 24 * 30, // 30 Tage
     dehydrateOptions: {
-      // Nur erfolgreich geladene Daten persistieren – ein Fehlerzustand
-      // (z. B. weil beim allerersten Laden schon offline) soll nicht als
-      // "letzter bekannter Stand" überschreiben, was vorher schon da war.
+      // Es zählt, ob überhaupt schon einmal gute Daten da waren – nicht, ob
+      // der ZULETZT versuchte Fetch erfolgreich war. Ein einzelner Fehlschlag
+      // (z. B. offline) darf einen vorher erfolgreich persistierten "letzten
+      // bekannten Stand" nicht aus IndexedDB löschen, sonst geht er beim
+      // nächsten Speicherzyklus (der den gesamten Cache neu schreibt) verloren.
       shouldDehydrateQuery: (query: Query) =>
-        isOfflineScoped(query.queryKey) && query.state.status === "success",
+        isOfflineScoped(query.queryKey) && query.state.data !== undefined,
       // Standardverhalten beibehalten: pausierte (offline ausgelöste)
       // Mutationen werden unabhängig vom Query-Key persistiert – es gibt
       // ohnehin nur wenige Schreibvorgänge in der App, das lohnt keine
@@ -51,12 +63,26 @@ export function setupOfflinePersistence(queryClient: QueryClient): Promise<void>
     },
   });
 
-  // Beim (Wieder-)Verbinden alle offline pausierten Mutationen abspielen.
-  window.addEventListener("online", () => {
-    void queryClient.resumePausedMutations().then(() => {
-      void queryClient.invalidateQueries({ queryKey: ["recipes"] });
-      void queryClient.invalidateQueries({ queryKey: ["ingredients_master"] });
-      void queryClient.invalidateQueries({ queryKey: ["meal-plan"] });
+  function syncOfflineDomain() {
+    for (const prefix of OFFLINE_QUERY_PREFIXES) {
+      void queryClient.invalidateQueries({ queryKey: prefix });
+    }
+  }
+
+  // Pausierte Mutationen abspielen, sobald wieder online – sowohl beim
+  // tatsächlichen Offline→Online-Übergang als auch direkt nach dem Boot,
+  // falls das Gerät zu dem Zeitpunkt (z. B. App offline geschlossen, später
+  // wieder mit Netz geöffnet) bereits online ist. Ohne den Boot-Check würde
+  // in diesem – sehr häufigen – Fall nie ein "online"-Event mehr feuern und
+  // eine offline gespeicherte Änderung bliebe für immer ungesendet liegen.
+  void restored.then(() => {
+    if (onlineManager.isOnline()) {
+      void queryClient.resumePausedMutations().then(syncOfflineDomain);
+    }
+    onlineManager.subscribe((isOnline) => {
+      if (isOnline) {
+        void queryClient.resumePausedMutations().then(syncOfflineDomain);
+      }
     });
   });
 
