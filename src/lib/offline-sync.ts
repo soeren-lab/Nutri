@@ -33,13 +33,41 @@ function interleave<T>(a: readonly T[], b: readonly T[]): T[] {
  * hätte der Service Worker sie nie gesehen, wenn das Bild vorher noch nie
  * sichtbar gerendert wurde.
  */
-function preloadImageBytes(url: string): Promise<void> {
+function preloadImageBytes(url: string, label: string): Promise<void> {
   return new Promise((resolve) => {
     const img = new Image();
-    img.onload = () => resolve();
-    img.onerror = () => resolve(); // ein einzelnes Bild darf den Sync nie blockieren
+    img.onload = () => {
+      console.warn(`[Offline-Sync] Preload onload: ${label}`);
+      resolve();
+    };
+    img.onerror = (e) => {
+      console.warn(`[Offline-Sync] Preload onerror: ${label}`, e);
+      resolve(); // ein einzelnes Bild darf den Sync nie blockieren
+    };
     img.src = url;
   });
+}
+
+/** Diagnose: kontrolliert der Service Worker die aktuelle Seite tatsächlich, und was liegt im images-v2-Cache? */
+async function logServiceWorkerState(): Promise<void> {
+  try {
+    console.warn(
+      `[Offline-Sync] SW controller: ${navigator.serviceWorker?.controller ? "vorhanden" : "NULL"}`,
+    );
+    const regs = await navigator.serviceWorker?.getRegistrations();
+    console.warn(
+      `[Offline-Sync] SW Registrierungen: ${regs?.length ?? 0} - ${regs
+        ?.map((r) => `active=${!!r.active} installing=${!!r.installing} waiting=${!!r.waiting}`)
+        .join(" | ")}`,
+    );
+    if (typeof caches !== "undefined") {
+      const cache = await caches.open("images-v2");
+      const keys = await cache.keys();
+      console.warn(`[Offline-Sync] images-v2 Cache: ${keys.length} Einträge`);
+    }
+  } catch (err) {
+    console.warn("[Offline-Sync] SW-Diagnose fehlgeschlagen", err);
+  }
 }
 
 /**
@@ -104,7 +132,7 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
             console.warn(
               `[Offline-Sync] Rezeptbild ok: ${recipe.title} -> ${url ? "URL erhalten" : "null"}`,
             );
-            if (url) await preloadImageBytes(url);
+            if (url) await preloadImageBytes(url, `Rezept ${recipe.title}`);
           },
           (err) => {
             console.warn(
@@ -127,7 +155,7 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
             console.warn(
               `[Offline-Sync] Zutatbild ok: ${master.name} -> ${url ? "URL erhalten" : "null"}`,
             );
-            if (url) await preloadImageBytes(url);
+            if (url) await preloadImageBytes(url, `Zutat ${master.name}`);
           },
           (err) => {
             console.warn(`[Offline-Sync] Zutatbild FEHLGESCHLAGEN: ${master.name} (${path})`, err);
@@ -141,6 +169,8 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
   console.warn(
     `[Offline-Sync] ${recipeImageTasks.length} Rezeptbilder, ${ingredientImageTasks.length} Zutatenbilder, ${detailTasks.length} Rezept-Details zum Laden`,
   );
+  console.warn("[Offline-Sync] SW-Status VOR dem Bilder-Durchlauf:");
+  await logServiceWorkerState();
 
   // Bilder zuerst, und Rezept-/Zutatenbilder abwechselnd statt hintereinander –
   // sonst sind bei vielen Rezepten die Zutatenbilder (oder umgekehrt) noch
@@ -152,6 +182,8 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
     CONCURRENCY,
     (task) => task(),
   );
+  console.warn("[Offline-Sync] SW-Status NACH dem Bilder-Durchlauf:");
+  await logServiceWorkerState();
   console.warn("[Offline-Sync] Bilder-Durchlauf fertig, starte Rezept-Details");
   await mapWithConcurrency(detailTasks, CONCURRENCY, (task) => task());
   console.warn("[Offline-Sync] warmOfflineCache fertig");
