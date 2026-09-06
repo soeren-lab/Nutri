@@ -1,0 +1,235 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+/* Dark Mode: aktuell über die Systemeinstellung ODER die Klasse .dark
+   (Toggle folgt im nächsten Schritt). */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:not(.light *) {
+      @slot;
+    }
+  }
+  &:is(.dark *) {
+    @slot;
+  }
+}
+
+
+@theme inline {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: "Fraunces", "Plus Jakarta Sans", Georgia, serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  /* Warmes Off-White als Grundfläche, reines Weiß für Karten (Elevation statt Fill) */
+  --background: hsl(36 33% 99%);
+  --foreground: hsl(258 18% 14%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(258 18% 14%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(258 18% 14%);
+
+  /* Akzente: gleiche Grundtöne wie im Dark Mode, für hellen Grund kalibriert */
+  --primary: hsl(262 83% 56%);
+  --primary-foreground: hsl(258 40% 99%);
+  --primary-gradient: linear-gradient(135deg, hsl(262 83% 56%), hsl(205 92% 55%));
+  --accent: hsl(205 92% 52%);
+  --accent-foreground: hsl(210 45% 99%);
+
+  --secondary: hsl(258 28% 96%);
+  --secondary-foreground: hsl(258 20% 22%);
+  --muted: hsl(258 24% 96%);
+  --muted-foreground: hsl(256 12% 46%);
+  --destructive: hsl(0 72% 48%);
+  --destructive-foreground: hsl(0 40% 99%);
+  --border: hsl(258 18% 91%);
+  --input: hsl(258 18% 88%);
+  --ring: hsl(262 83% 56%);
+
+  /* Ampel-/Statusfarben (siehe src/lib/nutritionScore.ts) */
+  --status-sat: 72%;
+  --status-light: 38%;
+  --status-warn: hsl(38 92% 42%);
+  --status-danger: hsl(2 78% 46%);
+
+  /* BorderBeam der Suchleisten – gleiches Gefühl wie im Dark Mode, kräftiger */
+  --beam-from: #7c3aed;
+  --beam-to: #0ea5e9;
+  --beam-glow: 0 0 14px -4px hsl(262 83% 56% / 0.4);
+
+  /* Karten-Elevation & Lila-Glow */
+  --shadow-card:
+    0 1px 2px hsl(258 30% 20% / 0.05),
+    0 10px 26px -20px hsl(258 40% 25% / 0.28);
+  --glow-primary: hsl(262 83% 56% / 0.28);
+  --glow-primary-strong: hsl(262 83% 56% / 0.45);
+}
+
+/*
+ * Dark Mode – eigenständige Palette (tiefes, warmes Dunkellila statt Schwarz,
+ * abgesetzte Karten, warmes Off-White, leuchtende Lila/Indigo-Akzente).
+ * Werte werden für die Systemeinstellung UND die Klasse .dark gesetzt.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: hsl(257 25% 9%);
+    --foreground: hsl(258 30% 95%);
+    --card: hsl(256 22% 14%);
+    --card-foreground: hsl(258 30% 95%);
+    --popover: hsl(256 24% 15%);
+    --popover-foreground: hsl(258 30% 95%);
+    --primary: hsl(262 92% 72%);
+    --primary-foreground: hsl(258 40% 10%);
+    --primary-gradient: linear-gradient(135deg, hsl(262 92% 72%), hsl(199 95% 72%));
+    --secondary: hsl(256 20% 21%);
+    --secondary-foreground: hsl(258 26% 92%);
+    --muted: hsl(256 18% 20%);
+    --muted-foreground: hsl(255 16% 70%);
+    --accent: hsl(199 95% 72%);
+    --accent-foreground: hsl(210 45% 12%);
+    --destructive: hsl(0 78% 66%);
+    --destructive-foreground: hsl(0 40% 12%);
+    --border: hsl(258 20% 26%);
+    --input: hsl(258 20% 28%);
+    --ring: hsl(262 95% 78%);
+
+    --status-sat: 72%;
+    --status-light: 62%;
+    --status-warn: hsl(38 95% 65%);
+    --status-danger: hsl(2 85% 68%);
+
+    --beam-from: #c4a6ff;
+    --beam-to: #7dd3fc;
+    --beam-glow: 0 0 18px -2px hsl(262 92% 72% / 0.55);
+
+    --shadow-card: 0 2px 12px -4px hsl(258 60% 3% / 0.75);
+    --glow-primary: hsl(262 92% 72% / 0.35);
+    --glow-primary-strong: hsl(262 92% 72% / 0.6);
+  }
+}
+
+.dark {
+  --background: hsl(257 25% 9%);
+  --foreground: hsl(258 30% 95%);
+  --card: hsl(256 22% 14%);
+  --card-foreground: hsl(258 30% 95%);
+  --popover: hsl(256 24% 15%);
+  --popover-foreground: hsl(258 30% 95%);
+  --primary: hsl(262 92% 72%);
+  --primary-foreground: hsl(258 40% 10%);
+  --primary-gradient: linear-gradient(135deg, hsl(262 92% 72%), hsl(199 95% 72%));
+  --secondary: hsl(256 20% 21%);
+  --secondary-foreground: hsl(258 26% 92%);
+  --muted: hsl(256 18% 20%);
+  --muted-foreground: hsl(255 16% 70%);
+  --accent: hsl(199 95% 72%);
+  --accent-foreground: hsl(210 45% 12%);
+  --destructive: hsl(0 78% 66%);
+  --destructive-foreground: hsl(0 40% 12%);
+  --border: hsl(258 20% 26%);
+  --input: hsl(258 20% 28%);
+  --ring: hsl(262 95% 78%);
+
+  --status-sat: 72%;
+  --status-light: 62%;
+  --status-warn: hsl(38 95% 65%);
+  --status-danger: hsl(2 85% 68%);
+
+  --beam-from: #c4a6ff;
+  --beam-to: #7dd3fc;
+  --beam-glow: 0 0 18px -2px hsl(262 92% 72% / 0.55);
+
+  --shadow-card: 0 2px 12px -4px hsl(258 60% 3% / 0.75);
+}
+
+
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    /* Verhindert horizontales Springen, wenn Dialoge/Sheets den Scroll sperren */
+    scrollbar-gutter: stable;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  /* Plus Jakarta Sans unterstützt tabular-nums; gleichmäßige Zahlenbreite. */
+  .tabular-nums,
+  input[type="number"] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+
+@layer base {
+  /* Native UI (Scrollbars, Formular-Controls) an das Theme koppeln */
+  :root {
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) {
+      color-scheme: dark;
+    }
+  }
+  .dark {
+    color-scheme: dark;
+  }
+  /* Bilder werden im Dark Mode NICHT abgedunkelt oder entsättigt. */
+  img,
+  video {
+    filter: none;
+    opacity: 1;
+  }
+}
+
+@layer base {
+  /* Sanfter Farbübergang beim Wechsel zwischen Hell und Dunkel */
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition:
+      background-color 260ms ease,
+      border-color 260ms ease,
+      color 260ms ease,
+      fill 260ms ease,
+      stroke 260ms ease,
+      box-shadow 260ms ease;
+  }
+  .light {
+    color-scheme: light;
+  }
+}

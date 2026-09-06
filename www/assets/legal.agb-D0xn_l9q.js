@@ -1,0 +1,1 @@
+import{n as e}from"./createLucideIcon-NyHIPPmZ.js";import{t}from"./LegalPage-DPMQcAF5.js";var n=e(),r=()=>(0,n.jsx)(t,{title:`Nutzungsbedingungen (AGB)`});export{r as component};

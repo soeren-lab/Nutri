@@ -1,0 +1,1 @@
+ALTER TABLE public.user_profile ADD COLUMN IF NOT EXISTS track_sugar boolean NOT NULL DEFAULT true;

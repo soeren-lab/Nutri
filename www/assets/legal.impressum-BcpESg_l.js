@@ -1,0 +1,1 @@
+import{n as e}from"./createLucideIcon-NyHIPPmZ.js";import{n as t,t as n}from"./LegalPage-DPMQcAF5.js";var r=e(),i=()=>(0,r.jsx)(n,{title:`Impressum`,children:(0,r.jsx)(t,{})});export{i as component};

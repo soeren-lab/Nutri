@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS public.ingredients_master_user_name_key;

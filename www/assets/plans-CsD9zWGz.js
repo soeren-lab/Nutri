@@ -1,0 +1,1 @@
+var e=`free`,t={free:`Free`,pro:`Pro`,max:`Max`};export{t as n,e as t};

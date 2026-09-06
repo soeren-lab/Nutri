@@ -1,0 +1,1 @@
+import{t as e}from"./createLucideIcon-NyHIPPmZ.js";import{t}from"./useSuspenseQuery-DNRWGX36.js";import{ft as n}from"./index-BnNpR17Q.js";var r=e(`chevrons-up-down`,[[`path`,{d:`m7 15 5 5 5-5`,key:`1hf1tw`}],[`path`,{d:`m7 9 5-5 5 5`,key:`sgt6xg`}]]);function i(e=!1){let{data:r}=t(n(e));return r}export{r as n,i as t};

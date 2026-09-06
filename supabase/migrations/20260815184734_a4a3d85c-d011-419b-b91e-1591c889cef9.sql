@@ -1,0 +1,2 @@
+ALTER TABLE public.meal_plan_entries DROP CONSTRAINT IF EXISTS meal_plan_entries_food_type_check;
+ALTER TABLE public.meal_plan_entries ADD CONSTRAINT meal_plan_entries_food_type_check CHECK (food_type IN ('recipe', 'ingredient', 'quick_entry'));

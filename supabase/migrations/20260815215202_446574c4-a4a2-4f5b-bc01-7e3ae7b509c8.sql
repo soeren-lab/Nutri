@@ -1,0 +1,14 @@
+update meal_plan_entries set snapshot_name='Schinken-Sahne-Soße', snapshot_calories=1102.2, snapshot_protein_g=54.8, snapshot_carbs_g=198.2, snapshot_fat_g=6.2 where id='e7b58243-09b0-4bd6-a894-5278046994a1';
+update meal_plan_entries set snapshot_name='Gulasch', snapshot_calories=1153.5, snapshot_protein_g=64.2, snapshot_carbs_g=196.8, snapshot_fat_g=10.5 where id='7dbbce45-6c70-4e9a-900d-7699f90bbe26';
+update meal_plan_entries set snapshot_name='Schoko-Haselnuss Shake', snapshot_calories=362.5, snapshot_protein_g=39.7, snapshot_carbs_g=26.8, snapshot_fat_g=9.9 where id='8c790b37-efe0-4181-a713-06dd523bf158';
+update meal_plan_entries set snapshot_name='Gulasch', snapshot_calories=769, snapshot_protein_g=42.8, snapshot_carbs_g=131.2, snapshot_fat_g=7 where id='93c6ffa5-f86d-4b35-a8b8-648b1bc631a6';
+update meal_plan_entries set snapshot_name='Nudelauflauf', snapshot_calories=1594.8, snapshot_protein_g=54.4, snapshot_carbs_g=159.2, snapshot_fat_g=42.8 where id='94723e4a-726d-41f6-a33c-b66ba575eeae';
+update meal_plan_entries set snapshot_name='Hänchenpfanne', snapshot_calories=733.2, snapshot_protein_g=112.6, snapshot_carbs_g=43, snapshot_fat_g=6.4 where id='19639ea9-35d3-4ec3-ba2b-3118916de061';
+update meal_plan_entries set snapshot_name='Schoko-Haselnuss Shake', snapshot_calories=362.5, snapshot_protein_g=39.7, snapshot_carbs_g=26.8, snapshot_fat_g=9.9 where id='6536aee3-a051-49d1-841d-7c36c3608074';
+update meal_plan_entries set snapshot_name='Schoko-Haselnuss Shake', snapshot_calories=362.5, snapshot_protein_g=39.7, snapshot_carbs_g=26.8, snapshot_fat_g=9.9 where id='5523641e-8de7-44c2-83cb-3f34b5703dd9';
+update meal_plan_entries set snapshot_name='Schoko-Haselnuss Shake', snapshot_calories=362.5, snapshot_protein_g=39.7, snapshot_carbs_g=26.8, snapshot_fat_g=9.9 where id='c78ff9d1-8fee-4bf7-96ac-0d4f33417d48';
+update meal_plan_entries set snapshot_name='Schoko-Haselnuss Shake', snapshot_calories=362.5, snapshot_protein_g=39.7, snapshot_carbs_g=26.8, snapshot_fat_g=9.9 where id='10cf1518-08be-4b98-86ea-346ec0123265';
+update meal_plan_entries set snapshot_name='Gulasch', snapshot_calories=384.5, snapshot_protein_g=21.4, snapshot_carbs_g=65.6, snapshot_fat_g=3.5 where id='1b9fd69c-4f2a-4168-a64d-e43ac1bf5b9e';
+update meal_plan_entries set snapshot_name='Kaiserschmarrn', snapshot_calories=452.2, snapshot_protein_g=43.9, snapshot_carbs_g=29.4, snapshot_fat_g=15.8 where id='d091c6b2-912a-4c32-aa16-cc12a08d1394';
+update meal_plan_entries set snapshot_name='Schoko-Haselnuss Shake', snapshot_calories=362.5, snapshot_protein_g=39.7, snapshot_carbs_g=26.8, snapshot_fat_g=9.9 where id='23fb8f24-2bd6-4df8-abc2-1db3a1f989e2';
+update meal_plan_entries set snapshot_name='Schoko-Haselnuss Shake', snapshot_calories=362.5, snapshot_protein_g=39.7, snapshot_carbs_g=26.8, snapshot_fat_g=9.9 where id='dec042e0-2b32-4b80-b44d-ebc4bd238c0d';

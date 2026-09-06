@@ -1,0 +1,1 @@
+ALTER TABLE public.meal_plan_entries ADD COLUMN IF NOT EXISTS batch_cooked_at timestamp with time zone;

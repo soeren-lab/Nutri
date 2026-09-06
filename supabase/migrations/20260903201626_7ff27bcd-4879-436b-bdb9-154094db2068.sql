@@ -1,0 +1,1 @@
+UPDATE public.user_points SET bonus_points = 0, updated_at = now() WHERE bonus_points <> 0;

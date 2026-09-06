@@ -1,0 +1,1 @@
+import{i as e,s as t}from"./createLucideIcon-NyHIPPmZ.js";import{Kt as n,Lt as r,Nt as i}from"./index-BnNpR17Q.js";var a=t(e(),1);function o(){let e=n({...r(),staleTime:6e4}),t=e.data??null;return{profile:t,targets:(0,a.useMemo)(()=>i(t),[t]),isLoading:e.isLoading}}export{o as t};

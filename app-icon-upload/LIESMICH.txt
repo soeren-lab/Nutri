@@ -1,0 +1,28 @@
+App-Icon hochladen
+===================
+
+Lege hier dein fertiges App-Icon als PNG-Datei ab und benenne es genau so:
+
+    icon.png
+
+Empfehlungen für das Quellbild:
+- Quadratisch (z. B. 1024x1024 Pixel)
+- Möglichst ohne transparenten Rand (volle Fläche), da es für einige
+  Icon-Varianten randlos zugeschnitten wird
+- Je höher die Auflösung, desto besser (mind. 512x512, besser 1024x1024+)
+
+Sobald "icon.png" hier liegt, einmal ausführen:
+
+    bun run generate-icons
+
+Das Skript erzeugt daraus automatisch alle benötigten Icon-Dateien für:
+- die Web-App / PWA (public/*.png)
+- die Android-App (android/app/src/main/res/mipmap-*/*.png)
+
+Das Skript kann beliebig oft erneut ausgeführt werden (z. B. wenn du das
+Icon später nochmal änderst) - es überschreibt dabei immer dieselben
+Zieldateien.
+
+Hinweis: Für die Android-Version musst du die App danach neu bauen
+(gradlew assembleDebug), damit das neue Icon auf dem Handy sichtbar wird.
+Bei der Web-Version reicht ein normales Neuladen im Browser.

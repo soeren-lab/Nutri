@@ -1,0 +1,2 @@
+ALTER TABLE public.ingredients_master ADD COLUMN IF NOT EXISTS published_at timestamp with time zone;
+UPDATE public.ingredients_master SET published_at = updated_at WHERE is_published = true AND published_at IS NULL;

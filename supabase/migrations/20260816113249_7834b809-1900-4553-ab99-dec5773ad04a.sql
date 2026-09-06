@@ -1,0 +1,1 @@
+ALTER TABLE public.ingredients_master ADD COLUMN IF NOT EXISTS subcategory text;
