@@ -33,6 +33,16 @@ function interleave<T>(a: readonly T[], b: readonly T[]): T[] {
  * Läuft im Hintergrund (fire-and-forget), blockiert nie Rendering/Navigation.
  * Wird beim Boot (falls schon online) und bei jedem Offline→Online-Übergang
  * aufgerufen (siehe offline-persistence.ts).
+ *
+ * Bewusst `fetchQuery()`, NICHT `ensureQueryData()`: Letzteres holt Daten nur,
+ * wenn der Cache-Eintrag noch komplett leer ist – ist einmal irgendein Stand
+ * da (auch Stunden/Tage alt), liefert es ihn unverändert zurück und ignoriert
+ * `staleTime` komplett. Für Rezepte/Zutaten (staleTime 0) hieße das: der
+ * Sync würde nach dem allerersten erfolgreichen Lauf für immer dieselbe
+ * eingefrorene Liste verwenden und neu hinzugefügte/geänderte Einträge nie
+ * mehr entdecken – ihre Bilder würden dann nie geladen. `fetchQuery()`
+ * respektiert `staleTime` tatsächlich und holt bei jedem Aufruf neu, wenn
+ * die Daten (per `staleTime`) als veraltet gelten.
  */
 export async function warmOfflineCache(queryClient: QueryClient): Promise<void> {
   if (typeof window === "undefined") return;
@@ -40,24 +50,22 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
   if (!userId) return;
 
   const [recipes, ingredients] = await Promise.all([
-    queryClient.ensureQueryData(recipesQuery()),
-    queryClient.ensureQueryData(ingredientsMasterQuery(false)),
+    queryClient.fetchQuery(recipesQuery()),
+    queryClient.fetchQuery(ingredientsMasterQuery(false)),
   ]);
   // Eigene Favoriten – kostet wenig, wird aber von der Rezept-Detailseite
   // per useSuspenseQuery zwingend gebraucht (siehe recipes.$id.index.tsx).
-  await queryClient.ensureQueryData(favoritesQuery(userId)).catch(() => {});
+  await queryClient.fetchQuery(favoritesQuery(userId)).catch(() => {});
 
   const recipeImageTasks: Array<() => Promise<void>> = [];
   const ingredientImageTasks: Array<() => Promise<void>> = [];
   const detailTasks: Array<() => Promise<void>> = [];
 
   for (const recipe of recipes) {
-    detailTasks.push(() => queryClient.ensureQueryData(recipeQuery(recipe.id)).then(() => {}));
+    detailTasks.push(() => queryClient.fetchQuery(recipeQuery(recipe.id)).then(() => {}));
     if (recipe.image_url) {
       const path = recipe.image_url;
-      recipeImageTasks.push(() =>
-        queryClient.ensureQueryData(signedImageQuery(path)).then(() => {}),
-      );
+      recipeImageTasks.push(() => queryClient.fetchQuery(signedImageQuery(path)).then(() => {}));
     }
   }
 
@@ -65,7 +73,7 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
     if (master.image_url && !isExternalImagePath(master.image_url)) {
       const path = master.image_url;
       ingredientImageTasks.push(() =>
-        queryClient.ensureQueryData(signedIngredientImageQuery(path)).then(() => {}),
+        queryClient.fetchQuery(signedIngredientImageQuery(path)).then(() => {}),
       );
     }
   }
