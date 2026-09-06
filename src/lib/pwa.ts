@@ -4,11 +4,7 @@
 // - Unregisters any stale /sw.js in refused contexts.
 const SW_PATH = "/sw.js";
 
-const LOVABLE_PREVIEW_HOSTS = [
-  "lovableproject.com",
-  "lovableproject-dev.com",
-  "beta.lovable.dev",
-];
+const LOVABLE_PREVIEW_HOSTS = ["lovableproject.com", "lovableproject-dev.com", "beta.lovable.dev"];
 
 function isLovablePreviewHost(host: string): boolean {
   if (host.startsWith("id-preview--") || host.startsWith("preview--")) return true;
@@ -33,7 +29,14 @@ async function unregisterMatching(): Promise<void> {
 }
 
 export async function registerPwa(): Promise<void> {
-  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+  if (typeof window === "undefined") {
+    console.warn("[pwa] kein window, breche ab");
+    return;
+  }
+  if (!("serviceWorker" in navigator)) {
+    console.warn("[pwa] navigator.serviceWorker nicht vorhanden");
+    return;
+  }
 
   const url = new URL(window.location.href);
   const inIframe = window.self !== window.top;
@@ -43,6 +46,9 @@ export async function registerPwa(): Promise<void> {
     inIframe ||
     isLovablePreviewHost(host) ||
     url.searchParams.get("sw") === "off";
+  console.warn(
+    `[pwa] host=${host} PROD=${import.meta.env.PROD} inIframe=${inIframe} refuse=${refuse}`,
+  );
 
   if (refuse) {
     await unregisterMatching();
@@ -50,7 +56,10 @@ export async function registerPwa(): Promise<void> {
   }
 
   try {
-    await navigator.serviceWorker.register(SW_PATH, { scope: "/" });
+    const reg = await navigator.serviceWorker.register(SW_PATH, { scope: "/" });
+    console.warn(
+      `[pwa] SW registriert: active=${!!reg.active} installing=${!!reg.installing} waiting=${!!reg.waiting} scope=${reg.scope}`,
+    );
   } catch (err) {
     console.warn("[pwa] SW registration failed", err);
   }
