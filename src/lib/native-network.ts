@@ -16,17 +16,12 @@ import { isNativeApp } from "@/lib/platform";
  * das den echten Verbindungsstatus des Betriebssystems liefert.
  */
 export async function setupNativeNetworkDetection(): Promise<void> {
-  if (!isNativeApp()) {
-    console.warn("[Native-Network] Keine native Plattform, überspringe");
-    return;
-  }
+  if (!isNativeApp()) return;
 
   const initial = await Network.getStatus();
-  console.warn(`[Native-Network] Initialer Status: connected=${initial.connected}`);
   onlineManager.setEventListener((setOnline) => {
     setOnline(initial.connected);
     const handle = Network.addListener("networkStatusChange", (status) => {
-      console.warn(`[Native-Network] Statusänderung: connected=${status.connected}`);
       setOnline(status.connected);
     });
     return () => {

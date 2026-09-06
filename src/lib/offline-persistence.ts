@@ -97,15 +97,11 @@ export function setupOfflinePersistence(queryClient: QueryClient): Promise<void>
   }
 
   void restored.then(() => {
-    console.warn(
-      `[Offline-Persistence] Boot: onlineManager.isOnline()=${onlineManager.isOnline()}`,
-    );
     if (onlineManager.isOnline()) {
       void queryClient.resumePausedMutations().then(syncOfflineDomain);
       warmCache();
     }
     onlineManager.subscribe((isOnline) => {
-      console.warn(`[Offline-Persistence] onlineManager-Änderung: isOnline=${isOnline}`);
       if (isOnline) {
         void queryClient.resumePausedMutations().then(syncOfflineDomain);
         warmCache();

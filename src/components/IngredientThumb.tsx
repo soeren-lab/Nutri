@@ -17,12 +17,7 @@ export function IngredientThumb({
   className?: string;
   size?: keyof typeof SIZES;
 }) {
-  const { data: url, status, fetchStatus, error, dataUpdatedAt } = useSignedIngredientImage(path);
-  if (path && !url) {
-    console.warn(
-      `[IngredientThumb] Kein Bild für ${path}: status=${status} fetchStatus=${fetchStatus} dataUpdatedAt=${dataUpdatedAt} error=${error instanceof Error ? error.message : String(error ?? "")}`,
-    );
-  }
+  const { data: url } = useSignedIngredientImage(path);
   return (
     <div
       className={cn(
