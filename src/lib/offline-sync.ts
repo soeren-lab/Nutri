@@ -56,6 +56,12 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
   const [recipes, ingredients] = await Promise.all([
     queryClient.fetchQuery(recipesQuery()),
     queryClient.fetchQuery(ingredientsMasterQuery(false)),
+    // Die Zutaten-Seite (ingredients.tsx) liest die includeArchived:true-
+    // Variante – ein eigener Cache-Eintrag, den ensureQueryData() in ihrem
+    // Loader (wie fetchQuery hier) nie von selbst auffrischt. Ohne diesen
+    // Fetch bliebe dieser Stand für immer eingefroren (gcTime/maxAge:
+    // Infinity), inkl. veralteter image_url-Pfade.
+    queryClient.fetchQuery(ingredientsMasterQuery(true)),
   ]);
   console.warn(
     `[Offline-Sync] ${recipes.length} eigene Rezepte, ${ingredients.length} eigene Zutaten gefunden`,
