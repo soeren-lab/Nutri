@@ -1,1 +1,0 @@
-import{Kt as e,Ot as t}from"./index-BnNpR17Q.js";import{r as n}from"./patch-notes-1EH7_voM.js";function r(){let{user:r}=t(),i=e(n(r?.id));return{isAdmin:i.data===!0,isLoading:i.isLoading}}export{r as t};

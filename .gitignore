@@ -16,6 +16,10 @@ dist-ssr
 .nitro
 *.local
 
+# Capacitor webDir – generierter Build-Output (aus .output/public +
+# build-capacitor-shell.mjs), wird bei jedem Release neu erzeugt.
+www/
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

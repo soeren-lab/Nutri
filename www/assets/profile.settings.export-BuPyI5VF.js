@@ -1,1 +1,0 @@
-import{n as e}from"./createLucideIcon-NyHIPPmZ.js";import{i as t}from"./AccountSection-BMovh5PG.js";import{t as n}from"./SettingsSubPage-Dc1hgKb-.js";var r=e(),i=()=>(0,r.jsx)(n,{title:`Daten exportieren`,children:(0,r.jsx)(t,{})});export{i as component};
