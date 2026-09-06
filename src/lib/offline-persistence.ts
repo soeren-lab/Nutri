@@ -2,14 +2,19 @@ import { get, set, del } from "idb-keyval";
 import { persistQueryClient } from "@tanstack/query-persist-client-core";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { onlineManager, type Query, type QueryClient, type QueryKey } from "@tanstack/react-query";
+import { warmOfflineCache } from "@/lib/offline-sync";
 
 /**
  * Diese Bereiche werden lokal (IndexedDB) gecacht/wiederhergestellt und
  * offline geschrieben – Rezepte, Zutaten, Planer, Einkaufsliste sowie die
  * signierten Bild-URLs dazu (siehe getSignedImageUrl/getIngredientSignedUrl:
  * ohne Persistenz verschwinden Rezept-/Zutatenbilder nach einem Neustart
- * offline komplett, auch wenn sie vorher schon geladen waren). Alles andere
- * (Freunde, Punkte, Community, ...) bleibt bewusst rein im Speicher/online-only.
+ * offline komplett, auch wenn sie vorher schon geladen waren). `favorites`
+ * und `brands` sind mit dabei, weil Rezept-Detail- bzw. Zutaten-Seiten sie
+ * über useSuspenseQuery zwingend brauchen – ohne Persistenz hängt die ganze
+ * Seite offline unauflösbar fest, sobald sie diese Session noch nicht
+ * geladen wurden. Alles andere (Freunde, Punkte, Community, ...) bleibt
+ * bewusst rein im Speicher/online-only.
  */
 const OFFLINE_QUERY_PREFIXES: QueryKey[] = [
   ["recipes"],
@@ -18,6 +23,8 @@ const OFFLINE_QUERY_PREFIXES: QueryKey[] = [
   ["shopping-list"],
   ["signed-image"],
   ["signed-ingredient-image"],
+  ["favorites"],
+  ["brands"],
 ];
 
 function isOfflineScoped(queryKey: QueryKey): boolean {
@@ -75,13 +82,24 @@ export function setupOfflinePersistence(queryClient: QueryClient): Promise<void>
   // wieder mit Netz geöffnet) bereits online ist. Ohne den Boot-Check würde
   // in diesem – sehr häufigen – Fall nie ein "online"-Event mehr feuern und
   // eine offline gespeicherte Änderung bliebe für immer ungesendet liegen.
+  // Wärmt proaktiv den Offline-Cache für alle eigenen Rezepte/Zutaten (inkl.
+  // Bilder) vor – unabhängig davon, ob die jeweilige Seite je besucht wurde.
+  // Läuft unabhängig von resumePausedMutations (Schreiben vs. Lesen, keine
+  // Reihenfolge nötig) mit eigenem catch, damit ein Sync-Fehler nie zu einer
+  // unbehandelten Promise-Ablehnung wird.
+  function warmCache() {
+    void warmOfflineCache(queryClient).catch(() => {});
+  }
+
   void restored.then(() => {
     if (onlineManager.isOnline()) {
       void queryClient.resumePausedMutations().then(syncOfflineDomain);
+      warmCache();
     }
     onlineManager.subscribe((isOnline) => {
       if (isOnline) {
         void queryClient.resumePausedMutations().then(syncOfflineDomain);
+        warmCache();
       }
     });
   });

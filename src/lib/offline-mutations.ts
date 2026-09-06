@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { currentUserId } from "@/lib/auth-session";
 import { cleanupBatchGroup } from "@/lib/batch";
 import {
   addFoodEntry,
@@ -33,15 +33,9 @@ export const MUTATION_KEYS = {
   toggleShoppingItem: ["shopping-list", "toggle"],
 } as const;
 
-/**
- * Liest die User-ID direkt aus der von supabase-js persistierten Session
- * (kein Netzwerk-Roundtrip nötig, funktioniert offline) – dieselbe Quelle,
- * die auch `useAuth()` verwendet. Dadurch muss `userId` nicht zusätzlich in
- * jede Mutation-Variable aufgenommen werden.
- */
-async function currentUserId(): Promise<string> {
-  const { data } = await supabase.auth.getSession();
-  const userId = data.session?.user.id;
+/** Wie `currentUserId()`, aber wirft statt `null` – Mutationen müssen ohne Login laut fehlschlagen. */
+async function requireUserId(): Promise<string> {
+  const userId = await currentUserId();
   if (!userId) throw new Error("Nicht angemeldet");
   return userId;
 }
@@ -89,7 +83,7 @@ export function registerOfflineMutationDefaults(qc: QueryClient) {
     }) => {
       const date = asDate(v.date);
       return addRecipeEntry({
-        userId: await currentUserId(),
+        userId: await requireUserId(),
         date: toISODate(date),
         meal_slot: v.slot,
         recipe_id: v.recipeId,
@@ -114,7 +108,7 @@ export function registerOfflineMutationDefaults(qc: QueryClient) {
     }) => {
       const date = asDate(v.date);
       return addFoodEntry({
-        userId: await currentUserId(),
+        userId: await requireUserId(),
         date: toISODate(date),
         meal_slot: v.slot,
         ingredient_master_id: v.ingredientId,
@@ -140,7 +134,7 @@ export function registerOfflineMutationDefaults(qc: QueryClient) {
     }) => {
       const date = asDate(v.date);
       return addQuickEntry({
-        userId: await currentUserId(),
+        userId: await requireUserId(),
         date: toISODate(date),
         meal_slot: v.slot,
         name: v.name,
