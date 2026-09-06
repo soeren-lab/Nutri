@@ -53,8 +53,12 @@ function lookupRecipe(qc: QueryClient, id: string): RecipeListItem | null {
 
 function lookupMaster(qc: QueryClient, id: string): IngredientMasterRow | null {
   return (
-    qc.getQueryData<IngredientMasterRow[]>(ingredientsMasterQuery(true).queryKey)?.find((m) => m.id === id) ??
-    qc.getQueryData<IngredientMasterRow[]>(ingredientsMasterQuery(false).queryKey)?.find((m) => m.id === id) ??
+    qc
+      .getQueryData<IngredientMasterRow[]>(ingredientsMasterQuery(true).queryKey)
+      ?.find((m) => m.id === id) ??
+    qc
+      .getQueryData<IngredientMasterRow[]>(ingredientsMasterQuery(false).queryKey)
+      ?.find((m) => m.id === id) ??
     null
   );
 }
@@ -130,7 +134,6 @@ export function useMealPlan(weekStart: Date) {
     void qc.invalidateQueries({ queryKey: ["daily-totals"] });
     void qc.invalidateQueries({ queryKey: ["batch-cook-week"] });
   }
-
 
   /**
    * Punkte des betroffenen Tages nach jeder Änderung neu berechnen –
@@ -239,7 +242,13 @@ export function useMealPlan(weekStart: Date) {
 
   const planFood = useMutation({
     mutationKey: MUTATION_KEYS.planFood,
-    onMutate: async (v: { date: Date; slot: MealSlot; ingredientId: string; amount: number; unit: string }) => {
+    onMutate: async (v: {
+      date: Date;
+      slot: MealSlot;
+      ingredientId: string;
+      amount: number;
+      unit: string;
+    }) => {
       if (!user) return;
       const snapshot = await foodSnapshot(v.ingredientId, v.amount, v.unit, qc).catch(() => null);
       if (!snapshot) return;
@@ -406,6 +415,7 @@ export function useMealPlan(weekStart: Date) {
     unit?: string | null;
     date?: string;
     meal_slot?: MealSlot;
+    skipped?: boolean;
     selected_variant_ids?: Record<string, string> | null;
     group_choices?: Record<string, string> | null;
     quick_entry_name?: string;
@@ -451,7 +461,6 @@ export function useMealPlan(weekStart: Date) {
       }
       // Beide Tage melden: bei Verschieben ändern sich alter und neuer Tag.
       return { dates: [entry?.date, patch.date].filter(Boolean) as string[] };
-
     },
     onSuccess: (res) => {
       invalidate();
@@ -463,16 +472,10 @@ export function useMealPlan(weekStart: Date) {
 
   /** Eintrag auf beliebig viele Tage/Slots kopieren. */
   const copy = useMutation({
-    mutationFn: async (v: {
-      entry: MealPlanEntryFull;
-      dates: string[];
-      slot: MealSlot;
-    }) => {
+    mutationFn: async (v: { entry: MealPlanEntryFull; dates: string[]; slot: MealSlot }) => {
       if (!user) throw new Error("Nicht angemeldet");
       for (const date of v.dates) {
-        const existing = entries.filter(
-          (e) => e.date === date && e.meal_slot === v.slot,
-        ).length;
+        const existing = entries.filter((e) => e.date === date && e.meal_slot === v.slot).length;
         await copyMealPlanEntry({
           entry: v.entry,
           userId: user.id,
@@ -487,9 +490,7 @@ export function useMealPlan(weekStart: Date) {
     onSuccess: (res) => {
       invalidate();
       for (const d of res.dates) recalcPoints(d);
-      toast.success(
-        res.dates.length > 1 ? `Auf ${res.dates.length} Tage kopiert` : "Kopiert",
-      );
+      toast.success(res.dates.length > 1 ? `Auf ${res.dates.length} Tage kopiert` : "Kopiert");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -514,7 +515,6 @@ export function useMealPlan(weekStart: Date) {
     },
     onError: (e: Error) => toast.error(e.message),
   });
-
 
   return {
     days,

@@ -5,7 +5,6 @@ import {
   Apple,
   BookOpen,
   Check,
-
   Clock,
   CookingPot,
   Layers,
@@ -212,7 +211,6 @@ function PlannerPage() {
     void qc.invalidateQueries({ queryKey: ["batch-cook-week"] });
   }
 
-
   async function handleCreateBatch(
     entry: MealPlanEntryFull,
     dates: string[],
@@ -355,9 +353,7 @@ function PlannerPage() {
     if (lines.length > 0) {
       const rows = lines.map((line, i) => {
         const parsed = parseIngredientLine(line);
-        const match = foods.find(
-          (f) => f.name.trim().toLowerCase() === parsed.name.toLowerCase(),
-        );
+        const match = foods.find((f) => f.name.trim().toLowerCase() === parsed.name.toLowerCase());
         const unit = parsed.unit ?? match?.unit ?? "g";
         return {
           recipe_id: data.id,
@@ -378,7 +374,6 @@ function PlannerPage() {
     setTarget(null);
     void navigate({ to: "/recipes/$id/edit", params: { id: data.id } });
   }
-
 
   function openAdd(date: Date, slot: MealSlot) {
     setTarget({ date, slot });
@@ -448,8 +443,7 @@ function PlannerPage() {
           onSuggest={() => openSuggest(day, slot)}
           onPaste={
             clipboard
-              ? () =>
-                  copy.mutate({ entry: clipboard, dates: [toISODate(day)], slot })
+              ? () => copy.mutate({ entry: clipboard, dates: [toISODate(day)], slot })
               : undefined
           }
         />
@@ -467,9 +461,8 @@ function PlannerPage() {
       .map((d) => targetsFor(toISODate(d)))
       .filter((t): t is NonNullable<typeof t> => t != null);
     if (list.length === 0) return null;
-    const avg = (
-      key: "calories" | "protein_g" | "carbs_g" | "fat_g" | "fiber_g" | "sugar_max_g",
-    ) => Math.round(list.reduce((sum, t) => sum + t[key], 0) / list.length);
+    const avg = (key: "calories" | "protein_g" | "carbs_g" | "fat_g" | "fiber_g" | "sugar_max_g") =>
+      Math.round(list.reduce((sum, t) => sum + t[key], 0) / list.length);
     return {
       bmr: 0,
       tdee: 0,
@@ -481,7 +474,6 @@ function PlannerPage() {
       sugar_max_g: avg("sugar_max_g"),
       manual: true,
     };
-
   }, [days, targetsFor]);
 
   const activeDate = useMemo(() => {
@@ -501,8 +493,6 @@ function PlannerPage() {
     () => batchCookSummaries(cookEntries, toISODate(activeDate)),
     [cookEntries, activeDate],
   );
-
-
 
   return (
     <div className="space-y-4">
@@ -546,7 +536,6 @@ function PlannerPage() {
         />
       </div>
 
-
       {isLoading ? (
         <LoadingSpinner />
       ) : (
@@ -566,7 +555,6 @@ function PlannerPage() {
         onOpenChange={setShoppingOpen}
         weekStart={weekStart}
       />
-
 
       {/* Art des Eintrags wählen */}
       <Dialog
@@ -663,9 +651,7 @@ function PlannerPage() {
               <span className="block truncate">
                 {f.name}
                 {f.subcategory && matchesViaSubcategory(f, ctx.query) && (
-                  <span className="ml-1 text-xs text-muted-foreground">
-                    · {f.subcategory}
-                  </span>
+                  <span className="ml-1 text-xs text-muted-foreground">· {f.subcategory}</span>
                 )}
               </span>
               <span className="block text-xs text-muted-foreground">
@@ -676,7 +662,6 @@ function PlannerPage() {
             </span>
           </SearchSheetRow>
         )}
-
       />
 
       {/* Menge für Lebensmittel */}
@@ -810,7 +795,6 @@ function PlannerPage() {
         onPick={pickSuggestion}
         onPickAi={pickAiSuggestion}
         onSaveAiAsRecipe={(s) => void saveAiSuggestionAsRecipe(s)}
-
         onManual={() => {
           setSuggestTarget(null);
           setMode("choose");
@@ -854,6 +838,10 @@ function PlannerPage() {
             remove.mutate(optionsEntry.id);
             setOptionsEntry(null);
           }}
+          onToggleSkipped={() => {
+            update.mutate({ id: optionsEntry.id, skipped: !optionsEntry.skipped });
+            setOptionsEntry(null);
+          }}
           onBatch={() => {
             setBatchEntry(optionsEntry);
             setOptionsEntry(null);
@@ -888,7 +876,6 @@ function PlannerPage() {
           }}
         />
       )}
-
 
       {servingsEntry && (
         <ServingsDialog
@@ -1083,7 +1070,6 @@ function MacroGrid({ items }: { items: MacroGridItem[] }) {
   );
 }
 
-
 /** „noch X kcal übrig" / „X kcal über dem Ziel" – nur Tageswert, nicht Wochen-Ø. */
 function RemainingKcal({ value, target }: { value: number; target: number }) {
   const diff = target - value;
@@ -1091,9 +1077,7 @@ function RemainingKcal({ value, target }: { value: number; target: number }) {
     return <p className="text-[10px] text-muted-foreground">→ Ziel erreicht</p>;
   }
   if (diff > 0) {
-    return (
-      <p className="text-[10px] text-muted-foreground">→ noch {diff} kcal übrig</p>
-    );
+    return <p className="text-[10px] text-muted-foreground">→ noch {diff} kcal übrig</p>;
   }
   return (
     <p className="text-[10px] font-semibold" style={{ color: overColor(value, target) }}>
@@ -1136,10 +1120,7 @@ function MacroCell({ label, value, target, isMax }: Omit<MacroGridItem, "key">) 
           {rounded}/{target}g
         </span>
       </div>
-      <span
-        aria-hidden
-        className="block h-1 w-full overflow-hidden rounded-full bg-muted"
-      >
+      <span aria-hidden className="block h-1 w-full overflow-hidden rounded-full bg-muted">
         <span
           className="block h-full rounded-full"
           style={{ width: `${pct}%`, backgroundColor: col }}
@@ -1148,7 +1129,6 @@ function MacroCell({ label, value, target, isMax }: Omit<MacroGridItem, "key">) 
     </div>
   );
 }
-
 
 function ServingsDialog({
   entry,
@@ -1192,7 +1172,14 @@ function FixedBatchNote({
   recipe,
   servings,
 }: {
-  recipe: { is_fixed_batch?: boolean | null; batch_servings?: number | string | null; servings?: number | null } | null | undefined;
+  recipe:
+    | {
+        is_fixed_batch?: boolean | null;
+        batch_servings?: number | string | null;
+        servings?: number | null;
+      }
+    | null
+    | undefined;
   servings: number | null;
 }) {
   if (!isFixedBatch(recipe) || servings == null || servings <= 0) return null;
@@ -1225,7 +1212,11 @@ function BatchCookNotes({ summaries }: { summaries: BatchCookSummary[] }) {
           )}
         >
           <span className="flex items-center gap-1 font-semibold text-primary">
-            {s.cookedAt ? <Check className="h-3.5 w-3.5" /> : <CookingPot className="h-3.5 w-3.5" />}
+            {s.cookedAt ? (
+              <Check className="h-3.5 w-3.5" />
+            ) : (
+              <CookingPot className="h-3.5 w-3.5" />
+            )}
             {s.cookedAt ? "Gekocht" : "Koch-Tag"}
           </span>
           <span className="min-w-0 truncate font-medium text-foreground">{s.title}</span>
@@ -1246,8 +1237,6 @@ function BatchCookNotes({ summaries }: { summaries: BatchCookSummary[] }) {
     </div>
   );
 }
-
-
 
 /** Mengeneingabe (Portionen oder Gramm) beim Einplanen eines Rezepts. */
 function PortionPlanDialog({

@@ -41,7 +41,6 @@ export type DayTotals = {
   daysLate?: number;
 };
 
-
 export function todayDate(): Date {
   const n = new Date();
   return new Date(n.getFullYear(), n.getMonth(), n.getDate());
@@ -55,17 +54,20 @@ export async function fetchDailyTotals(
   const entries = await fetchMealPlan(from, to);
   const out: Record<string, DayTotals> = {};
   for (const e of entries) {
+    // Ausgelassene Einträge dürfen keinen (auch nur Nullen-)Totals-Eintrag
+    // für den Tag erzeugen – sonst zählt ein komplett übersprungener Tag
+    // fälschlich als "hat einen Eintrag" für Streak/Punkte-Multiplikator.
+    if (e.skipped) continue;
     const m = entryMacros(e);
-    const cur =
-      out[e.date] ?? {
-        calories: 0,
-        protein_g: 0,
-        carbs_g: 0,
-        fat_g: 0,
-        fiber_g: 0,
-        sugar_g: 0,
-        daysLate: 0,
-      };
+    const cur = out[e.date] ?? {
+      calories: 0,
+      protein_g: 0,
+      carbs_g: 0,
+      fat_g: 0,
+      fiber_g: 0,
+      sugar_g: 0,
+      daysLate: 0,
+    };
     out[e.date] = {
       calories: cur.calories + (m?.calories ?? 0),
       protein_g: cur.protein_g + (m?.protein_g ?? 0),
@@ -135,10 +137,7 @@ export function buildProgressDays(
 }
 
 /** Längste Serie aufeinanderfolgender Tage, die das Kriterium erfüllen. */
-export function bestStreak(
-  days: ProgressDay[],
-  predicate: (d: ProgressDay) => boolean,
-): number {
+export function bestStreak(days: ProgressDay[], predicate: (d: ProgressDay) => boolean): number {
   let best = 0;
   let run = 0;
   for (const d of days) {

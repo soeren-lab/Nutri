@@ -34,8 +34,12 @@ function cachedRecipe(qc: QueryClient | undefined, recipeId: string): RecipeList
 }
 
 function cachedMaster(qc: QueryClient | undefined, id: string): IngredientMasterRow | undefined {
-  const withArchived = qc?.getQueryData<IngredientMasterRow[]>(ingredientsMasterQuery(true).queryKey);
-  const activeOnly = qc?.getQueryData<IngredientMasterRow[]>(ingredientsMasterQuery(false).queryKey);
+  const withArchived = qc?.getQueryData<IngredientMasterRow[]>(
+    ingredientsMasterQuery(true).queryKey,
+  );
+  const activeOnly = qc?.getQueryData<IngredientMasterRow[]>(
+    ingredientsMasterQuery(false).queryKey,
+  );
   return withArchived?.find((m) => m.id === id) ?? activeOnly?.find((m) => m.id === id);
 }
 
@@ -230,6 +234,9 @@ export function liveEntryMacros(entry: MealPlanEntryFull): MacroTotals | null {
  * Einplanens; nur Alt-Einträge ohne Snapshot fallen auf die Live-Berechnung zurück.
  */
 export function entryMacros(entry: MealPlanEntryFull): MacroTotals | null {
+  // Ausgelassene Einträge tragen zu Nährwerten/Punkten/Streak nichts bei,
+  // bleiben aber als Eintrag sichtbar (siehe MealPlanEntryPatch/"skipped").
+  if (entry.skipped) return null;
   if (entry.snapshot_calories != null) {
     const num = (v: number | null) => (v == null ? 0 : Number(v));
     return {
@@ -312,9 +319,6 @@ export function entryVariantTag(entry: MealPlanEntryFull): string | null {
   }
   return parts.length > 0 ? parts.join(" · ") : null;
 }
-
-
-
 
 /* -------------------------------------------------------------------- Daten */
 
@@ -577,7 +581,11 @@ export async function foodSnapshot(
   const cached = cachedMaster(qc, ingredientMasterId);
   const { data, error } = cached
     ? { data: cached, error: null }
-    : await supabase.from("ingredients_master").select("*").eq("id", ingredientMasterId).maybeSingle();
+    : await supabase
+        .from("ingredients_master")
+        .select("*")
+        .eq("id", ingredientMasterId)
+        .maybeSingle();
   if (error) throw error;
   const master = data as IngredientMasterRow | null;
   return snapshotFrom(master?.name ?? "Lebensmittel", foodMacros(master, amount, unit));
@@ -631,7 +639,6 @@ export async function addRecipeEntry(input: {
   if (error) throw error;
 }
 
-
 export async function addFoodEntry(input: {
   userId: string;
   date: string;
@@ -642,7 +649,12 @@ export async function addFoodEntry(input: {
   sort_order?: number;
   qc?: QueryClient;
 }) {
-  const snapshot = await foodSnapshot(input.ingredient_master_id, input.amount, input.unit, input.qc);
+  const snapshot = await foodSnapshot(
+    input.ingredient_master_id,
+    input.amount,
+    input.unit,
+    input.qc,
+  );
   const { error } = await supabase.from("meal_plan_entries").insert({
     id: crypto.randomUUID(),
     created_at: new Date().toISOString(),
@@ -723,8 +735,7 @@ export async function copyMealPlanEntry(input: {
       selected_variant_ids: parseVariantSelection(entry.selected_variant_ids),
       group_choices: entry.group_choices as GroupChoices | null,
       input_mode: (entry.input_mode as "servings" | "grams") ?? "servings",
-      input_grams_value:
-        entry.input_grams_value != null ? Number(entry.input_grams_value) : null,
+      input_grams_value: entry.input_grams_value != null ? Number(entry.input_grams_value) : null,
       qc: input.qc,
     });
     return;
@@ -748,8 +759,7 @@ export async function copyMealPlanEntry(input: {
     meal_slot: input.meal_slot,
     name: entry.quick_entry_name ?? entry.snapshot_name ?? "Schnelleintrag",
     calories: Number(entry.quick_entry_calories ?? entry.snapshot_calories ?? 0),
-    protein_g:
-      entry.quick_entry_protein_g != null ? Number(entry.quick_entry_protein_g) : null,
+    protein_g: entry.quick_entry_protein_g != null ? Number(entry.quick_entry_protein_g) : null,
     carbs_g: entry.quick_entry_carbs_g != null ? Number(entry.quick_entry_carbs_g) : null,
     fat_g: entry.quick_entry_fat_g != null ? Number(entry.quick_entry_fat_g) : null,
     fiber_g: entry.quick_entry_fiber_g != null ? Number(entry.quick_entry_fiber_g) : null,
@@ -757,7 +767,6 @@ export async function copyMealPlanEntry(input: {
     sort_order: input.sort_order ?? 0,
   });
 }
-
 
 export type MealPlanEntryPatch = Partial<
   Pick<
@@ -767,6 +776,7 @@ export type MealPlanEntryPatch = Partial<
     | "unit"
     | "date"
     | "meal_slot"
+    | "skipped"
     | "quick_entry_name"
     | "quick_entry_calories"
     | "quick_entry_protein_g"

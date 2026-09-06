@@ -1,4 +1,4 @@
-import { Copy, CookingPot, ExternalLink, Link2, Unlink } from "lucide-react";
+import { Ban, Copy, CookingPot, ExternalLink, Link2, Unlink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -46,6 +46,7 @@ export function EntryDetailSheet({
   onRemove,
   onBatch,
   onDissolveBatch,
+  onToggleSkipped,
   hasGroups,
 }: {
   entry: MealPlanEntryFull;
@@ -59,6 +60,7 @@ export function EntryDetailSheet({
   onRemove: () => void;
   onBatch: () => void;
   onDissolveBatch: () => void;
+  onToggleSkipped: () => void;
   hasGroups: boolean;
 }) {
   const macros = entryMacros(entry);
@@ -66,7 +68,6 @@ export function EntryDetailSheet({
   const amount = entryAmountLabel(entry);
   const batchRole = batchRoleOf(entry);
   const batched = isBatched(entry);
-
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
@@ -85,6 +86,11 @@ export function EntryDetailSheet({
         </p>
 
         <div className="flex flex-wrap gap-1.5">
+          {entry.skipped && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-muted-foreground/30 bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              <Ban className="h-3 w-3" /> Ausgelassen
+            </span>
+          )}
           {amount && (
             <span className="rounded-full border border-border px-2 py-0.5 text-xs">{amount}</span>
           )}
@@ -225,6 +231,10 @@ export function EntryDetailSheet({
               </Link>
             </Button>
           )}
+          <Button variant="secondary" onClick={onToggleSkipped}>
+            <Ban className="mr-2 h-4 w-4" />
+            {entry.skipped ? "Doch gegessen" : "Ausgelassen"}
+          </Button>
           <Button variant="destructive" onClick={onRemove}>
             Entfernen
           </Button>

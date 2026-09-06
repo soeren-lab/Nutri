@@ -1,5 +1,6 @@
 import {
   Apple,
+  Ban,
   ClipboardPaste,
   CookingPot,
   Flame,
@@ -42,7 +43,9 @@ export function MealEntryRow({
   const category = entryCategory(entry);
   const variantTag = entryVariantTag(entry);
   const timeLabel = formatEntryTime(entry.created_at);
-  const stripeColor = category ? getCategoryGradient(category).from : "hsl(var(--muted-foreground))";
+  const stripeColor = category
+    ? getCategoryGradient(category).from
+    : "hsl(var(--muted-foreground))";
   // „Koch-Tag" nur am tatsächlichen Koch-Tag; alle Verzehrtage sind „Vorgekocht".
   const rawBatchRole = batchRoleOf(entry);
   const batchRole =
@@ -56,12 +59,16 @@ export function MealEntryRow({
       onClick={onClick}
       className={cn(
         "group relative flex w-full items-center gap-3 overflow-hidden bg-card py-2.5 pl-3 pr-2 text-left transition-colors hover:bg-accent/5",
+        entry.skipped && "opacity-50",
         className,
       )}
     >
       <span
         aria-hidden
-        className={cn("absolute inset-y-2 left-0 w-1 rounded-full", batchRole === "leftover" && "opacity-50")}
+        className={cn(
+          "absolute inset-y-2 left-0 w-1 rounded-full",
+          batchRole === "leftover" && "opacity-50",
+        )}
         style={{ backgroundColor: stripeColor }}
       />
       {batchRole !== "none" && (
@@ -70,7 +77,6 @@ export function MealEntryRow({
           className="absolute inset-y-1.5 left-1.5 w-1.5 rounded-l-md border-y border-l border-primary/40"
         />
       )}
-
 
       <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted/40">
         {imageUrl ? (
@@ -95,7 +101,12 @@ export function MealEntryRow({
 
       <span className="min-w-0 flex-1">
         <span className="flex items-center justify-between gap-2">
-          <span className="line-clamp-1 text-sm font-semibold text-foreground">
+          <span
+            className={cn(
+              "line-clamp-1 text-sm font-semibold text-foreground",
+              entry.skipped && "line-through",
+            )}
+          >
             {entryTitle(entry)}
           </span>
           {kcal != null && (
@@ -113,12 +124,15 @@ export function MealEntryRow({
               <span className="truncate text-xs text-muted-foreground">Schnelleintrag</span>
             )
           ) : (
-            amount && (
-              <span className="truncate text-xs text-muted-foreground">{amount}</span>
-            )
+            amount && <span className="truncate text-xs text-muted-foreground">{amount}</span>
           )}
           {variantTag && (
             <span className="truncate text-xs text-muted-foreground">· {variantTag}</span>
+          )}
+          {entry.skipped && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-muted-foreground/30 bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <Ban className="h-3 w-3" /> Ausgelassen
+            </span>
           )}
           {batchRole !== "none" && (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
@@ -138,7 +152,6 @@ export function MealEntryRow({
     </button>
   );
 }
-
 
 /** Zeile am Ende eines Slots: Eintrag hinzufügen, einfügen oder Vorschlag holen. */
 export function SlotAddRow({
@@ -161,9 +174,7 @@ export function SlotAddRow({
         className,
       )}
     >
-      {label && (
-        <span className="w-20 shrink-0 pl-1 text-xs font-medium sm:hidden">{label}</span>
-      )}
+      {label && <span className="w-20 shrink-0 pl-1 text-xs font-medium sm:hidden">{label}</span>}
       <button
         type="button"
         onClick={onAdd}
@@ -193,4 +204,3 @@ export function SlotAddRow({
     </div>
   );
 }
-
