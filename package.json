@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "postbuild": "node scripts/fix-wrangler-compat-date.mjs",
+    "postbuild": "node scripts/fix-wrangler-compat-date.mjs && node scripts/copy-sw-to-output.mjs",
     "build:dev": "vite build --mode development",
     "test": "vitest run",
     "preview": "vite preview",
