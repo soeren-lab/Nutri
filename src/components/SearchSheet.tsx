@@ -3,12 +3,9 @@ import { X, Plus } from "lucide-react";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { Sheet, SheetPortal, SheetOverlay } from "@/components/ui/sheet";
 import { SearchInputWithBeam } from "@/components/SearchInputWithBeam";
-import {
-  useBodyScrollLock,
-  useVisualViewportHeight,
-} from "@/hooks/use-sheet-viewport";
+import { useBodyScrollLock, useVisualViewportHeight } from "@/hooks/use-sheet-viewport";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 import { cn } from "@/lib/utils";
-
 
 export type SearchSheetItem = { id: string };
 
@@ -55,11 +52,6 @@ type Props<T extends SearchSheetItem> = {
   /** Zutaten-Suche: BorderBeam-Effekt am Suchfeld bei Fokus. */
 };
 
-
-
-
-
-
 export function SearchSheet<T extends SearchSheetItem>({
   open,
   onOpenChange,
@@ -84,7 +76,13 @@ export function SearchSheet<T extends SearchSheetItem>({
   const [query, setQuery] = useState("");
   const viewportStyle = useVisualViewportHeight(open);
   useBodyScrollLock(open);
-
+  // Reine Auswahl-Liste, kein Formularzustand zu verlieren – Swipe schließt
+  // direkt, ohne Rückfrage.
+  useSwipePriority(
+    open
+      ? { onSwipeLeft: () => onOpenChange(false), onSwipeRight: () => onOpenChange(false) }
+      : null,
+  );
 
   useEffect(() => {
     if (!open) setQuery("");
@@ -92,11 +90,8 @@ export function SearchSheet<T extends SearchSheetItem>({
 
   const trimmed = query.trim();
   const q = trimmed.toLowerCase();
-  const filtered = q
-    ? items.filter((i) => getSearchText(i).toLowerCase().includes(q))
-    : items;
-  const hasExactMatch =
-    !!q && items.some((i) => getSearchText(i).trim().toLowerCase() === q);
+  const filtered = q ? items.filter((i) => getSearchText(i).toLowerCase().includes(q)) : items;
+  const hasExactMatch = !!q && items.some((i) => getSearchText(i).trim().toLowerCase() === q);
   const showCreateRow = !!onCreate && !!trimmed && !hasExactMatch;
   const showExtras = !!renderQueryExtras && !!trimmed && !hasExactMatch;
 
@@ -126,7 +121,10 @@ export function SearchSheet<T extends SearchSheetItem>({
           // gelayoutet ist – der Nutzer sieht einen leeren Bereich.
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+          <div
+            className="flex items-center gap-2 border-b border-border px-4 py-3"
+            style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
+          >
             <SheetPrimitive.Title className="flex-1 truncate text-base font-semibold">
               {title}
             </SheetPrimitive.Title>
@@ -162,10 +160,7 @@ export function SearchSheet<T extends SearchSheetItem>({
             </div>
           )}
 
-
-          {toolbar && (
-            <div className="border-b border-border px-4 py-2.5">{toolbar}</div>
-          )}
+          {toolbar && <div className="border-b border-border px-4 py-2.5">{toolbar}</div>}
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2">
             {filtered.length === 0 && !showCreateRow && !showExtras && !renderAfterList ? (
@@ -183,9 +178,7 @@ export function SearchSheet<T extends SearchSheetItem>({
                     <SearchSheetRow onClick={handleCreate}>
                       <Plus className="h-4 w-4 shrink-0 text-primary" />
                       <span className="flex-1 truncate text-primary">
-                        {createLabel
-                          ? createLabel(trimmed)
-                          : <>„{trimmed}" erstellen</>}
+                        {createLabel ? createLabel(trimmed) : <>„{trimmed}" erstellen</>}
                       </span>
                     </SearchSheetRow>
                   </li>
@@ -225,21 +218,14 @@ export function SearchSheet<T extends SearchSheetItem>({
                 {renderAfterList?.(trimmed)}
               </ul>
             )}
-
           </div>
 
-
-          {footer && (
-            <div className="border-t border-border bg-background px-4 py-3">
-              {footer}
-            </div>
-          )}
+          {footer && <div className="border-t border-border bg-background px-4 py-3">{footer}</div>}
         </SheetPrimitive.Content>
       </SheetPortal>
     </Sheet>
   );
 }
-
 
 /** Consistent row style for use inside renderItem. */
 export function SearchSheetRow({
@@ -259,9 +245,7 @@ export function SearchSheetRow({
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
-        selected
-          ? "border-primary bg-accent"
-          : "border-transparent hover:bg-accent/60",
+        selected ? "border-primary bg-accent" : "border-transparent hover:bg-accent/60",
         className,
       )}
     >

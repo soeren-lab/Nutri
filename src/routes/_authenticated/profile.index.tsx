@@ -9,6 +9,7 @@ import { useUserAvatar } from "@/hooks/use-user-avatar";
 import { useUserRank } from "@/hooks/use-user-rank";
 import { useUsername } from "@/hooks/use-username";
 import { RANK_ICONS, RANK_IMAGES } from "@/lib/ranks";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 
 type ProfileTab = "goals" | "progress" | "friends" | "admin";
 
@@ -86,9 +87,22 @@ function ProfilePage() {
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
   const active: ProfileTab = tab ?? "goals";
+  const activeIndex = TABS.findIndex(([value]) => value === active);
+  useSwipePriority({
+    onSwipeLeft: () =>
+      void navigate({
+        search: { tab: TABS[Math.min(activeIndex + 1, TABS.length - 1)]![0] },
+        replace: true,
+      }),
+    onSwipeRight: () =>
+      void navigate({
+        search: { tab: TABS[Math.max(activeIndex - 1, 0)]![0] },
+        replace: true,
+      }),
+  });
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
+    <div className="liquid-glass refract-test mx-auto max-w-lg space-y-6">
       <div className="flex items-center justify-between gap-3 py-4">
         <h1 className="text-2xl font-semibold tracking-tight">Profil</h1>
         <ProfileHeaderMeta />

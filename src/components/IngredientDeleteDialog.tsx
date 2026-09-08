@@ -17,6 +17,7 @@ import {
   type IngredientMaster,
 } from "@/lib/ingredients-master";
 import { toast } from "sonner";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 
 /**
  * Löschflow für Stammzutaten (Soft-Delete):
@@ -56,8 +57,10 @@ export function IngredientDeleteDialog({
   const archiveMut = useMutation({
     onMutate: () => {
       const previous = qc.getQueriesData<IngredientMaster[]>({ queryKey: ["ingredients_master"] });
-      qc.setQueriesData({ queryKey: ["ingredients_master"] }, (old: IngredientMaster[] | undefined) =>
-        (old ?? []).map((m) => (m.id === ingredient!.id ? { ...m, archived: true } : m)),
+      qc.setQueriesData(
+        { queryKey: ["ingredients_master"] },
+        (old: IngredientMaster[] | undefined) =>
+          (old ?? []).map((m) => (m.id === ingredient!.id ? { ...m, archived: true } : m)),
       );
       toast.success("Zutat gelöscht");
       onDone?.();
@@ -74,6 +77,12 @@ export function IngredientDeleteDialog({
     },
   });
 
+  useSwipePriority(
+    open
+      ? { onSwipeLeft: () => onOpenChange(false), onSwipeRight: () => onOpenChange(false) }
+      : null,
+  );
+
   if (!ingredient) return null;
 
   return (
@@ -82,8 +91,7 @@ export function IngredientDeleteDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Zutat wirklich löschen?</AlertDialogTitle>
           <AlertDialogDescription>
-            „{ingredient.name}" wird aus deiner Zutatenliste entfernt
-            (archiviert).
+            „{ingredient.name}" wird aus deiner Zutatenliste entfernt (archiviert).
             {usage === null
               ? " Verwendung wird geprüft…"
               : usage > 0
@@ -92,9 +100,7 @@ export function IngredientDeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={archiveMut.isPending}>
-            Abbrechen
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={archiveMut.isPending}>Abbrechen</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
@@ -103,9 +109,7 @@ export function IngredientDeleteDialog({
             disabled={archiveMut.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {archiveMut.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
+            {archiveMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Löschen
           </AlertDialogAction>
         </AlertDialogFooter>

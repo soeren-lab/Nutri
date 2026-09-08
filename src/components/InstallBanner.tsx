@@ -88,6 +88,7 @@ export function InstallBanner() {
       role="dialog"
       aria-label="App installieren"
       className="fixed inset-x-0 top-0 z-50 mx-auto flex max-w-xl items-center gap-3 border-b border-border bg-card/95 px-4 py-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/80 sm:inset-x-4 sm:top-3 sm:rounded-2xl sm:border"
+      style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Download className="h-5 w-5" />

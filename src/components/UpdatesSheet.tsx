@@ -34,6 +34,7 @@ import {
 import { UserAvatar } from "@/components/UserAvatar";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 
 export function UpdatesSheet({
   open,
@@ -153,14 +154,20 @@ export function UpdatesSheet({
   const total =
     updates.length + recipeUpdates.length + friendRequests.length + acceptedNotes.length;
 
+  useSwipePriority(
+    open
+      ? { onSwipeLeft: () => onOpenChange(false), onSwipeRight: () => onOpenChange(false) }
+      : null,
+  );
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
         <SheetHeader className="border-b border-border p-4 text-left">
           <SheetTitle>Benachrichtigungen</SheetTitle>
           <SheetDescription>
-            Freundschaftsanfragen und aktualisierte Werte für deine importierten Zutaten
-            und Rezepte.
+            Freundschaftsanfragen und aktualisierte Werte für deine importierten Zutaten und
+            Rezepte.
           </SheetDescription>
         </SheetHeader>
 
@@ -185,11 +192,7 @@ export function UpdatesSheet({
                       key={r.requestId}
                       className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
                     >
-                      <UserAvatar
-                        label={r.username}
-                        avatarUrl={r.avatarUrl}
-                        className="h-9 w-9"
-                      />
+                      <UserAvatar label={r.username} avatarUrl={r.avatarUrl} className="h-9 w-9" />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">@{r.username}</div>
                         <div className="text-xs text-muted-foreground">
@@ -237,11 +240,7 @@ export function UpdatesSheet({
                       key={n.requestId}
                       className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
                     >
-                      <UserAvatar
-                        label={n.username}
-                        avatarUrl={n.avatarUrl}
-                        className="h-9 w-9"
-                      />
+                      <UserAvatar label={n.username} avatarUrl={n.avatarUrl} className="h-9 w-9" />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">@{n.username}</div>
                         <div className="text-xs text-muted-foreground">
@@ -264,14 +263,8 @@ export function UpdatesSheet({
               {updates.length > 0 && (
                 <div className="space-y-3">
                   <div className="text-sm font-semibold">Zutaten ({updates.length})</div>
-                  <Button
-                    className="w-full"
-                    onClick={() => applyAllMut.mutate()}
-                    disabled={busy}
-                  >
-                    {applyAllMut.isPending && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
+                  <Button className="w-full" onClick={() => applyAllMut.mutate()} disabled={busy}>
+                    {applyAllMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Alle übernehmen ({updates.length})
                   </Button>
 
@@ -320,9 +313,7 @@ export function UpdatesSheet({
 
               {recipeUpdates.length > 0 && (
                 <div className="space-y-3">
-                  <div className="text-sm font-semibold">
-                    Rezepte ({recipeUpdates.length})
-                  </div>
+                  <div className="text-sm font-semibold">Rezepte ({recipeUpdates.length})</div>
                   {recipeUpdates.map((u) => (
                     <div
                       key={u.copy.id}
@@ -339,8 +330,8 @@ export function UpdatesSheet({
 
                       <NutritionDiff fields={diffRecipe(u.copy, u.source)} />
                       <p className="text-xs text-muted-foreground">
-                        Beim Übernehmen werden Zutaten, Komponenten und Schritte deiner
-                        Kopie durch die neue Version ersetzt.
+                        Beim Übernehmen werden Zutaten, Komponenten und Schritte deiner Kopie durch
+                        die neue Version ersetzt.
                       </p>
 
                       <div className="flex gap-2">

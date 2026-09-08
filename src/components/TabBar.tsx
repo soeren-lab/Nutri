@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpen, CalendarDays, Carrot, Library, type LucideIcon } from "lucide-react";
+import { BookOpen, CalendarDays, Carrot, Compass, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type TabItem = {
@@ -10,11 +10,10 @@ export type TabItem = {
 
 export const TABS: TabItem[] = [
   { label: "Rezepte", icon: BookOpen, to: "/recipes" },
-  { label: "Kochbücher", icon: Library, to: "/cookbooks" },
+  { label: "Entdecken", icon: Compass, to: "/discover" },
   { label: "Zutaten", icon: Carrot, to: "/ingredients" },
   { label: "Planer", icon: CalendarDays, to: "/planner" },
 ];
-
 
 export function TabBar() {
   return (
@@ -35,7 +34,6 @@ export function TabBar() {
                 className:
                   "flex flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-medium bg-gradient-to-br from-primary/10 to-accent/10 text-primary",
               }}
-
             >
               <tab.icon className="h-5 w-5" />
               <span className="leading-none">{tab.label}</span>

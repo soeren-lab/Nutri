@@ -184,9 +184,13 @@
 .glass {
   --background: hsl(258 32% 6%);
   --foreground: hsl(258 30% 96%);
-  --card: hsl(258 25% 20% / 0.5);
+  --card: hsl(258 25% 22% / 0.38);
   --card-foreground: hsl(258 30% 96%);
-  --popover: hsl(258 25% 20% / 0.6);
+  /* Blickdicht statt glasig: --popover ist Basis für ALLE Dropdown-/Select-/
+     Popover-/Context-Menu-/Command-/Dialog-Flächen, die über komplexem Inhalt
+     schweben – backdrop-filter greift auf manchen Android-WebViews nicht
+     zuverlässig, dann wäre Transluzenz allein komplett durchsichtig. */
+  --popover: hsl(258 24% 12%);
   --popover-foreground: hsl(258 30% 96%);
   --primary: hsl(262 92% 72%);
   --primary-foreground: hsl(258 40% 10%);
@@ -216,34 +220,285 @@
   --glow-primary: hsl(262 92% 72% / 0.35);
   --glow-primary-strong: hsl(262 92% 72% / 0.6);
 
-  /* Glass-spezifisch: Blur-Stärke + Ambient-Glow-Blobs (siehe GlassAmbientGlow.tsx) */
+  /* Glass-spezifisch: Blur-Stärke + Ambient-Glow-Wash (body-Hintergrund unten) */
   --glass-blur: 20px;
-  --glow-1: hsl(280 70% 55% / 0.5);
-  --glow-2: hsl(255 65% 50% / 0.4);
-  --glow-3: hsl(320 60% 55% / 0.35);
+  --glow-1: hsl(280 75% 58% / 0.65);
+  --glow-2: hsl(255 70% 55% / 0.55);
+  --glow-3: hsl(320 65% 58% / 0.5);
+
+  /* Blickdichte Variante von --card, für sticky/fixierte Flächen, unter denen
+     Inhalt wegscrollt (z.B. der eingeklappte Planer-Header) – dort reicht
+     Transluzenz+Blur allein nicht, weil ständig neuer Kontrast durchscheint. */
+  --card-solid: hsl(258 25% 16%);
 
   color-scheme: dark;
 }
 
 /*
- * Trübglas-Effekt: bestehende Token-Klassen bekommen unter .glass zusätzlich
- * einen Blur, ohne dass Komponenten einzeln angefasst werden müssen. Bewusst
- * NICHT in @layer gewrapped, damit die background-color-Regel für
- * Dialog/Sheet/AlertDialog (die "bg-background" statt "bg-card" nutzen,
- * für den Glass-Look aber transparent sein müssen) die Tailwind-Utility
- * zuverlässig schlägt – unlayered CSS gewinnt immer gegen @layer utilities.
+ * Experimental Glass-Look, helle Variante – gleiche Glass-Mechanik (Blur,
+ * transluzente Karten, Ambient-Glow) wie .glass, aber auf lavendel-weißem
+ * statt dunklem Grund. Bewusst NICHT Teil der .glass-basierten dark:-Variante
+ * (siehe @custom-variant oben), damit dark:-Utilities hier NICHT greifen.
+ */
+.glass-light {
+  --background: hsl(258 40% 95%);
+  --foreground: hsl(258 25% 16%);
+  --card: hsl(270 45% 97% / 0.45);
+  --card-foreground: hsl(258 25% 16%);
+  /* Blickdicht statt glasig: --popover ist Basis für ALLE Dropdown-/Select-/
+     Popover-/Context-Menu-/Command-/Dialog-Flächen, die über komplexem Inhalt
+     schweben – backdrop-filter greift auf manchen Android-WebViews nicht
+     zuverlässig, dann wäre Transluzenz allein komplett durchsichtig. */
+  --popover: hsl(270 42% 98%);
+  --popover-foreground: hsl(258 25% 16%);
+  --primary: hsl(262 83% 56%);
+  --primary-foreground: hsl(258 40% 99%);
+  --primary-gradient: linear-gradient(135deg, hsl(262 83% 56%), hsl(320 65% 58%));
+  --secondary: hsl(258 30% 94% / 0.6);
+  --secondary-foreground: hsl(258 20% 22%);
+  --muted: hsl(258 24% 94% / 0.6);
+  --muted-foreground: hsl(256 12% 40%);
+  --accent: hsl(320 65% 58%);
+  --accent-foreground: hsl(258 40% 99%);
+  --destructive: hsl(0 72% 48%);
+  --destructive-foreground: hsl(0 40% 99%);
+  --border: hsl(258 20% 70% / 0.25);
+  --input: hsl(258 18% 80% / 0.4);
+  --ring: hsl(262 83% 56%);
+
+  --status-sat: 72%;
+  --status-light: 38%;
+  --status-warn: hsl(38 92% 42%);
+  --status-danger: hsl(2 78% 46%);
+
+  --beam-from: #7c3aed;
+  --beam-to: #d946ef;
+  --beam-glow: 0 0 14px -4px hsl(262 83% 56% / 0.35);
+
+  --shadow-card:
+    0 1px 2px hsl(258 30% 20% / 0.06),
+    0 12px 30px -16px hsl(258 40% 30% / 0.2);
+  --glow-primary: hsl(262 83% 56% / 0.22);
+  --glow-primary-strong: hsl(262 83% 56% / 0.35);
+
+  --glass-blur: 20px;
+  --glow-1: hsl(280 75% 68% / 0.45);
+  --glow-2: hsl(255 70% 68% / 0.38);
+  --glow-3: hsl(320 70% 70% / 0.32);
+
+  /* Blickdichte Variante von --card, für sticky/fixierte Flächen, unter denen
+     Inhalt wegscrollt (z.B. der eingeklappte Planer-Header) – dort reicht
+     Transluzenz+Blur allein nicht, weil ständig neuer Kontrast durchscheint. */
+  --card-solid: hsl(270 40% 96%);
+
+  color-scheme: light;
+}
+
+/*
+ * Ambient-Farbwash: gerendert über ein echtes position:fixed-Element
+ * (GlassAmbientWash.tsx), NICHT über background-attachment:fixed – das wird
+ * auf mobilen WebViews (Android/Capacitor) oft ignoriert oder wie "scroll"
+ * behandelt, wodurch der Wash beim Scrollen aus dem Bild wandert. Ein
+ * position:fixed-Element bleibt zuverlässig am Viewport verankert und deckt
+ * dadurch die GANZE Fläche ab, egal wie weit man auf langen Listen
+ * (z.B. Planer, Zutaten) herunterscrollt.
+ */
+
+/*
+ * Trübglas-Effekt nur noch für Karten (bg-card): bewusst NICHT in @layer
+ * gewrapped, damit es zuverlässig gegen Tailwind-Utilities gewinnt.
+ * bg-popover bekommt bewusst KEINEN Blur mehr – --popover ist jetzt blickdicht
+ * (siehe .glass/.glass-light oben), Blur hinter einer deckenden Fläche wäre
+ * unsichtbar und kostet nur Leistung.
  */
 .glass .bg-card,
-.glass .bg-popover {
+.glass-light .bg-card {
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
+/*
+ * Liquid Glass, Strategie B: ersetzt Transluzenz+Blur durch einen deckenden
+ * Verlauf + dünnen Lichtsaum oben ("Sheen") – funktioniert unabhängig von
+ * backdrop-filter-Unterstützung. Aktiv auf den fünf Haupttab-Übersichten
+ * (".liquid-glass", siehe route.tsx LIQUID_GLASS_ROUTES), NICHT auf Detail-/
+ * Bearbeiten-/Einstellungs-Unterseiten.
+ */
+/*
+ * Rundung identisch zur Zutaten-Überschrift (GlassScreenHeader): rounded-3xl
+ * (1.5rem). Rand/Schatten bewusst NICHT übernommen – eigene, hellere/dunklere
+ * Werte statt border-primary/20 + Glow-Schatten der Überschrift.
+ * ".slot-add-row" bewusst NICHT hier drin – die "+ Eintrag hinzufügen"-Zeile
+ * bleibt überall (auch im Glass-Modus) die schlichte gestrichelte Box ohne
+ * eigenen Hintergrund.
+ */
+.glass .liquid-glass .bg-card,
+.glass-light .liquid-glass .bg-card {
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.glass-light .liquid-glass .bg-card {
+  background: linear-gradient(160deg, #ffffff 0%, #f4effc 60%, #ede5fa 100%);
+  /* Leicht lavendelfarben statt neutral weiß – liest so eher als "fängt
+     Umgebungslicht ein" statt als generischer weißer Rand. */
+  border: 1px solid hsl(280 60% 88% / 0.9);
+  box-shadow: 0 10px 30px -14px rgba(80, 40, 130, 0.28);
+}
+.glass .liquid-glass .bg-card {
+  background: linear-gradient(160deg, #241a34 0%, #1c1428 60%, #17101f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.55);
+}
+.glass .liquid-glass .bg-card::before,
+.glass-light .liquid-glass .bg-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+/*
+ * Light: der Lichtsaum ist das Element, das bei hellem Glas am ehesten
+ * "echt gläsern" statt "durchsichtig" liest – deutlich breiter/heller als im
+ * Dunkelmodus, mit leichtem Glow statt einer reinen 1px-Linie, weil hier der
+ * Hintergrund (bewusst) NICHT stark genug ist, um allein für den Look zu
+ * sorgen (siehe .wash-boost unten – konzentrierte statt flächige Farbe).
+ */
+.glass-light .liquid-glass .bg-card::before {
+  left: 5%;
+  right: 5%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4) 15%,
+    #ffffff 50%,
+    rgba(255, 255, 255, 0.4) 85%,
+    transparent
+  );
+  box-shadow: 0 0 12px 1px rgba(255, 255, 255, 0.55);
+}
+.glass .liquid-glass .bg-card::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+}
+/*
+ * Gegenstück zum Lichtsaum: echtes Glas empfängt Licht von oben und wird
+ * nach unten hin dunkler/tiefer – ohne das wirkt die Karte flach. Nur Light,
+ * da Dark durch den kräftigeren Hintergrund bereits genug Tiefe hat.
+ */
+.glass-light .liquid-glass .bg-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 45%;
+  background: linear-gradient(to top, hsl(268 55% 30% / 0.12), transparent);
+  pointer-events: none;
+}
+
+/*
+ * ".meal-entry-card" (MealEntryRow): nicht nur dieselbe Rundung wie die
+ * Zutaten-Überschrift, sondern auch dieselbe Größe/Proportion – großzügiges
+ * Innenpadding wie GlassScreenHeader ("p-4"), statt der engen Listen-Zeile.
+ * Eigene Klasse statt ".bg-card" allgemein, damit PlannerHero (eigenes,
+ * internes Padding) davon unberührt bleibt.
+ */
+.glass .liquid-glass .meal-entry-card,
+.glass-light .liquid-glass .meal-entry-card {
+  padding: 1rem;
+}
+
+/*
+ * Geräte-Test: echte Refraktion via SVG-Filter (feTurbulence +
+ * feDisplacementMap, zentral definiert in route.tsx) statt des simulierten
+ * Verlaufs oben. @supports prüft, ob der Browser
+ * "backdrop-filter: url(...)" überhaupt als gültig akzeptiert – wenn nicht,
+ * bleibt automatisch die Verlaufs-Variante von oben aktiv (kein kaputtes
+ * Rendering). Ob es zusätzlich auf dem Gerät GUT aussieht (nicht nur
+ * unterstützt wird), muss der reale Test auf dem Handy zeigen.
+ */
+@supports (backdrop-filter: url(#liquidRefract)) {
+  .glass .liquid-glass.refract-test .bg-card,
+  .glass-light .liquid-glass.refract-test .bg-card {
+    backdrop-filter: url(#liquidRefract) blur(2px) saturate(160%);
+    -webkit-backdrop-filter: blur(2px) saturate(160%);
+  }
+  .glass-light .liquid-glass.refract-test .bg-card {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.65);
+  }
+  .glass .liquid-glass.refract-test .bg-card {
+    background: rgba(20, 30, 40, 0.18);
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+}
+
+/*
+ * Basis-Layout der drei Wash-Blobs (siehe GlassAmbientWash.tsx): jeder Blob
+ * deckt den ganzen Viewport ab und trägt sein eigenes Radial-Gradient als
+ * Inline-Style. Ohne ".wash-boost" (siehe unten) bleibt das exakt so
+ * statisch/pixelgleich wie der frühere Einzel-Div mit drei Gradient-Layern.
+ */
+.ambient-wash__blob {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * Wash-Boost (siehe route.tsx LIQUID_GLASS_ROUTES/".wash-boost"): der normale
+ * Ambient-Wash ist zu blass, um für die Refraktion (oben) etwas Farbiges zum
+ * Verbiegen zu geben. Dark-Glass bekommt kräftigere Glow-Farben (bewährt).
+ *
+ * Light-Glass NICHT flächig über Alpha/Hintergrund verstärkt (wirkte dadurch
+ * zu dunkel/muddy) – stattdessen wenige, dafür kräftigere Farbkleckse in den
+ * Ecken (kleinere Ellipsen über --wash-N-w/h/x/y, siehe GlassAmbientWash.tsx),
+ * der Großteil der Fläche bleibt hell. Der Lichtsaum auf den Karten (oben)
+ * übernimmt hier den Hauptteil des "gläsernen" Eindrucks.
+ */
+.glass-light .wash-boost {
+  --background: hsl(258 42% 96%);
+  --glow-1: hsl(280 82% 62% / 0.62);
+  /* Warmes Gold statt Violett/Blau – etwas Abwechslung neben den zwei
+     kühlen Tönen, wirkt "sonniger" (angelehnt an die Wasser-Foto-Referenz). */
+  --glow-2: hsl(38 88% 62% / 0.5);
+  --glow-3: hsl(320 78% 62% / 0.48);
+  --wash-1-w: 55%;
+  --wash-1-h: 46%;
+  --wash-1-x: 6%;
+  --wash-1-y: -6%;
+  --wash-2-w: 50%;
+  --wash-2-h: 44%;
+  --wash-2-x: 104%;
+  --wash-2-y: 38%;
+  --wash-3-w: 55%;
+  --wash-3-h: 48%;
+  --wash-3-x: 4%;
+  --wash-3-y: 104%;
+}
+.glass .wash-boost {
+  --glow-1: hsl(280 85% 55% / 0.85);
+  --glow-2: hsl(255 80% 52% / 0.75);
+  --glow-3: hsl(320 75% 55% / 0.7);
+}
+
+/*
+ * Dialog/Sheet/AlertDialog nutzen "bg-background" statt "bg-popover" –
+ * unter .glass/.glass-light setzen wir sie stattdessen explizit auf die
+ * (blickdichte) --popover-Fläche, damit sie sich optisch von der Seite
+ * dahinter abheben statt mit ihr zu verschmelzen.
+ */
 .glass [role="dialog"],
-.glass [role="alertdialog"] {
+.glass [role="alertdialog"],
+.glass-light [role="dialog"],
+.glass-light [role="alertdialog"] {
   background-color: var(--popover);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 @layer base {

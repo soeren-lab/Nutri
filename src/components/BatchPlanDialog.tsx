@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 import {
   batchFormSize,
   fixedBatchServings,
@@ -44,7 +45,6 @@ export function BatchPlanDialog({
   );
   const [cookDate, setCookDate] = useState(entry.batch_cook_date ?? entry.date);
 
-
   const recipe = entry.recipe;
   const fixed = isFixedBatch(recipe);
   const formSize = batchFormSize(recipe);
@@ -67,6 +67,8 @@ export function BatchPlanDialog({
   const eatingDates = [entry.date, ...selected].sort();
   const followUps = eatingDates.filter((d) => d > cookDate).length;
 
+  useSwipePriority({ onSwipeLeft: onClose, onSwipeRight: onClose });
+
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-sm space-y-4">
@@ -75,7 +77,6 @@ export function BatchPlanDialog({
             <CookingPot className="h-4 w-4 text-primary" />{" "}
             {editing ? "Vorkochen bearbeiten" : "Für mehrere Tage vorkochen"}
           </DialogTitle>
-
         </DialogHeader>
 
         <p className="text-xs text-muted-foreground">
@@ -161,7 +162,6 @@ export function BatchPlanDialog({
             </Button>
           )}
         </div>
-
       </DialogContent>
     </Dialog>
   );

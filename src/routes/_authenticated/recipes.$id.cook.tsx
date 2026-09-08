@@ -10,15 +10,15 @@ export const Route = createFileRoute("/_authenticated/recipes/$id/cook")({
   },
   component: CookPage,
   pendingComponent: () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       <Skeleton className="h-32 w-64" />
     </div>
   ),
   head: () => ({
-    meta: [
-      { title: "Kochmodus" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Kochmodus" }, { name: "robots", content: "noindex" }],
   }),
 });
 

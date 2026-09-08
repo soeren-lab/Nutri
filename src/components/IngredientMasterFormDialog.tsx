@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageIcon, Loader2, Upload, X } from "lucide-react";
 import {
@@ -9,6 +9,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -35,7 +46,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BrandSelect } from "@/components/BrandSelect";
 import { INGREDIENT_CATEGORIES, DEFAULT_INGREDIENT_CATEGORY } from "@/lib/categories";
-
 
 type NumField = number | "";
 
@@ -74,6 +84,8 @@ export function IngredientMasterFormDialog({
   const { data: signedUrl } = useSignedIngredientImage(imagePath);
   const allMasters = useIngredientsMaster(true);
   const subcategoryOptions = collectSubcategories(allMasters);
+
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -148,6 +160,44 @@ export function IngredientMasterFormDialog({
     };
   }
 
+  // Ausgangszustand beim Öffnen – für den Ungespeichert-Check unabhängig
+  // vom aktuellen Formularstand.
+  const initialPayload = useMemo(() => {
+    if (!open) return null;
+    return {
+      name: (existing?.name ?? defaultName ?? "").trim(),
+      brand_id: existing?.brand_id ?? null,
+      image_url: existing?.image_url ?? null,
+      unit: existing ? normalizeUnit(existing.unit) : "g",
+      category: existing?.category ?? DEFAULT_INGREDIENT_CATEGORY,
+      subcategory: (existing?.subcategory ?? "").trim() || null,
+      calories: existing?.calories ?? null,
+      protein_g: existing?.protein_g ?? null,
+      carbs_g: existing?.carbs_g ?? null,
+      fat_g: existing?.fat_g ?? null,
+      fiber_g: existing?.fiber_g ?? null,
+      sugar_g: existing?.sugar_g ?? null,
+      density_g_per_ml: existing?.density_g_per_ml ?? null,
+    };
+  }, [open, existing, defaultName]);
+
+  const isDirty =
+    open &&
+    initialPayload != null &&
+    JSON.stringify(buildPayload()) !== JSON.stringify(initialPayload);
+
+  function attemptClose() {
+    if (isDirty) setConfirmDiscardOpen(true);
+    else onOpenChange(false);
+  }
+
+  function handleOpenChange(next: boolean) {
+    if (!next) attemptClose();
+    else onOpenChange(next);
+  }
+
+  useSwipePriority(open ? { onSwipeLeft: attemptClose, onSwipeRight: attemptClose } : null);
+
   const mutation = useMutation({
     onMutate: (id: string) => {
       // ID wird vorab erzeugt statt von der DB vergeben, damit die Zutat auch
@@ -196,7 +246,7 @@ export function IngredientMasterFormDialog({
   const previewUrl = localPreview ?? signedUrl ?? null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="flex max-h-[90dvh] max-w-md flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>{existing ? "Zutat bearbeiten" : "Neue Zutat"}</DialogTitle>
@@ -318,8 +368,6 @@ export function IngredientMasterFormDialog({
             </datalist>
           </div>
 
-
-
           <div className="space-y-1.5">
             <Label>Basis-Einheit</Label>
             <Select value={unit} onValueChange={setUnit}>
@@ -356,9 +404,7 @@ export function IngredientMasterFormDialog({
                   step="any"
                   placeholder="0"
                   value={val}
-                  onChange={(e) =>
-                    setter(e.target.value === "" ? "" : Number(e.target.value))
-                  }
+                  onChange={(e) => setter(e.target.value === "" ? "" : Number(e.target.value))}
                   className="h-9 text-sm"
                 />
               </div>
@@ -385,7 +431,7 @@ export function IngredientMasterFormDialog({
           )}
 
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="ghost" onClick={attemptClose}>
               Abbrechen
             </Button>
             <Button type="submit" disabled={mutation.isPending || uploading}>
@@ -395,6 +441,29 @@ export function IngredientMasterFormDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <AlertDialog open={confirmDiscardOpen} onOpenChange={setConfirmDiscardOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Änderungen verwerfen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Du hast ungespeicherte Änderungen an dieser Zutat. Wenn du jetzt schließt, gehen sie
+              verloren.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Weiter bearbeiten</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmDiscardOpen(false);
+                onOpenChange(false);
+              }}
+            >
+              Verwerfen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

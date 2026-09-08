@@ -17,24 +17,22 @@ function startsInsideHorizontalScroller(target: EventTarget | null): boolean {
 }
 
 /**
- * Erkennt horizontale Swipe-Gesten auf dem übergebenen Container und ruft
- * onSwipeLeft/onSwipeRight auf. Ignoriert Gesten, die auf einem horizontal
- * scrollbaren Element beginnen (z.B. Kategorie-Chips), damit normales
- * Scrollen dort nicht mit der Navigation kollidiert.
+ * Erkennt horizontale Swipe-Gesten app-weit (auf window, nicht nur einem
+ * Container) und ruft onSwipeLeft/onSwipeRight auf. Läuft auf window statt
+ * einem Ref, damit auch Portal-Inhalte (Dialoge, Sheets – rendern außerhalb
+ * des normalen Baums an document.body) Gesten empfangen. Ignoriert Gesten,
+ * die auf einem horizontal scrollbaren Element beginnen (z.B.
+ * Kategorie-Chips), damit normales Scrollen dort nicht kollidiert.
  */
-export function useSwipeNavigation<T extends HTMLElement>(
+export function useSwipeNavigation(
   onSwipeLeft: (() => void) | null,
   onSwipeRight: (() => void) | null,
 ) {
-  const ref = useRef<T>(null);
   const start = useRef<{ x: number; y: number; t: number; ignore: boolean } | null>(null);
   const handlers = useRef({ onSwipeLeft, onSwipeRight });
   handlers.current = { onSwipeLeft, onSwipeRight };
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
     function onTouchStart(e: TouchEvent) {
       const touch = e.touches[0];
       if (!touch) return;
@@ -64,13 +62,11 @@ export function useSwipeNavigation<T extends HTMLElement>(
       else handlers.current.onSwipeRight?.();
     }
 
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
     return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
     };
   }, []);
-
-  return ref;
 }

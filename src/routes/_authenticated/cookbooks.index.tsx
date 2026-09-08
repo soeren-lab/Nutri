@@ -1,13 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
 import { cookbooksQuery } from "@/lib/cookbooks";
-import { CookbookCard } from "@/components/CookbookCard";
-import { EmptyState } from "@/components/EmptyState";
+import { CookbooksTab } from "@/components/CookbooksTab";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { GlassScreenHeader } from "@/components/GlassScreenHeader";
 
+/**
+ * Eigenständige Kochbücher-Seite – nicht mehr in der Bottom-Nav (Kochbücher
+ * lebt jetzt als Unter-Tab unter Rezepte), bleibt aber für Deep-Links und
+ * "Zurück"-Navigation aus Kochbuch-Detail/-Formular erreichbar.
+ */
 export const Route = createFileRoute("/_authenticated/cookbooks/")({
   loader: ({ context }) => {
     context.queryClient.ensureQueryData(cookbooksQuery());
@@ -26,41 +27,10 @@ export const Route = createFileRoute("/_authenticated/cookbooks/")({
 });
 
 function CookbooksPage() {
-  const { data: cookbooks } = useSuspenseQuery(cookbooksQuery());
-
   return (
     <div className="space-y-6">
-      <GlassScreenHeader
-        title="Kochbücher"
-        subtitle={`${cookbooks.length} Kochbuch${cookbooks.length === 1 ? "" : "ücher"} in deiner Sammlung`}
-        action={
-          <Button asChild size="sm" className="gap-1.5">
-            <Link to="/cookbooks/new">
-              <Plus className="h-4 w-4" /> Kochbuch
-            </Link>
-          </Button>
-        }
-      />
-
-      {cookbooks.length === 0 ? (
-        <EmptyState
-          title="Noch keine Kochbücher"
-          description="Sammle deine Lieblingsrezepte in Kochbüchern und teile sie mit anderen."
-          action={
-            <Button asChild>
-              <Link to="/cookbooks/new">
-                <Plus className="mr-2 h-4 w-4" /> Kochbuch erstellen
-              </Link>
-            </Button>
-          }
-        />
-      ) : (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-          {cookbooks.map((c) => (
-            <CookbookCard key={c.id} cookbook={c} />
-          ))}
-        </div>
-      )}
+      <GlassScreenHeader title="Kochbücher" />
+      <CookbooksTab />
     </div>
   );
 }

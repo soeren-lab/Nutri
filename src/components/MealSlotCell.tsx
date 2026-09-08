@@ -58,7 +58,7 @@ export function MealEntryRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "group relative flex w-full items-center gap-3 overflow-hidden bg-card py-2.5 pl-3 pr-2 text-left transition-colors hover:bg-accent/5",
+        "meal-entry-card group relative flex w-full items-center gap-3 overflow-hidden rounded-xl bg-card py-2.5 pl-3 pr-2 text-left transition-colors hover:bg-accent/5",
         entry.skipped && "opacity-50",
         className,
       )}

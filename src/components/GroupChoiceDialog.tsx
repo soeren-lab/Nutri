@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { FlexibleIngredientPicker } from "@/components/FlexibleIngredientPicker";
 import { useIngredientsMaster } from "@/hooks/use-ingredients-master";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 import {
   lastGroupChoice,
   mastersInGroup,
@@ -51,11 +52,12 @@ export function GroupChoiceDialog({
     return out;
   });
 
-
   const complete = useMemo(
     () => pending.every((p) => !!choices[p.ingredient.id]),
     [pending, choices],
   );
+
+  useSwipePriority({ onSwipeLeft: onClose, onSwipeRight: onClose });
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>

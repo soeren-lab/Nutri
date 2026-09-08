@@ -40,11 +40,20 @@ export function applyTheme(pref: ThemePreference, animate = false) {
   if (pref !== "system") root.classList.add(pref);
 }
 
+/** Farbvariante des experimentellen Glass-Looks. */
+export type GlassVariant = "dark" | "light";
+
+export function isGlassVariant(value: unknown): value is GlassVariant {
+  return value === "dark" || value === "light";
+}
+
 /**
- * Schaltet den experimentellen Glass-Look app-weit um (unabhängig von
- * Hell/Dunkel – Glass ist immer dunkel).
+ * Schaltet den experimentellen Glass-Look app-weit um, in der gewählten
+ * Variante (unabhängig von der normalen Hell/Dunkel-Einstellung).
  */
-export function applyGlassMode(enabled: boolean) {
+export function applyGlassMode(enabled: boolean, variant: GlassVariant = "dark") {
   if (typeof document === "undefined") return;
-  document.documentElement.classList.toggle("glass", enabled);
+  const root = document.documentElement;
+  root.classList.toggle("glass", enabled && variant === "dark");
+  root.classList.toggle("glass-light", enabled && variant === "light");
 }

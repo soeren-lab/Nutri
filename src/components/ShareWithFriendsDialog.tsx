@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 import {
   myFriendsQuery,
   setShares,
@@ -69,12 +70,16 @@ export function ShareWithFriendsDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
+  useSwipePriority(
+    open
+      ? { onSwipeLeft: () => onOpenChange(false), onSwipeRight: () => onOpenChange(false) }
+      : null,
+  );
+
   const friends = friendsQ.data ?? [];
 
   function toggle(id: string) {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   return (
@@ -83,8 +88,8 @@ export function ShareWithFriendsDialog({
         <DialogHeader>
           <DialogTitle>Mit Freund teilen</DialogTitle>
           <DialogDescription>
-            „{contentName}" nur für ausgewählte Freunde sichtbar machen – nicht
-            öffentlich in der Community.
+            „{contentName}" nur für ausgewählte Freunde sichtbar machen – nicht öffentlich in der
+            Community.
           </DialogDescription>
         </DialogHeader>
 
@@ -110,9 +115,7 @@ export function ShareWithFriendsDialog({
                   avatarUrl={f.avatarUrl}
                   className="h-8 w-8 text-xs"
                 />
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                  @{f.username}
-                </span>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">@{f.username}</span>
               </label>
             ))}
           </div>
@@ -122,10 +125,7 @@ export function ShareWithFriendsDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Abbrechen
           </Button>
-          <Button
-            onClick={() => save.mutate()}
-            disabled={save.isPending || friends.length === 0}
-          >
+          <Button onClick={() => save.mutate()} disabled={save.isPending || friends.length === 0}>
             {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Speichern"}
           </Button>
         </DialogFooter>

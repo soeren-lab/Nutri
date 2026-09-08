@@ -79,11 +79,17 @@ export function PlannerHero({
   return (
     <div
       className={cn(
-        "relative overflow-hidden border border-primary/20 bg-card transition-all duration-300 ease-out",
+        "relative overflow-hidden border border-primary/20 transition-all duration-300 ease-out",
+        !compact && "bg-card",
         compact
           ? "rounded-2xl shadow-[0_4px_24px_-8px_var(--glow-primary)]"
           : "rounded-3xl shadow-[0_8px_40px_-12px_var(--glow-primary)]",
       )}
+      // Eingeklappt bleibt diese Karte sticky, während der Rest der Seite
+      // dahinter wegscrollt – reine Transluzenz+Blur (wie bei "bg-card")
+      // reicht dann nicht, weil ständig neuer Kontrast durchscheint. Deshalb
+      // hier blickdicht statt glasig, sobald compact aktiv ist.
+      style={compact ? { backgroundColor: "var(--card-solid, var(--card))" } : undefined}
     >
       {/* Weicher Verlauf + Glow im Hintergrund */}
       <div
@@ -120,9 +126,7 @@ export function PlannerHero({
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div className="min-w-0 text-center">
-            <p className="truncate text-sm font-semibold">
-              Woche vom {formatWeekRange(weekStart)}
-            </p>
+            <p className="truncate text-sm font-semibold">Woche vom {formatWeekRange(weekStart)}</p>
             <button
               type="button"
               onClick={onToday}
@@ -186,9 +190,7 @@ export function PlannerHero({
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
                 {activeTargetKcal > 0 && (
-                  <CompactRing
-                    ratio={Math.max(0, Math.min(1, activeKcal / activeTargetKcal))}
-                  />
+                  <CompactRing ratio={Math.max(0, Math.min(1, activeKcal / activeTargetKcal))} />
                 )}
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold leading-tight">
@@ -295,15 +297,7 @@ export function PlannerHero({
 }
 
 /** Großer Ring mit Lila→Indigo-Verlauf. */
-function GradientRing({
-  value,
-  target,
-  size,
-}: {
-  value: number;
-  target: number;
-  size: number;
-}) {
+function GradientRing({ value, target, size }: { value: number; target: number; size: number }) {
   const stroke = 10;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -343,9 +337,7 @@ function GradientRing({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-lg font-bold tabular-nums leading-none">{value}</span>
-        <span className="text-[10px] text-muted-foreground tabular-nums">
-          / {target} kcal
-        </span>
+        <span className="text-[10px] text-muted-foreground tabular-nums">/ {target} kcal</span>
         <span
           className="text-[10px] font-semibold tabular-nums"
           style={{

@@ -1,13 +1,10 @@
 import type { ReactNode } from "react";
 
 /**
- * Einfacher Container für eine komplette Meal-Slot-Gruppe (alle Einträge zusammen).
- * Kein animierter Rahmen mehr – nur die interne Trennlinie zwischen den Zeilen.
+ * Reiner Abstands-Wrapper für mehrere Einträge im selben Meal-Slot – kein
+ * eigener Hintergrund/Rahmen mehr, damit nur die einzelne Eintrags-Karte
+ * (MealEntryRow) als Glass-Karte sichtbar ist.
  */
 export function MealSlotBorder({ children }: { children: ReactNode }) {
-  return (
-    <div className="w-full divide-y divide-border/60 overflow-hidden rounded-xl bg-card p-1">
-      {children}
-    </div>
-  );
+  return <div className="w-full space-y-1.5">{children}</div>;
 }

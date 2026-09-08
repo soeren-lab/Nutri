@@ -1325,6 +1325,7 @@ export type Database = {
           avatar_url: string | null;
           created_at: string;
           experimental_glass_ui: boolean;
+          experimental_glass_variant: string;
           goal: string;
           goal_rate: string;
           height_cm: number | null;
@@ -1353,6 +1354,7 @@ export type Database = {
           avatar_url?: string | null;
           created_at?: string;
           experimental_glass_ui?: boolean;
+          experimental_glass_variant?: string;
           goal?: string;
           goal_rate?: string;
           height_cm?: number | null;
@@ -1381,6 +1383,7 @@ export type Database = {
           avatar_url?: string | null;
           created_at?: string;
           experimental_glass_ui?: boolean;
+          experimental_glass_variant?: string;
           goal?: string;
           goal_rate?: string;
           height_cm?: number | null;

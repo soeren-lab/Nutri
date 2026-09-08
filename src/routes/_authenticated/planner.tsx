@@ -61,6 +61,7 @@ import { DailyProgressRing } from "@/components/DailyProgressRing";
 
 import { useMealPlan } from "@/hooks/use-meal-plan";
 import { useTargetsForDate } from "@/hooks/use-targets-for-date";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 import type { NutritionTargets } from "@/lib/nutritionTargets";
 import { recipesQuery } from "@/lib/recipes";
 import { VariantChips } from "@/components/VariantChips";
@@ -481,6 +482,17 @@ function PlannerPage() {
     return found ?? days[0] ?? new Date();
   }, [days, activeDay]);
 
+  function goToDay(delta: number) {
+    const next = addDays(activeDate, delta);
+    const nextWeekStart = startOfWeek(next);
+    if (toISODate(nextWeekStart) !== toISODate(weekStart)) setWeekStart(nextWeekStart);
+    setActiveDay(toISODate(next));
+  }
+  useSwipePriority({
+    onSwipeLeft: () => goToDay(1),
+    onSwipeRight: () => goToDay(-1),
+  });
+
   const activeDayHasEntries = useMemo(
     () => MEAL_SLOTS.some((slot) => getEntries(activeDate, slot).length > 0),
     [activeDate, getEntries],
@@ -495,7 +507,10 @@ function PlannerPage() {
   );
 
   return (
-    <div className="space-y-4">
+    // "liquid-glass"/"refract-test": Liquid-Glass-Look im Experimental-Modus
+    // (siehe styles.css) – der SVG-Filter für die Refraktion ist zentral in
+    // route.tsx definiert (einmal für alle Liquid-Glass-Seiten).
+    <div className="liquid-glass refract-test space-y-4">
       <header className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-bold">Planer</h1>
         <div className="flex items-center gap-1">
@@ -515,8 +530,14 @@ function PlannerPage() {
         </div>
       </header>
 
-      {/* Planer-Header: klebt direkt unter dem globalen App-Header (h-16) */}
-      <div className="sticky top-16 z-20 -mx-4 border-b border-border/60 bg-background px-4 pb-2 pt-2">
+      {/* Planer-Header: klebt direkt unter dem globalen App-Header (h-16 +
+          Safe-Area – der App-Header hat oben zusätzlich env(safe-area-inset-top)
+          Padding, ein fixes top-16 würde auf Geräten mit Status-Bar-Inset zu
+          wenig Abstand lassen und den Wochentitel darunter abschneiden). */}
+      <div
+        className="sticky z-20 -mx-4 border-b border-border/60 px-4 pb-2 pt-2"
+        style={{ top: "calc(4rem + env(safe-area-inset-top))" }}
+      >
         <PlannerHero
           weekStart={weekStart}
           days={days}

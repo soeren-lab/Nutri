@@ -19,6 +19,7 @@ import { Route as LegalAgbRouteImport } from './routes/legal.agb'
 import { Route as AuthenticatedShoppingListRouteImport } from './routes/_authenticated/shopping-list'
 import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated/planner'
 import { Route as AuthenticatedIngredientsRouteImport } from './routes/_authenticated/ingredients'
+import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticated/discover'
 import { Route as AuthenticatedRecipesIndexRouteImport } from './routes/_authenticated/recipes.index'
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile.index'
 import { Route as AuthenticatedCookbooksIndexRouteImport } from './routes/_authenticated/cookbooks.index'
@@ -106,6 +107,11 @@ const AuthenticatedIngredientsRoute =
     path: '/ingredients',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDiscoverRoute = AuthenticatedDiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRecipesIndexRoute =
   AuthenticatedRecipesIndexRouteImport.update({
     id: '/recipes/',
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/discover': typeof AuthenticatedDiscoverRoute
   '/ingredients': typeof AuthenticatedIngredientsRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/shopping-list': typeof AuthenticatedShoppingListRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/discover': typeof AuthenticatedDiscoverRoute
   '/ingredients': typeof AuthenticatedIngredientsRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/shopping-list': typeof AuthenticatedShoppingListRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/discover': typeof AuthenticatedDiscoverRoute
   '/_authenticated/ingredients': typeof AuthenticatedIngredientsRoute
   '/_authenticated/planner': typeof AuthenticatedPlannerRoute
   '/_authenticated/shopping-list': typeof AuthenticatedShoppingListRoute
@@ -460,6 +469,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/discover'
     | '/ingredients'
     | '/planner'
     | '/shopping-list'
@@ -506,6 +516,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/discover'
     | '/ingredients'
     | '/planner'
     | '/shopping-list'
@@ -553,6 +564,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/discover'
     | '/_authenticated/ingredients'
     | '/_authenticated/planner'
     | '/_authenticated/shopping-list'
@@ -677,6 +689,13 @@ declare module '@tanstack/react-router' {
       path: '/ingredients'
       fullPath: '/ingredients'
       preLoaderRoute: typeof AuthenticatedIngredientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/discover': {
+      id: '/_authenticated/discover'
+      path: '/discover'
+      fullPath: '/discover'
+      preLoaderRoute: typeof AuthenticatedDiscoverRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/recipes/': {
@@ -928,6 +947,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDiscoverRoute: typeof AuthenticatedDiscoverRoute
   AuthenticatedIngredientsRoute: typeof AuthenticatedIngredientsRoute
   AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
   AuthenticatedShoppingListRoute: typeof AuthenticatedShoppingListRoute
@@ -968,6 +988,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDiscoverRoute: AuthenticatedDiscoverRoute,
   AuthenticatedIngredientsRoute: AuthenticatedIngredientsRoute,
   AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
   AuthenticatedShoppingListRoute: AuthenticatedShoppingListRoute,

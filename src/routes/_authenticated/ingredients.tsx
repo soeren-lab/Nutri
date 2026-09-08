@@ -25,7 +25,8 @@ import { Input } from "@/components/ui/input";
 import { SearchInputWithBeam } from "@/components/SearchInputWithBeam";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SegmentedTabsList } from "@/components/SegmentedTabsList";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -79,10 +80,12 @@ import {
   type NutrientField,
   type NutrientFilters,
 } from "@/lib/ingredient-filters";
-import { CommunityTab } from "@/components/CommunityTab";
 import { GlassScreenHeader } from "@/components/GlassScreenHeader";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 
 import { findSimilarPublished, publishIngredient, unpublishIngredient } from "@/lib/community";
+
+const INGREDIENT_TABS = ["ingredients", "brands"] as const;
 
 /** True, wenn eine veröffentlichte Zutat seit dem letzten Publish verändert wurde. */
 function hasUnpublishedChanges(m: IngredientMaster): boolean {
@@ -113,38 +116,31 @@ export const Route = createFileRoute("/_authenticated/ingredients")({
 });
 
 function IngredientsPage() {
-  const [tab, setTab] = useState<"ingredients" | "brands" | "community">("ingredients");
+  const [tab, setTab] = useState<"ingredients" | "brands">("ingredients");
+  const tabIndex = INGREDIENT_TABS.indexOf(tab);
+  useSwipePriority({
+    onSwipeLeft: () => setTab(INGREDIENT_TABS[Math.min(tabIndex + 1, INGREDIENT_TABS.length - 1)]!),
+    onSwipeRight: () => setTab(INGREDIENT_TABS[Math.max(tabIndex - 1, 0)]!),
+  });
   return (
-    <div className="space-y-6">
-      <GlassScreenHeader title="Zutaten" subtitle="Stammzutaten, Marken und Community-Hub" />
+    <div className="liquid-glass refract-test space-y-6">
+      <GlassScreenHeader title="Zutaten" subtitle="Stammzutaten und Marken" />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-        <TabsList className="grid h-auto w-full max-w-sm grid-cols-3 gap-1 rounded-2xl border border-border bg-muted/70 p-1 shadow-inner">
-          {(
+        <SegmentedTabsList
+          tabs={
             [
               ["ingredients", "Zutaten"],
               ["brands", "Marken"],
-              ["community", "Community"],
             ] as const
-          ).map(([value, label]) => (
-            <TabsTrigger
-              key={value}
-              value={value}
-              className="rounded-xl py-2 text-sm font-medium text-muted-foreground transition-all data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:[background:var(--primary-gradient)]"
-            >
-              {label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+          }
+        />
 
         <TabsContent value="ingredients" className="mt-4">
           <IngredientsTab />
         </TabsContent>
         <TabsContent value="brands" className="mt-4">
           <BrandsTab />
-        </TabsContent>
-        <TabsContent value="community" className="mt-4">
-          <CommunityTab />
         </TabsContent>
       </Tabs>
     </div>

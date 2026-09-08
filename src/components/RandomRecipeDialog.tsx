@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { recipesQuery } from "@/lib/recipes";
 import { useQuery } from "@tanstack/react-query";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 import { recipeCategoriesOf } from "@/hooks/use-all-categories";
 import { getCategoryColor } from "@/lib/categories";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,12 @@ export function RandomRecipeDialog({
     setCategory(null);
     navigate({ to: "/recipes/$id", params: { id: choice.id } });
   }
+
+  useSwipePriority(
+    open
+      ? { onSwipeLeft: () => onOpenChange(false), onSwipeRight: () => onOpenChange(false) }
+      : null,
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -84,7 +91,9 @@ export function RandomRecipeDialog({
                   onClick={() => setCategory(c)}
                   className={cn(
                     "rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
-                    active ? cn(color.bg, color.text, color.border) : "border-border text-muted-foreground hover:text-foreground",
+                    active
+                      ? cn(color.bg, color.text, color.border)
+                      : "border-border text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {c}

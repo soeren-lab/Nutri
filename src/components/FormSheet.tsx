@@ -2,10 +2,8 @@ import type { ReactNode } from "react";
 import { X } from "lucide-react";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { Sheet, SheetPortal, SheetOverlay } from "@/components/ui/sheet";
-import {
-  useBodyScrollLock,
-  useVisualViewportHeight,
-} from "@/hooks/use-sheet-viewport";
+import { useBodyScrollLock, useVisualViewportHeight } from "@/hooks/use-sheet-viewport";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 import { cn } from "@/lib/utils";
 
 /**
@@ -32,6 +30,13 @@ export function FormSheet({
 }) {
   const viewportStyle = useVisualViewportHeight(open);
   useBodyScrollLock(open);
+  // onOpenChange trägt ggf. schon eine Rückfrage bei ungespeicherten
+  // Änderungen (Aufrufer-Verantwortung) – Swipe ruft immer denselben Setter.
+  useSwipePriority(
+    open
+      ? { onSwipeLeft: () => onOpenChange(false), onSwipeRight: () => onOpenChange(false) }
+      : null,
+  );
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -51,7 +56,10 @@ export function FormSheet({
           style={viewportStyle}
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+          <div
+            className="flex items-center gap-2 border-b border-border px-4 py-3"
+            style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
+          >
             <SheetPrimitive.Title className="flex-1 truncate text-base font-semibold">
               {title}
             </SheetPrimitive.Title>
@@ -67,11 +75,7 @@ export function FormSheet({
             {children}
           </div>
 
-          {footer && (
-            <div className="border-t border-border bg-background px-4 py-3">
-              {footer}
-            </div>
-          )}
+          {footer && <div className="border-t border-border bg-background px-4 py-3">{footer}</div>}
         </SheetPrimitive.Content>
       </SheetPortal>
     </Sheet>

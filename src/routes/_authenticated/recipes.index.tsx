@@ -16,10 +16,15 @@ import { getCategoryColor } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { SortDropdown } from "@/components/SortDropdown";
 import { useRecipeFilters } from "@/hooks/use-recipe-filters";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RecipeCommunityTab } from "@/components/RecipeCommunityTab";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { CookbooksTab } from "@/components/CookbooksTab";
 import { RandomRecipeDialog } from "@/components/RandomRecipeDialog";
 import { GlassScreenHeader } from "@/components/GlassScreenHeader";
+import { SegmentedTabsList } from "@/components/SegmentedTabsList";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
+
+const RECIPE_TABS = ["mine", "cookbooks"] as const;
+type RecipeTab = (typeof RECIPE_TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/recipes/")({
   loader: ({ context }) => {
@@ -50,25 +55,36 @@ function RecipesPage() {
 
   const availableCategories = useMemo(() => aggregateCategories(recipes), [recipes]);
 
+  const [tab, setTab] = useState<RecipeTab>("mine");
+  const tabIndex = RECIPE_TABS.indexOf(tab);
+  useSwipePriority({
+    onSwipeLeft: () => setTab(RECIPE_TABS[Math.min(tabIndex + 1, RECIPE_TABS.length - 1)]!),
+    onSwipeRight: () => setTab(RECIPE_TABS[Math.max(tabIndex - 1, 0)]!),
+  });
+
   return (
-    <div className="space-y-6">
+    // "liquid-glass"/"refract-test": Rollout des im Planer erprobten
+    // Liquid-Glass-Looks (siehe styles.css) – bewusst nur auf dieser
+    // Übersichtsseite, nicht auf Detail-/Bearbeiten-Routen (eigene Dateien,
+    // erben die Klasse nicht automatisch).
+    <div className="liquid-glass refract-test space-y-6">
       <GlassScreenHeader
         title="Rezepte"
         subtitle={`${recipes.length} Rezept${recipes.length === 1 ? "" : "e"} in deiner Sammlung`}
       />
 
-      <Tabs defaultValue="mine" className="space-y-6">
-        <TabsList className="w-full">
-          <TabsTrigger value="mine" className="flex-1">
-            Meine
-          </TabsTrigger>
-          <TabsTrigger value="community" className="flex-1">
-            Community
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as RecipeTab)} className="space-y-6">
+        <SegmentedTabsList
+          tabs={
+            [
+              ["mine", "Meine"],
+              ["cookbooks", "Kochbücher"],
+            ] as const
+          }
+        />
 
-        <TabsContent value="community" className="space-y-4">
-          <RecipeCommunityTab />
+        <TabsContent value="cookbooks" className="space-y-4">
+          <CookbooksTab />
         </TabsContent>
 
         <TabsContent value="mine" className="space-y-6">

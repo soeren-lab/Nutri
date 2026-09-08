@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSwipePriority } from "@/hooks/use-swipe-priority";
 import { recipeQuery } from "@/lib/recipes";
 import { scaleIngredientList, type ScaledIngredient } from "@/hooks/use-scaled-ingredients";
 import { freeIngredients } from "@/lib/componentNutrition";
@@ -117,6 +118,8 @@ export function BatchCookSheet({
     },
     onError: () => toast.error("Konnte nicht gespeichert werden"),
   });
+
+  useSwipePriority({ onSwipeLeft: onClose, onSwipeRight: onClose });
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>

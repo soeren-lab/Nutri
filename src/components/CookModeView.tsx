@@ -14,11 +14,7 @@ import type { RecipeComponentWithRelations, RecipeWithRelations } from "@/types/
 import { VariantChips } from "@/components/VariantChips";
 import { GroupChoiceDialog } from "@/components/GroupChoiceDialog";
 import { useIngredientsMaster } from "@/hooks/use-ingredients-master";
-import {
-  applyGroupChoices,
-  pendingGroupIngredients,
-  type GroupChoices,
-} from "@/lib/productGroups";
+import { applyGroupChoices, pendingGroupIngredients, type GroupChoices } from "@/lib/productGroups";
 import {
   defaultSelection,
   isChoiceComponent,
@@ -165,7 +161,6 @@ export function CookModeView({ recipe: rawRecipe }: { recipe: RecipeWithRelation
     [recipe, servings, baseServings],
   );
 
-
   const scaledComponents = useMemo(
     () =>
       components.map((c) => {
@@ -244,7 +239,10 @@ export function CookModeView({ recipe: rawRecipe }: { recipe: RecipeWithRelation
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background">
+    <div
+      className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       <header className="flex items-center justify-between border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur">
         <div className="min-w-0 flex-1">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">Kochmodus</div>
@@ -315,7 +313,6 @@ export function CookModeView({ recipe: rawRecipe }: { recipe: RecipeWithRelation
             >
               {flexGroups.length > 0 ? "Sorte wählen" : "Los geht's"}
             </Button>
-
           </div>
         </div>
       ) : (

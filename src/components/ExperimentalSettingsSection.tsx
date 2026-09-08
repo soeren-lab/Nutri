@@ -1,11 +1,11 @@
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Moon, Sun } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { useExperimentalMode } from "@/hooks/use-experimental-mode";
 
-/** Schaltet den experimentellen Glass-Look der App ein/aus (nur Admins). */
 export function ExperimentalSettingsSection() {
-  const { enabled, setEnabled, isSaving } = useExperimentalMode();
+  const { enabled, variant, setEnabled, setVariant, isSaving } = useExperimentalMode();
 
   return (
     <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
@@ -23,6 +23,36 @@ export function ExperimentalSettingsSection() {
           onCheckedChange={setEnabled}
         />
       </div>
+
+      {enabled && (
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-muted-foreground">Farbvariante</p>
+          <div className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-muted/70 p-1">
+            {(
+              [
+                ["dark", "Dunkel", Moon],
+                ["light", "Hell", Sun],
+              ] as const
+            ).map(([value, label, Icon]) => (
+              <button
+                key={value}
+                type="button"
+                disabled={isSaving}
+                onClick={() => setVariant(value)}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-all",
+                  variant === value
+                    ? "text-primary-foreground shadow-md [background:var(--primary-gradient)]"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <p className="flex items-start gap-2 rounded-xl bg-destructive/10 p-3 text-[11px] leading-relaxed text-destructive">
         <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
