@@ -404,6 +404,135 @@
 }
 
 /*
+ * Untere Navbar (siehe TabBar.tsx ".tab-bar"): auf den fünf Liquid-Glass-
+ * Haupttabs (".wash-boost") Verlauf statt Transluzenz+Blur – backdrop-filter
+ * greift auf diesem Gerät nicht zuverlässig, dieselbe Fläche wie bei
+ * Header/Karten. Lichtsaum oben (Grenze zum scrollenden Inhalt darüber).
+ * Aktiver Tab bekommt eine gefüllte Verlaufs-Pille (".tab-active") statt nur
+ * eines leichten Farbtons – auf einen Blick erkennbar (Variante C).
+ */
+.glass .wash-boost .tab-bar,
+.glass-light .wash-boost .tab-bar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.glass-light .wash-boost .tab-bar {
+  background: linear-gradient(160deg, #ffffff 0%, #f4effc 70%, #ede5fa 100%);
+  border-color: hsl(280 60% 88% / 0.9);
+  box-shadow: 0 10px 30px -14px rgba(80, 40, 130, 0.3);
+}
+.glass .wash-boost .tab-bar {
+  background: linear-gradient(160deg, #241a34 0%, #1c1428 70%, #17101f 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.6);
+}
+.glass .wash-boost .tab-bar::before,
+.glass-light .wash-boost .tab-bar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+.glass-light .wash-boost .tab-bar::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4) 15%,
+    #ffffff 50%,
+    rgba(255, 255, 255, 0.4) 85%,
+    transparent
+  );
+  box-shadow: 0 0 12px 1px rgba(255, 255, 255, 0.5);
+}
+.glass .wash-boost .tab-bar::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+}
+.glass-light .wash-boost .tab-bar .tab-active {
+  background: linear-gradient(135deg, #7c3aed, #e0559e);
+  color: #fbf9ff;
+  box-shadow: 0 6px 16px -6px hsl(262 83% 56% / 0.5);
+}
+.glass .wash-boost .tab-bar .tab-active {
+  background: linear-gradient(135deg, #b18afa, #e685cf);
+  color: #1c1428;
+  box-shadow: 0 6px 16px -6px hsl(262 92% 72% / 0.4);
+}
+
+/*
+ * App-Header (siehe AppHeader.tsx ".app-header"): Verlauf statt Transluzenz+
+ * Blur – derselbe Grund wie bei Dialogen/Dropdowns, backdrop-filter greift
+ * auf diesem Gerät nicht zuverlässig. Lichtsaum an der UNTEREN Kante (Grenze
+ * zum Content) statt oben, analog zu den Karten, aber randlos/ohne Rundung –
+ * Form bleibt exakt wie im normalen Theme.
+ *
+ * Bewusst APP-WEIT (nicht auf ".wash-boost"/die fünf Haupttabs beschränkt):
+ * der Header ist eine einzige, dauerhaft sichtbare Komponente (siehe
+ * route.tsx) – sprang beim Öffnen eines Rezepts/Kochbuchs sonst zurück auf
+ * den alten Look, was wie ein Bug wirkte.
+ */
+.glass .app-header,
+.glass-light .app-header {
+  border-bottom: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.glass-light .app-header {
+  background: linear-gradient(160deg, #ffffff 0%, #f4effc 70%, #ede5fa 100%);
+  box-shadow: 0 10px 30px -18px rgba(80, 40, 130, 0.3);
+}
+.glass .app-header {
+  background: linear-gradient(160deg, #241a34 0%, #1c1428 70%, #17101f 100%);
+  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.6);
+}
+.glass .app-header::after,
+.glass-light .app-header::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 0;
+  height: 2px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+.glass-light .app-header::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4) 15%,
+    #ffffff 50%,
+    rgba(255, 255, 255, 0.4) 85%,
+    transparent
+  );
+  box-shadow: 0 0 12px 1px rgba(255, 255, 255, 0.5);
+}
+.glass .app-header::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+}
+
+/*
+ * Buttons mit variant="outline" (Button-Komponente) nutzen "border
+ * border-input bg-background" – unter .glass/.glass-light ist --background
+ * eine VOLLSTÄNDIG DECKENDE Fläche (dunkel im Dark-Glass, praktisch
+ * schwarz), ganz anders als die Karten-Verläufe drumherum. ".border.bg-
+ * background" trifft gezielt diese Kombination (Inputs/Selects nutzen
+ * "bg-transparent", nicht betroffen) – Root-Cause-Fix statt Einzelfall, gilt
+ * für jeden aktuellen und künftigen Outline-Button auf den fünf Haupttabs.
+ *
+ * Bewusst NUR transparent gemacht (kein Verlauf/Pill-Form) – exakt das
+ * Aussehen des Sortier-Buttons im Zutaten-Tab (der von Anfang an ohne
+ * bg-Klasse auskommt und deshalb nie das Problem hatte).
+ */
+.glass .liquid-glass .border.bg-background,
+.glass-light .liquid-glass .border.bg-background {
+  background: transparent;
+}
+
+/*
  * ".meal-entry-card" (MealEntryRow): nicht nur dieselbe Rundung wie die
  * Zutaten-Überschrift, sondern auch dieselbe Größe/Proportion – großzügiges
  * Innenpadding wie GlassScreenHeader ("p-4"), statt der engen Listen-Zeile.

@@ -163,7 +163,7 @@ export function UpdatesSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
-        <SheetHeader className="border-b border-border p-4 text-left">
+        <SheetHeader className="border-b border-border px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] text-left">
           <SheetTitle>Benachrichtigungen</SheetTitle>
           <SheetDescription>
             Freundschaftsanfragen und aktualisierte Werte für deine importierten Zutaten und

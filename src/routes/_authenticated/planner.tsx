@@ -7,6 +7,7 @@ import {
   Check,
   Clock,
   CookingPot,
+  Info,
   Layers,
   ListChecks,
   Minus,
@@ -109,6 +110,7 @@ import {
   WEEKDAYS,
   addDays,
   entryDiffersFromSnapshot,
+  entryMacros,
   entryTitle,
   parseGroupChoices,
   formatDayShort,
@@ -203,6 +205,8 @@ function PlannerPage() {
   const [groupEditEntry, setGroupEditEntry] = useState<MealPlanEntryFull | null>(null);
   // Batch-/Vorkoch-Verknüpfung.
   const [batchEntry, setBatchEntry] = useState<MealPlanEntryFull | null>(null);
+  // Tagesanalyse (Info-Button oben rechts im Statistik-Board).
+  const [analysisOpen, setAnalysisOpen] = useState(false);
   const { user } = useAuth();
   const qc = useQueryClient();
 
@@ -554,8 +558,19 @@ function PlannerPage() {
           targetsFor={targetsFor}
           dayTotals={dayTotals}
           forceCompact={!activeDayHasEntries}
+          onOpenAnalysis={() => setAnalysisOpen(true)}
         />
       </div>
+
+      {analysisOpen && (
+        <DayAnalysisDialog
+          day={activeDate}
+          entries={entries.filter((e) => e.date === toISODate(activeDate) && !e.skipped)}
+          totals={dayTotals(activeDate)}
+          targets={targetsFor(toISODate(activeDate))}
+          onClose={() => setAnalysisOpen(false)}
+        />
+      )}
 
       {isLoading ? (
         <LoadingSpinner />
@@ -1148,6 +1163,136 @@ function MacroCell({ label, value, target, isMax }: Omit<MacroGridItem, "key">) 
         />
       </span>
     </div>
+  );
+}
+
+/** Eintrag mit dem größten Anteil an einem Makro (für die Herkunfts-Zeile). */
+function topContributor(
+  entries: MealPlanEntryFull[],
+  key: keyof MacroTotals,
+): { title: string; amount: number } | null {
+  let best: { title: string; amount: number } | null = null;
+  for (const e of entries) {
+    const amount = entryMacros(e)?.[key];
+    if (amount != null && amount > 0 && (!best || amount > best.amount)) {
+      best = { title: entryTitle(e), amount };
+    }
+  }
+  return best;
+}
+
+/**
+ * Tagesanalyse: Ziel-Fortschritt (wie DayHeading) + welches Rezept/welcher
+ * Eintrag welchen Anteil an den Makros hat, plus vollständige Aufschlüsselung
+ * aller Einträge des Tages. Geöffnet über den Info-Button in PlannerHero.
+ */
+function DayAnalysisDialog({
+  day,
+  entries,
+  totals,
+  targets,
+  onClose,
+}: {
+  day: Date;
+  entries: MealPlanEntryFull[];
+  totals: MacroTotals | null;
+  targets: NutritionTargets | null;
+  onClose: () => void;
+}) {
+  const { tracking } = useTracking();
+  useSwipePriority({ onSwipeLeft: onClose, onSwipeRight: onClose });
+
+  const dow = WEEKDAYS[(day.getDay() + 6) % 7];
+  const dateLabel = formatDayShort(day);
+
+  const insightRows = [
+    ...MACRO_ROW.filter((m) => tracking[m.key]).map(({ key, label }) => ({
+      key,
+      label,
+      value: totals?.[key] ?? 0,
+      target: targets?.[key] ?? 0,
+      contributor: topContributor(entries, key),
+    })),
+    ...(tracking.sugar_g
+      ? [
+          {
+            key: "sugar_g" as const,
+            label: "Zucker",
+            value: totals?.sugar_g ?? 0,
+            target: targets?.sugar_max_g ?? 0,
+            contributor: topContributor(entries, "sugar_g" as keyof MacroTotals),
+          },
+        ]
+      : []),
+  ];
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-h-[85vh] max-w-sm overflow-y-auto">
+        <DialogHeader className="text-left">
+          <DialogTitle className="pr-6 text-base leading-snug">
+            Tagesanalyse
+            <span className="block text-xs font-normal text-muted-foreground">
+              {dow} {dateLabel}
+            </span>
+          </DialogTitle>
+        </DialogHeader>
+
+        <DayHeading day={day} totals={totals} targets={targets} />
+
+        {targets && insightRows.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground">Herkunft</p>
+            <ul className="space-y-1">
+              {insightRows.map((r) => (
+                <li key={r.key} className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">
+                    {r.label}: {Math.round(r.value)}/{Math.round(r.target)}g
+                  </span>
+                  {r.contributor && (
+                    <>
+                      {" "}
+                      – größter Anteil aus{" "}
+                      <span className="font-medium text-foreground">{r.contributor.title}</span> (
+                      {Math.round(r.contributor.amount)}g)
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {entries.length > 0 ? (
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground">Einträge heute</p>
+            <ul className="divide-y divide-border rounded-xl border border-border">
+              {entries.map((e) => {
+                const m = entryMacros(e);
+                return (
+                  <li key={e.id} className="flex items-center justify-between gap-3 p-2.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{entryTitle(e)}</p>
+                      {m && (
+                        <p className="truncate text-[11px] text-muted-foreground tabular-nums">
+                          P {Math.round(m.protein_g)}g · KH {Math.round(m.carbs_g)}g · F{" "}
+                          {Math.round(m.fat_g)}g
+                        </p>
+                      )}
+                    </div>
+                    <span className="shrink-0 text-sm font-semibold tabular-nums">
+                      {m ? Math.round(m.calories) : 0} kcal
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">Für diesen Tag ist noch nichts eingeplant.</p>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 

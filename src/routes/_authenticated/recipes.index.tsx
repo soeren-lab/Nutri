@@ -27,6 +27,10 @@ const RECIPE_TABS = ["mine", "cookbooks"] as const;
 type RecipeTab = (typeof RECIPE_TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/recipes/")({
+  validateSearch: (search: Record<string, unknown>): { tab?: RecipeTab } => {
+    const tab = search["tab"];
+    return tab === "mine" || tab === "cookbooks" ? { tab } : {};
+  },
   loader: ({ context }) => {
     context.queryClient.ensureQueryData(recipesQuery());
   },
@@ -55,7 +59,14 @@ function RecipesPage() {
 
   const availableCategories = useMemo(() => aggregateCategories(recipes), [recipes]);
 
-  const [tab, setTab] = useState<RecipeTab>("mine");
+  // Sub-Tab-Auswahl steckt in der URL (?tab=mine|cookbooks) statt in lokalem
+  // State – dadurch führt sowohl ein Deep-Link als auch die Swipe-back-Geste
+  // aus einem Kochbuch/Rezept zurück zum korrekten Sub-Tab, statt ihn zu
+  // verlieren (siehe cookbooks.$id.index.tsx, CookbookForm.tsx).
+  const { tab: tabParam } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const tab = tabParam ?? "mine";
+  const setTab = (next: RecipeTab) => navigate({ search: { tab: next }, replace: true });
   const tabIndex = RECIPE_TABS.indexOf(tab);
   useSwipePriority({
     onSwipeLeft: () => setTab(RECIPE_TABS[Math.min(tabIndex + 1, RECIPE_TABS.length - 1)]!),

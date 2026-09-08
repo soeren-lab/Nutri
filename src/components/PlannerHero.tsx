@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { formatWeekRange, isToday, toISODate, WEEKDAYS } from "@/lib/meal-plan";
@@ -31,6 +31,7 @@ export function PlannerHero({
   targetsFor,
   dayTotals,
   forceCompact = false,
+  onOpenAnalysis,
 }: {
   weekStart: Date;
   days: Date[];
@@ -44,6 +45,7 @@ export function PlannerHero({
   targetsFor: TargetsForDate;
   dayTotals: (day: Date) => MacroTotals | null;
   forceCompact?: boolean;
+  onOpenAnalysis: () => void;
 }) {
   const [scrolledCompact, setScrolledCompact] = useState(false);
   const compact = forceCompact || scrolledCompact;
@@ -115,7 +117,7 @@ export function PlannerHero({
         )}
       >
         {/* Wochennavigation */}
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
@@ -146,6 +148,15 @@ export function PlannerHero({
             className="h-8 w-8 rounded-full"
           >
             <ChevronRight className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenAnalysis}
+            aria-label="Tagesanalyse anzeigen"
+            className="h-8 w-8 rounded-full"
+          >
+            <Info className="h-4 w-4" />
           </Button>
         </div>
 

@@ -74,7 +74,7 @@ function CookbookDetailPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cookbooks"] });
       toast.success("Kochbuch verlassen");
-      navigate({ to: "/cookbooks" });
+      navigate({ to: "/recipes", search: { tab: "cookbooks" } });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Fehler"),
   });
@@ -112,7 +112,7 @@ function CookbookDetailPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cookbooks"] });
       toast.success("Kochbuch gelöscht");
-      navigate({ to: "/cookbooks" });
+      navigate({ to: "/recipes", search: { tab: "cookbooks" } });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Fehler"),
   });
@@ -134,7 +134,11 @@ function CookbookDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/cookbooks" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/recipes"
+        search={{ tab: "cookbooks" }}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Zurück
       </Link>
 

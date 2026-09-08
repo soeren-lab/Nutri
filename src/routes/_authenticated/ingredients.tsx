@@ -342,7 +342,7 @@ function IngredientsTab() {
         <div className="space-y-6">
           {grouped.map((section) => (
             <section key={section.category}>
-              <div className="sticky top-0 z-10 mb-2 flex items-baseline gap-2 border-b border-border/70 bg-background/95 pb-1.5 backdrop-blur">
+              <div className="mb-2 flex items-baseline gap-2 border-b border-border/70 pb-1.5">
                 <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   {section.category}
                 </h2>

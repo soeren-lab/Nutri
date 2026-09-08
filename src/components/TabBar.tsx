@@ -19,7 +19,9 @@ export function TabBar() {
   return (
     <nav
       aria-label="Hauptnavigation"
-      className="fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-border bg-card/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/80"
+      // "tab-bar": Liquid-Glass-Übersteuerung (siehe styles.css) auf den
+      // fünf Haupttab-Seiten – Verlauf statt Transluzenz+Blur.
+      className="tab-bar fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-border bg-card/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/80"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="flex items-stretch justify-around gap-1 px-2 py-1.5">
@@ -31,8 +33,10 @@ export function TabBar() {
                 "flex flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground",
               )}
               activeProps={{
+                // "tab-active": Marker für die Liquid-Glass-Übersteuerung
+                // (gefüllte Verlaufs-Pille statt leichtem Farbton).
                 className:
-                  "flex flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-medium bg-gradient-to-br from-primary/10 to-accent/10 text-primary",
+                  "tab-active flex flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-medium bg-gradient-to-br from-primary/10 to-accent/10 text-primary",
               }}
             >
               <tab.icon className="h-5 w-5" />

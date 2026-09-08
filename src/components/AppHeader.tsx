@@ -41,7 +41,10 @@ export function AppHeader() {
 
   return (
     <header
-      className="sticky top-0 z-30 border-b border-purple-100/60 bg-background/70 backdrop-blur-xl"
+      // "app-header": Liquid-Glass-Übersteuerung (siehe styles.css) auf den
+      // fünf Haupttab-Seiten – Verlauf statt Transluzenz+Blur, damit der
+      // Header nicht mehr von backdrop-filter abhängt.
+      className="app-header sticky top-0 z-30 border-b border-purple-100/60 bg-background/70 backdrop-blur-xl"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4">

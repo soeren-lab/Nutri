@@ -143,7 +143,15 @@ export function CookbookForm({ existing }: { existing?: Cookbook }) {
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={() => navigate({ to: "/cookbooks" })}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() =>
+            existing
+              ? navigate({ to: "/cookbooks/$id", params: { id: existing.id } })
+              : navigate({ to: "/recipes", search: { tab: "cookbooks" } })
+          }
+        >
           Abbrechen
         </Button>
         <Button type="submit" disabled={saveMut.isPending || uploading}>
