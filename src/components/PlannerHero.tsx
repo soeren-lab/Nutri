@@ -81,17 +81,18 @@ export function PlannerHero({
   return (
     <div
       className={cn(
-        "relative overflow-hidden border border-primary/20 transition-all duration-300 ease-out",
-        !compact && "bg-card",
+        // "bg-card" bewusst IMMER (auch compact): unter Liquid Glass ist das
+        // eine deckende Verlaufsfläche (kein Alpha-Kanal), also weiterhin
+        // blickdicht während die Karte sticky über scrollendem Inhalt steht
+        // – nur eben im Liquid-Glass-Look statt als reine Flachfarbe.
+        // "no-refract" nur compact: der Refraktions-Test (styles.css) macht
+        // die Fläche wieder transluzent+geblurt – für eine dauerhaft über
+        // scrollendem Inhalt stehende Karte genau der alte Lesbarkeits-Bug.
+        "relative overflow-hidden border border-primary/20 bg-card transition-all duration-300 ease-out",
         compact
-          ? "rounded-2xl shadow-[0_4px_24px_-8px_var(--glow-primary)]"
+          ? "no-refract rounded-2xl shadow-[0_4px_24px_-8px_var(--glow-primary)]"
           : "rounded-3xl shadow-[0_8px_40px_-12px_var(--glow-primary)]",
       )}
-      // Eingeklappt bleibt diese Karte sticky, während der Rest der Seite
-      // dahinter wegscrollt – reine Transluzenz+Blur (wie bei "bg-card")
-      // reicht dann nicht, weil ständig neuer Kontrast durchscheint. Deshalb
-      // hier blickdicht statt glasig, sobald compact aktiv ist.
-      style={compact ? { backgroundColor: "var(--card-solid, var(--card))" } : undefined}
     >
       {/* Weicher Verlauf + Glow im Hintergrund */}
       <div

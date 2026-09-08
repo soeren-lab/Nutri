@@ -23,7 +23,7 @@
 
 @theme inline {
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-display: "Fraunces", "Plus Jakarta Sans", Georgia, serif;
+  --font-display: "Space Grotesk", "Plus Jakarta Sans", system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -226,11 +226,6 @@
   --glow-2: hsl(255 70% 55% / 0.55);
   --glow-3: hsl(320 65% 58% / 0.5);
 
-  /* Blickdichte Variante von --card, für sticky/fixierte Flächen, unter denen
-     Inhalt wegscrollt (z.B. der eingeklappte Planer-Header) – dort reicht
-     Transluzenz+Blur allein nicht, weil ständig neuer Kontrast durchscheint. */
-  --card-solid: hsl(258 25% 16%);
-
   color-scheme: dark;
 }
 
@@ -285,11 +280,6 @@
   --glow-1: hsl(280 75% 68% / 0.45);
   --glow-2: hsl(255 70% 68% / 0.38);
   --glow-3: hsl(320 70% 70% / 0.32);
-
-  /* Blickdichte Variante von --card, für sticky/fixierte Flächen, unter denen
-     Inhalt wegscrollt (z.B. der eingeklappte Planer-Header) – dort reicht
-     Transluzenz+Blur allein nicht, weil ständig neuer Kontrast durchscheint. */
-  --card-solid: hsl(270 40% 96%);
 
   color-scheme: light;
 }
@@ -552,18 +542,23 @@
  * bleibt automatisch die Verlaufs-Variante von oben aktiv (kein kaputtes
  * Rendering). Ob es zusätzlich auf dem Gerät GUT aussieht (nicht nur
  * unterstützt wird), muss der reale Test auf dem Handy zeigen.
+ *
+ * ":not(.no-refract)" – sticky Karten (der eingeklappte Planer-Header, siehe
+ * PlannerHero.tsx) bleiben davon ausgenommen: sie stehen dauerhaft über
+ * scrollendem Inhalt, echte Transluzenz+Blur/Refraktion macht sie dort
+ * wieder durchsichtig (der ursprüngliche Lesbarkeits-Bug).
  */
 @supports (backdrop-filter: url(#liquidRefract)) {
-  .glass .liquid-glass.refract-test .bg-card,
-  .glass-light .liquid-glass.refract-test .bg-card {
+  .glass .liquid-glass.refract-test .bg-card:not(.no-refract),
+  .glass-light .liquid-glass.refract-test .bg-card:not(.no-refract) {
     backdrop-filter: url(#liquidRefract) blur(2px) saturate(160%);
     -webkit-backdrop-filter: blur(2px) saturate(160%);
   }
-  .glass-light .liquid-glass.refract-test .bg-card {
+  .glass-light .liquid-glass.refract-test .bg-card:not(.no-refract) {
     background: rgba(255, 255, 255, 0.16);
     border-color: rgba(255, 255, 255, 0.65);
   }
-  .glass .liquid-glass.refract-test .bg-card {
+  .glass .liquid-glass.refract-test .bg-card:not(.no-refract) {
     background: rgba(20, 30, 40, 0.18);
     border-color: rgba(255, 255, 255, 0.14);
   }
