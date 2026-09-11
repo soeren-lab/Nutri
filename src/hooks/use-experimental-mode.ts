@@ -4,17 +4,16 @@ import { toast } from "sonner";
 import { userProfileQuery } from "@/lib/nutritionTargets";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useIsAdmin } from "@/hooks/use-is-admin";
 import { applyGlassMode, isGlassVariant, type GlassVariant } from "@/lib/theme";
 
 /**
- * Experimenteller Glass-Modus: nur für Admins sichtbar/schaltbar, wendet bei
- * Aktivierung app-weit die `.glass`/`.glass-light`-Klasse an (siehe
- * src/styles.css) – Variante ist unabhängig von der normalen Hell/Dunkel-Wahl.
+ * Experimenteller Glass-Modus: für alle angemeldeten Nutzer sicht-/schaltbar
+ * (offiziell freigegeben, war zuvor nur für Admins), wendet bei Aktivierung
+ * app-weit die `.glass`/`.glass-light`-Klasse an (siehe src/styles.css) –
+ * Variante ist unabhängig von der normalen Hell/Dunkel-Wahl.
  */
 export function useExperimentalMode() {
   const { user } = useAuth();
-  const { isAdmin } = useIsAdmin();
   const qc = useQueryClient();
   const profileQuery = useQuery({ ...userProfileQuery(), staleTime: 60_000 });
 
@@ -22,7 +21,7 @@ export function useExperimentalMode() {
     experimental_glass_ui?: unknown;
     experimental_glass_variant?: unknown;
   } | null;
-  const enabled = isAdmin && data?.experimental_glass_ui === true;
+  const enabled = data?.experimental_glass_ui === true;
   const variant: GlassVariant = isGlassVariant(data?.experimental_glass_variant)
     ? data.experimental_glass_variant
     : "dark";
@@ -66,7 +65,6 @@ export function useExperimentalMode() {
   });
 
   return {
-    isAdmin,
     enabled,
     variant,
     setEnabled: (value: boolean) => enabledMutation.mutate(value),

@@ -68,6 +68,12 @@ export function SettingsListTab() {
           title="Darstellung"
           subtitle={THEME_LABELS[theme]}
         />
+        <SettingsRow
+          to="/profile/settings/experimental"
+          icon={FlaskConical}
+          title="Experimental"
+          subtitle="Neue Glass-Oberfläche"
+        />
       </SettingsGroup>
 
       <SettingsGroup title="Account & Sicherheit">
@@ -132,12 +138,6 @@ export function SettingsListTab() {
             to="/profile/settings/patch-notes"
             icon={Wrench}
             title="Patch Notes verwalten"
-          />
-          <SettingsRow
-            to="/profile/settings/experimental"
-            icon={FlaskConical}
-            title="Experimental"
-            subtitle="Neue Glass-Oberfläche"
           />
         </SettingsGroup>
       )}
