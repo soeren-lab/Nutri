@@ -11,6 +11,8 @@ import {
 } from "@/lib/ingredients-master";
 import { IngredientMasterFormDialog } from "@/components/IngredientMasterFormDialog";
 import { IngredientSortFilterBar } from "@/components/IngredientSortFilterBar";
+import { CommunityResultsSection } from "@/components/CommunityResultsSection";
+import { OffResultsSection } from "@/components/OffResultsSection";
 import {
   INGREDIENT_CATEGORIES,
   DEFAULT_INGREDIENT_CATEGORY,
@@ -65,6 +67,12 @@ export function IngredientSelect({
     return sortIngredients(matched, sort);
   }, [list, selectedCats, nutrientFilters, sort]);
 
+  const getSearchText = (m: IngredientMaster) => ingredientSearchText(m, brandName);
+  function pickAndClose(m: IngredientMaster) {
+    onSelectMaster(m);
+    setOpen(false);
+  }
+
   function acceptFreetext(q: string) {
     onNameChange(q);
     onClearMaster();
@@ -117,44 +125,59 @@ export function IngredientSelect({
             compact
           />
         }
-        getSearchText={(m) =>
-          `${ingredientSearchText(m)} ${brandName(m.brand_id) ?? ""}`
-        }
+        getSearchText={getSearchText}
         selectedId={masterId}
         onSelect={(m) => onSelectMaster(m)}
         emptyLabel="Keine Zutaten für diese Filter"
         onCreate={(q) => openCreate(q)}
         createLabel={(q) => <>„{q}" als neue Zutat anlegen</>}
+        renderAfterList={(query) => {
+          const hasLocalMatch = items.some((m) =>
+            getSearchText(m).toLowerCase().includes(query.toLowerCase()),
+          );
+          if (hasLocalMatch) return null;
+          return (
+            <>
+              <CommunityResultsSection query={query} onImported={pickAndClose} />
+              <OffResultsSection variant="rows" query={query} onImported={pickAndClose} />
+            </>
+          );
+        }}
         renderQueryExtras={(q) => (
           <SearchSheetRow onClick={() => acceptFreetext(q)}>
             <PenLine className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="flex-1 truncate">„{q}" als Freitext übernehmen</span>
           </SearchSheetRow>
         )}
-        renderItem={(m, { selected, onSelect, query }) => (
-          <SearchSheetRow onClick={onSelect} selected={selected}>
-            <Check
-              className={cn(
-                "h-4 w-4 shrink-0",
-                selected ? "opacity-100 text-primary" : "opacity-0",
-              )}
-            />
-            <span className="min-w-0 flex-1 truncate">
-              {m.name}
-              {m.subcategory && matchesViaSubcategory(m, query ?? "") && (
-                <span className="text-muted-foreground"> · {m.subcategory}</span>
-              )}
-              {brandName(m.brand_id) && (
-                <span className="text-muted-foreground"> ({brandName(m.brand_id)})</span>
-              )}
-            </span>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {m.calories != null
-                ? `${m.calories} kcal / ${m.unit === "Stk" || m.unit === "Stück" ? "Stück" : `100${m.unit}`}`
-                : "keine Nährwerte"}
-            </span>
-          </SearchSheetRow>
-        )}
+        renderItem={(m, { selected, onSelect, query }) => {
+          const brand = brandName(m.brand_id);
+          const hint = m.subcategory && matchesViaSubcategory(m, query ?? "") ? m.subcategory : null;
+          return (
+            <SearchSheetRow onClick={onSelect} selected={selected}>
+              <Check
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  selected ? "opacity-100 text-primary" : "opacity-0",
+                )}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">{m.name}</span>
+                {(brand || hint) && (
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {brand && <span className="font-medium text-foreground">{brand}</span>}
+                    {brand && hint && " · "}
+                    {hint}
+                  </span>
+                )}
+              </span>
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {m.calories != null
+                  ? `${m.calories} kcal / ${m.unit === "Stk" || m.unit === "Stück" ? "Stück" : `100${m.unit}`}`
+                  : "keine Nährwerte"}
+              </span>
+            </SearchSheetRow>
+          );
+        }}
       />
 
       <IngredientMasterFormDialog

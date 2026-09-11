@@ -87,7 +87,19 @@ import {
   ingredientSearchText,
   ingredientsMasterQuery,
   matchesViaSubcategory,
+  type IngredientMaster,
 } from "@/lib/ingredients-master";
+import { brandsQuery } from "@/lib/brands";
+import { CommunityResultsSection } from "@/components/CommunityResultsSection";
+import { OffResultsSection } from "@/components/OffResultsSection";
+import { IngredientSortFilterBar } from "@/components/IngredientSortFilterBar";
+import { INGREDIENT_CATEGORIES, DEFAULT_INGREDIENT_CATEGORY } from "@/lib/categories";
+import {
+  matchesNutrientFilters,
+  sortIngredients,
+  type IngredientSort,
+  type NutrientFilters,
+} from "@/lib/ingredient-filters";
 import {
   buildSuggestions,
   calculateSlotTarget,
@@ -256,6 +268,33 @@ function PlannerPage() {
     ...ingredientsMasterQuery(),
     enabled: needsFoods,
   });
+  const { data: foodBrands = [] } = useQuery({ ...brandsQuery(), enabled: needsFoods });
+  const foodBrandName = (id: string | null) =>
+    id ? foodBrands.find((b) => b.id === id)?.name ?? null : null;
+  const getFoodSearchText = (m: IngredientMaster) => ingredientSearchText(m, foodBrandName);
+  // Kategorie-/Nährwert-Filter für die Lebensmittel-Suche, gleiche Bausteine
+  // wie bei der Rezept-Zutatenauswahl (IngredientSelect.tsx).
+  const [foodSort, setFoodSort] = useState<IngredientSort>("name_asc");
+  const [foodNutrientFilters, setFoodNutrientFilters] = useState<NutrientFilters>({});
+  const [foodSelectedCats, setFoodSelectedCats] = useState<string[]>([]);
+  const availableFoodCategories = useMemo(() => {
+    const set = new Set<string>(INGREDIENT_CATEGORIES);
+    foods.forEach((m) => set.add(m.category || DEFAULT_INGREDIENT_CATEGORY));
+    return Array.from(set);
+  }, [foods]);
+  const filteredFoods = useMemo(() => {
+    const matched = foods.filter((m) => {
+      const cat = m.category || DEFAULT_INGREDIENT_CATEGORY;
+      const matchC = foodSelectedCats.length === 0 || foodSelectedCats.includes(cat);
+      return matchC && matchesNutrientFilters(m, foodNutrientFilters);
+    });
+    return sortIngredients(matched, foodSort);
+  }, [foods, foodSelectedCats, foodNutrientFilters, foodSort]);
+  function pickFood(f: IngredientMaster) {
+    if (!target) return;
+    setFoodPending({ id: f.id, name: f.name, unit: f.unit, target });
+    setMode(null);
+  }
 
   const remaining = useMemo(() => {
     const targets = targetsFor(suggestTarget?.date ? toISODate(suggestTarget.date) : "");
@@ -672,32 +711,61 @@ function PlannerPage() {
         }}
         title={target ? `${target.slot} · ${formatDayShort(target.date)}` : "Lebensmittel wählen"}
         placeholder="Lebensmittel suchen…"
-        items={foods}
-        getSearchText={ingredientSearchText}
+        items={filteredFoods}
+        toolbar={
+          <IngredientSortFilterBar
+            sort={foodSort}
+            onSortChange={setFoodSort}
+            filters={foodNutrientFilters}
+            onFiltersChange={setFoodNutrientFilters}
+            categories={availableFoodCategories}
+            selectedCategories={foodSelectedCats}
+            onToggleCategory={(c) =>
+              setFoodSelectedCats((s) => (s.includes(c) ? s.filter((x) => x !== c) : [...s, c]))
+            }
+            onClearCategories={() => setFoodSelectedCats([])}
+            compact
+          />
+        }
+        getSearchText={getFoodSearchText}
         emptyLabel="Keine Lebensmittel vorhanden"
-        onSelect={(f) => {
-          if (!target) return;
-          setFoodPending({ id: f.id, name: f.name, unit: f.unit, target });
-          setMode(null);
+        onSelect={pickFood}
+        renderAfterList={(query) => {
+          const hasLocalMatch = filteredFoods.some((f) =>
+            getFoodSearchText(f).toLowerCase().includes(query.toLowerCase()),
+          );
+          if (hasLocalMatch) return null;
+          return (
+            <>
+              <CommunityResultsSection query={query} onImported={pickFood} />
+              <OffResultsSection variant="rows" query={query} onImported={pickFood} />
+            </>
+          );
         }}
-        renderItem={(f, ctx) => (
-          <SearchSheetRow onClick={ctx.onSelect} selected={ctx.selected}>
-            <Apple className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate">
-                {f.name}
-                {f.subcategory && matchesViaSubcategory(f, ctx.query) && (
-                  <span className="ml-1 text-xs text-muted-foreground">· {f.subcategory}</span>
+        renderItem={(f, ctx) => {
+          const brand = foodBrandName(f.brand_id);
+          const hint = f.subcategory && matchesViaSubcategory(f, ctx.query) ? f.subcategory : null;
+          return (
+            <SearchSheetRow onClick={ctx.onSelect} selected={ctx.selected}>
+              <Apple className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">{f.name}</span>
+                {(brand || hint) && (
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {brand && <span className="font-medium text-foreground">{brand}</span>}
+                    {brand && hint && " · "}
+                    {hint}
+                  </span>
                 )}
               </span>
-              <span className="block text-xs text-muted-foreground">
+              <span className="shrink-0 text-xs text-muted-foreground">
                 {f.calories != null
                   ? `${f.calories} kcal / ${f.unit === "Stück" ? "Stück" : `100 ${f.unit}`}`
                   : f.unit}
               </span>
-            </span>
-          </SearchSheetRow>
-        )}
+            </SearchSheetRow>
+          );
+        }}
       />
 
       {/* Menge für Lebensmittel */}

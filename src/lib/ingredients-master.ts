@@ -227,11 +227,17 @@ export function computeFromMaster(
   };
 }
 
-/** Text used by search inputs: matches name and subcategory. */
+/**
+ * Text used by search inputs: matches name, subcategory and (falls ein
+ * Resolver übergeben wird) Markenname – zentral hier statt in jedem
+ * Aufrufer einzeln nachgebaut, damit Markensuche überall gleich funktioniert.
+ */
 export function ingredientSearchText(
-  m: Pick<IngredientMaster, "name" | "subcategory">,
+  m: Pick<IngredientMaster, "name" | "subcategory" | "brand_id">,
+  brandName?: (brandId: string | null) => string | null | undefined,
 ): string {
-  return `${m.name} ${m.subcategory ?? ""}`;
+  const brand = brandName ? brandName(m.brand_id) : null;
+  return `${m.name} ${m.subcategory ?? ""} ${brand ?? ""}`;
 }
 
 /** True when the query only matches via subcategory (context hint needed). */

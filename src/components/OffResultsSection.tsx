@@ -72,6 +72,13 @@ function nutritionLine(p: OffProduct) {
   return `${p.calories ?? "–"} kcal / 100${p.unit}`;
 }
 
+/** Kompakte Makro-Zeile (P/KH/F) – nur wenn mindestens ein Wert bekannt ist. */
+function macroLine(p: OffProduct): string | null {
+  if (p.protein_g == null && p.carbs_g == null && p.fat_g == null) return null;
+  const round = (v: number | null) => (v == null ? "–" : Math.round(v * 10) / 10);
+  return `P ${round(p.protein_g)}g · KH ${round(p.carbs_g)}g · F ${round(p.fat_g)}g`;
+}
+
 /**
  * Open-Food-Facts-Treffer, die die normale Ergebnisliste ergänzen.
  * Werden immer NACH den eigenen/Community-Zutaten gerendert.
@@ -176,6 +183,11 @@ export function OffResultsSection({
                   {p.brand ? `${p.brand} · ` : ""}
                   {nutritionLine(p)}
                 </span>
+                {macroLine(p) && (
+                  <span className="block truncate text-[11px] text-muted-foreground">
+                    {macroLine(p)}
+                  </span>
+                )}
               </span>
               {action}
             </div>

@@ -3,7 +3,8 @@ import { Check, ChevronRight, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchSheet, SearchSheetRow } from "@/components/SearchSheet";
 import { useIngredientsMaster } from "@/hooks/use-ingredients-master";
-import type { IngredientMaster } from "@/lib/ingredients-master";
+import { useBrands } from "@/hooks/use-brands";
+import { ingredientSearchText, type IngredientMaster } from "@/lib/ingredients-master";
 import { mastersInGroup, rememberGroupChoice } from "@/lib/productGroups";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,9 @@ export function FlexibleIngredientPicker({
   onOpenChange?: (open: boolean) => void;
 }) {
   const all = useIngredientsMaster();
+  const brands = useBrands();
+  const brandName = (id: string | null) =>
+    id ? brands.find((b) => b.id === id)?.name ?? null : null;
   const list = mastersProp ?? all;
   const masters = mastersInGroup(list, group);
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
@@ -80,24 +84,34 @@ export function FlexibleIngredientPicker({
         title={`${group} wählen`}
         placeholder="Sorte suchen…"
         items={masters}
-        getSearchText={(m) => m.name}
+        getSearchText={(m) => ingredientSearchText(m, brandName)}
         selectedId={value}
         emptyLabel={`Keine Zutaten in der Gruppe „${group}"`}
         onSelect={(m) => {
           rememberGroupChoice(group, m.id);
           onSelect(m);
         }}
-        renderItem={(m, { selected: isSel, onSelect: pick }) => (
-          <SearchSheetRow onClick={pick} selected={isSel}>
-            <Check
-              className={cn("h-4 w-4 shrink-0", isSel ? "text-primary opacity-100" : "opacity-0")}
-            />
-            <span className="min-w-0 flex-1 truncate">{m.name}</span>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {m.calories != null ? `${m.calories} kcal` : m.unit}
-            </span>
-          </SearchSheetRow>
-        )}
+        renderItem={(m, { selected: isSel, onSelect: pick }) => {
+          const brand = brandName(m.brand_id);
+          return (
+            <SearchSheetRow onClick={pick} selected={isSel}>
+              <Check
+                className={cn("h-4 w-4 shrink-0", isSel ? "text-primary opacity-100" : "opacity-0")}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">{m.name}</span>
+                {brand && (
+                  <span className="block truncate text-xs font-medium text-foreground">
+                    {brand}
+                  </span>
+                )}
+              </span>
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {m.calories != null ? `${m.calories} kcal` : m.unit}
+              </span>
+            </SearchSheetRow>
+          );
+        }}
       />
     </>
   );
