@@ -60,7 +60,6 @@ function mergeById<T extends { id: string }>(base: T[], extra: T[]): T[] {
 }
 
 function PublicProfilePage() {
-
   const { username } = Route.useParams();
   const profileQ = useQuery(publicProfileQuery(username));
   const profile = profileQ.data ?? null;
@@ -100,7 +99,10 @@ function PublicProfilePage() {
   const importedIngredientIds = useMemo(
     () =>
       new Set(
-        ownIngredients.map((i) => i.source_ingredient_id).filter(Boolean) as string[],
+        ownIngredients
+          .filter((i) => !i.archived)
+          .map((i) => i.source_ingredient_id)
+          .filter(Boolean) as string[],
       ),
     [ownIngredients],
   );
@@ -153,26 +155,17 @@ function PublicProfilePage() {
   const friendDays = friendEntry?.friendsSince
     ? Math.max(
         0,
-        Math.floor(
-          (Date.now() - new Date(friendEntry.friendsSince).getTime()) / 86_400_000,
-        ),
+        Math.floor((Date.now() - new Date(friendEntry.friendsSince).getTime()) / 86_400_000),
       )
     : null;
-  const ranking = [...(comparisonQ.data ?? [])].sort(
-    (a, b) => b.totalPoints - a.totalPoints,
-  );
+  const ranking = [...(comparisonQ.data ?? [])].sort((a, b) => b.totalPoints - a.totalPoints);
   const placement = ranking.findIndex((e) => e.userId === uid);
   const recipes = mergeById(recipesQ.data ?? [], sharedQ.data?.recipes ?? []);
-  const ingredients = mergeById(
-    ingredientsQ.data ?? [],
-    sharedQ.data?.ingredients ?? [],
-  );
-  const sharedCount =
-    (sharedQ.data?.recipes.length ?? 0) + (sharedQ.data?.ingredients.length ?? 0);
-
+  const ingredients = mergeById(ingredientsQ.data ?? [], sharedQ.data?.ingredients ?? []);
+  const sharedCount = (sharedQ.data?.recipes.length ?? 0) + (sharedQ.data?.ingredients.length ?? 0);
 
   return (
-    <div className="space-y-4">
+    <div className="font-display space-y-4">
       <BackLink />
 
       <header
@@ -194,17 +187,12 @@ function PublicProfilePage() {
           />
           <div className="min-w-0 flex-1 space-y-1">
             <h1 className="truncate text-lg font-semibold">@{profile.username}</h1>
-            <p
-              className="text-xs font-semibold"
-              style={{ color: rankColors.from }}
-            >
+            <p className="text-xs font-semibold" style={{ color: rankColors.from }}>
               {rank.label}
             </p>
             <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
               <Flame className="h-3.5 w-3.5 fill-orange-500 text-orange-500" />
-              <span className="font-semibold text-foreground">
-                {profile.currentStreakDays}
-              </span>
+              <span className="font-semibold text-foreground">{profile.currentStreakDays}</span>
               Tage Streak
             </p>
           </div>
@@ -247,17 +235,15 @@ function PublicProfilePage() {
           >
             {friendDays !== null && (
               <span>
-                Ihr seid seit{" "}
-                <span className="font-semibold text-foreground">{friendDays}</span>{" "}
+                Ihr seid seit <span className="font-semibold text-foreground">{friendDays}</span>{" "}
                 {friendDays === 1 ? "Tag" : "Tagen"} befreundet
               </span>
             )}
             {friendDays !== null && placement >= 0 && <span>·</span>}
             {placement >= 0 && (
               <span>
-                Aktuell{" "}
-                <span className="font-semibold text-foreground">#{placement + 1}</span>{" "}
-                in eurem Vergleich
+                Aktuell <span className="font-semibold text-foreground">#{placement + 1}</span> in
+                eurem Vergleich
               </span>
             )}
           </Link>
@@ -266,12 +252,10 @@ function PublicProfilePage() {
 
       {sharedCount > 0 && (
         <p className="rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
-          {sharedCount} {sharedCount === 1 ? "Inhalt" : "Inhalte"} wurden privat nur mit
-          dir geteilt und sind hier zusätzlich sichtbar.
+          {sharedCount} {sharedCount === 1 ? "Inhalt" : "Inhalte"} wurden privat nur mit dir geteilt
+          und sind hier zusätzlich sichtbar.
         </p>
       )}
-
-
 
       <Tabs defaultValue="recipes">
         <TabsList className="w-full">

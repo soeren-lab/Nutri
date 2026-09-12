@@ -15,7 +15,7 @@ export function SettingsSubPage({
   children: ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-lg space-y-5">
+    <div className="font-display mx-auto max-w-lg space-y-5">
       <Link
         to="/profile"
         search={{ tab: backTab }}

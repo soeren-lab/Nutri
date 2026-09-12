@@ -102,7 +102,7 @@ function ProfilePage() {
   });
 
   return (
-    <div className="liquid-glass refract-test mx-auto max-w-lg space-y-6">
+    <div className="liquid-glass refract-test font-display mx-auto max-w-lg space-y-6">
       <div className="flex items-center justify-between gap-3 py-4">
         <h1 className="text-2xl font-semibold tracking-tight">Profil</h1>
         <ProfileHeaderMeta />
