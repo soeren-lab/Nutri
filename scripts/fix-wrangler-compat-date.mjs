@@ -3,6 +3,13 @@
 // Zukunft, lehnt Cloudflare den Deploy mit "Can't set compatibility date in
 // the future" ab. Fixe es hier auf ein sicher vergangenes, festes Datum.
 //
+// WICHTIG: Das Datum muss >= 2025-04-01 sein - ab diesem compatibility_date
+// befüllt Cloudflare bei aktiviertem "nodejs_compat"-Flag `process.env`
+// automatisch aus den Worker-Vars/-Secrets. Mit einem älteren Datum bleibt
+// `process.env.SUPABASE_URL` etc. im Worker leer, obwohl die Secrets korrekt
+// gesetzt sind (beobachtet: "wrangler secret list"/"versions view" zeigen die
+// Secrets an, `process.env` liefert sie zur Laufzeit trotzdem nicht).
+//
 // Nitro leitet den Worker-Namen automatisch her, wenn keiner fest konfiguriert
 // ist – u.a. vom git-Remote-Namen. Seit das Repo mit GitHub verbunden ist,
 // kippt der Name dadurch von "tanstack-start-ts" auf sowas wie
@@ -14,7 +21,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const PATH = join(dirname(fileURLToPath(import.meta.url)), "..", ".output/server/wrangler.json");
-const SAFE_DATE = "2024-09-23";
+const SAFE_DATE = "2025-04-01";
 const WORKER_NAME = "tanstack-start-ts";
 
 const config = JSON.parse(readFileSync(PATH, "utf8"));
