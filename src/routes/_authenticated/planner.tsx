@@ -554,8 +554,7 @@ function PlannerPage() {
     // (siehe styles.css) – der SVG-Filter für die Refraktion ist zentral in
     // route.tsx definiert (einmal für alle Liquid-Glass-Seiten).
     <div className="liquid-glass refract-test space-y-4">
-      <header className="flex items-center justify-between gap-2">
-        <h1 className="text-xl font-bold">Planer</h1>
+      <header className="flex items-center justify-end gap-2">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"

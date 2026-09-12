@@ -19,7 +19,6 @@ import { useRecipeFilters } from "@/hooks/use-recipe-filters";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CookbooksTab } from "@/components/CookbooksTab";
 import { RandomRecipeDialog } from "@/components/RandomRecipeDialog";
-import { GlassScreenHeader } from "@/components/GlassScreenHeader";
 import { SegmentedTabsList } from "@/components/SegmentedTabsList";
 import { useSwipePriority } from "@/hooks/use-swipe-priority";
 
@@ -79,11 +78,6 @@ function RecipesPage() {
     // Übersichtsseite, nicht auf Detail-/Bearbeiten-Routen (eigene Dateien,
     // erben die Klasse nicht automatisch).
     <div className="liquid-glass refract-test space-y-6">
-      <GlassScreenHeader
-        title="Rezepte"
-        subtitle={`${recipes.length} Rezept${recipes.length === 1 ? "" : "e"} in deiner Sammlung`}
-      />
-
       <Tabs value={tab} onValueChange={(v) => setTab(v as RecipeTab)} className="space-y-6">
         <SegmentedTabsList
           tabs={

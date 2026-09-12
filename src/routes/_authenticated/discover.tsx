@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { RecipeCommunityTab } from "@/components/RecipeCommunityTab";
 import { CommunityTab } from "@/components/CommunityTab";
-import { GlassScreenHeader } from "@/components/GlassScreenHeader";
 import { SegmentedTabsList } from "@/components/SegmentedTabsList";
 import { useSwipePriority } from "@/hooks/use-swipe-priority";
 
@@ -41,8 +40,6 @@ function DiscoverPage() {
 
   return (
     <div className="liquid-glass refract-test space-y-6">
-      <GlassScreenHeader title="Entdecken" subtitle="Community-Rezepte und -Zutaten" />
-
       <Tabs value={tab} onValueChange={(v) => setTab(v as DiscoverTab)} className="space-y-4">
         <SegmentedTabsList
           tabs={

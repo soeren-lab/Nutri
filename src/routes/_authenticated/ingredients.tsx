@@ -80,7 +80,6 @@ import {
   type NutrientField,
   type NutrientFilters,
 } from "@/lib/ingredient-filters";
-import { GlassScreenHeader } from "@/components/GlassScreenHeader";
 import { useSwipePriority } from "@/hooks/use-swipe-priority";
 
 import { findSimilarPublished, publishIngredient, unpublishIngredient } from "@/lib/community";
@@ -124,8 +123,6 @@ function IngredientsPage() {
   });
   return (
     <div className="liquid-glass refract-test space-y-6">
-      <GlassScreenHeader title="Zutaten" subtitle="Stammzutaten und Marken" />
-
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
         <SegmentedTabsList
           tabs={
