@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CreditCard,
   Download,
-  FlaskConical,
   FileText,
   Image,
   Lock,
@@ -19,14 +18,15 @@ import {
   Zap,
 } from "lucide-react";
 import { SettingsActionRow, SettingsGroup, SettingsRow } from "@/components/settings/SettingsList";
+import { BroadcastUpdateButton } from "@/components/BroadcastUpdateButton";
 import { UsernameDisplay } from "@/components/UsernameDisplay";
 import { CURRENT_PLAN, PLAN_LABELS } from "@/lib/plans";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useExperimentalMode } from "@/hooks/use-experimental-mode";
 import { useQuickEntryTemplates } from "@/hooks/use-quick-entry-templates";
-import { useTheme } from "@/hooks/use-theme";
 import { useUserAvatar } from "@/hooks/use-user-avatar";
-import { THEME_LABELS } from "@/lib/theme";
+import { GLASS_VARIANT_LABELS } from "@/lib/theme";
 import { recipesQuery } from "@/lib/recipes";
 import { findSideDishCandidates } from "@/lib/sideDishMigration";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +34,7 @@ import { supabase } from "@/integrations/supabase/client";
 /** Verwaltung als Einstellungs-Liste mit Unterseiten. */
 export function SettingsListTab() {
   const { user } = useAuth();
-  const { theme } = useTheme();
+  const { variant } = useExperimentalMode();
   const { avatarUrl } = useUserAvatar();
   const { isAdmin } = useIsAdmin();
   const { templates } = useQuickEntryTemplates();
@@ -66,13 +66,7 @@ export function SettingsListTab() {
           to="/profile/settings/appearance"
           icon={Palette}
           title="Darstellung"
-          subtitle={THEME_LABELS[theme]}
-        />
-        <SettingsRow
-          to="/profile/settings/experimental"
-          icon={FlaskConical}
-          title="Experimental"
-          subtitle="Neue Glass-Oberfläche"
+          subtitle={GLASS_VARIANT_LABELS[variant]}
         />
       </SettingsGroup>
 
@@ -139,6 +133,7 @@ export function SettingsListTab() {
             icon={Wrench}
             title="Patch Notes verwalten"
           />
+          <BroadcastUpdateButton />
         </SettingsGroup>
       )}
     </div>

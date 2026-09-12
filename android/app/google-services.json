@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "799042659233",
+    "project_id": "nutri-f027e",
+    "storage_bucket": "nutri-f027e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:799042659233:android:be9a6db9ae24673aa4e1e0",
+        "android_client_info": {
+          "package_name": "com.soeren.nutriapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDupO28yvm0O4tGYvN8JXbYt51zjDNsv18"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

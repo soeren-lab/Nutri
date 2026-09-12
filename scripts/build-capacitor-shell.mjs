@@ -7,9 +7,13 @@
 // beim App-Start), holen wir das gerenderte Root-HTML einmal vom deployten
 // Worker und speichern es als statische index.html dazu. Alle Asset-Pfade
 // darin sind relativ (/assets/...), Supabase-Aufrufe laufen ohnehin über eine
-// feste absolute URL – nur die vier serverfunktionsabhängigen Features
-// (Konto löschen, PDF-Export, Freigabelink, OFF-Suche) bleiben bewusst
-// "nicht verfügbar" in der App (siehe isNativeApp()-Guards).
+// feste absolute URL – die meisten POST-Server-Functions (Konto löschen,
+// PDF-Export, Kochbuch beitreten) bleiben bewusst "nicht verfügbar" in der
+// App (siehe isNativeApp()-Guards); die unauthentifizierten GET-Functions
+// (OFF-Suche, Kochbuch-Freigabelink) sowie zwei gezielt freigeschaltete
+// POST-Functions (Push-Registrierung, Update-Broadcast) laufen stattdessen
+// cross-origin gegen WORKER_URL (siehe src/lib/openfoodfacts.ts,
+// src/lib/push-notifications.ts, src/server.ts).
 //
 // Ablauf für ein neues Release:
 //   1. bun run build

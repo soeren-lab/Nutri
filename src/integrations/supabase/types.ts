@@ -785,6 +785,33 @@ export type Database = {
           },
         ];
       };
+      push_subscriptions: {
+        Row: {
+          created_at: string;
+          fcm_token: string;
+          id: string;
+          platform: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          fcm_token: string;
+          id?: string;
+          platform?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          fcm_token?: string;
+          id?: string;
+          platform?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       quick_entry_templates: {
         Row: {
           calories: number;
@@ -1572,6 +1599,10 @@ export type Database = {
         }[];
       };
       get_my_recipe_import_count: { Args: never; Returns: number };
+      get_other_push_tokens: {
+        Args: { _exclude_user_id: string };
+        Returns: { fcm_token: string }[];
+      };
       get_public_profile: {
         Args: { _username: string };
         Returns: {

@@ -8,6 +8,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { AchievementWatcher } from "@/components/AchievementWatcher";
+import { PushNotificationRegistrar } from "@/components/PushNotificationRegistrar";
 import { PatchNoteModal } from "@/components/PatchNoteModal";
 import { SeasonStartModal } from "@/components/SeasonStartModal";
 
@@ -159,6 +160,7 @@ function AuthedLayoutInner() {
       </main>
       <TabBar />
       <AchievementWatcher />
+      <PushNotificationRegistrar />
       <UsernameOnboardingDialog />
       <PatchNoteModal />
       <SeasonStartModal />
