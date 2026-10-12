@@ -2,6 +2,7 @@ import { Ban, Copy, CookingPot, ExternalLink, Link2, Unlink } from "lucide-react
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useMealPhotoUrl } from "@/hooks/use-meal-photo";
 import { useSwipePriority } from "@/hooks/use-swipe-priority";
 import { batchRoleOf, isBatched } from "@/lib/batch";
 import {
@@ -69,6 +70,7 @@ export function EntryDetailSheet({
   const amount = entryAmountLabel(entry);
   const batchRole = batchRoleOf(entry);
   const batched = isBatched(entry);
+  const photoUrl = useMealPhotoUrl(entry.photo_path);
 
   useSwipePriority({ onSwipeLeft: onClose, onSwipeRight: onClose });
 
@@ -83,6 +85,14 @@ export function EntryDetailSheet({
             </span>
           </DialogTitle>
         </DialogHeader>
+
+        {photoUrl && (
+          <img
+            src={photoUrl}
+            alt="Foto der Mahlzeit"
+            className="max-h-56 w-full rounded-xl object-cover"
+          />
+        )}
 
         <p className="text-[11px] text-muted-foreground">
           Stand beim Einplanen – späteres Bearbeiten des Rezepts ändert diesen Eintrag nicht.

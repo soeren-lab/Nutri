@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Json, Tables } from "@/integrations/supabase/types";
 import { freeIngredients, nutritionPerServing } from "@/lib/componentNutrition";
 import { fetchRecipe, fetchRecipes } from "@/lib/recipes";
 import { computeNutritionFromMaster } from "@/lib/unitConversion";
@@ -710,6 +710,82 @@ export async function addQuickEntry(input: {
   if (error) throw error;
 }
 
+export const MEAL_PHOTO_BUCKET = "meal-photos";
+
+/** Entfernt ein Essensfoto aus dem privaten Storage (Fehler sind nicht kritisch). */
+export async function removeMealPhoto(path: string): Promise<void> {
+  const { error } = await supabase.storage.from(MEAL_PHOTO_BUCKET).remove([path]);
+  if (error) throw error;
+}
+
+/** Zeitlich begrenzte URL zum Anzeigen eines privaten Essensfotos. */
+export async function mealPhotoSignedUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(MEAL_PHOTO_BUCKET)
+    .createSignedUrl(path, 60 * 60);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+/**
+ * Legt einen Foto-Scan-Eintrag an: Tellerfoto in den Storage, Eintrag als Schnelleintrag
+ * (mit Nährwert-Snapshot) plus die erkannten Positionen, damit er später editierbar bleibt.
+ */
+export async function addPhotoScanEntry(input: {
+  userId: string;
+  date: string;
+  meal_slot: MealSlot;
+  name: string;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g: number;
+  sugar_g: number;
+  items: Json;
+  photo: Blob | null;
+  sort_order?: number;
+}) {
+  const id = crypto.randomUUID();
+  let photoPath: string | null = null;
+  if (input.photo) {
+    photoPath = `${input.userId}/${id}.jpg`;
+    const { error: uploadError } = await supabase.storage
+      .from(MEAL_PHOTO_BUCKET)
+      .upload(photoPath, input.photo, { contentType: "image/jpeg", upsert: false });
+    if (uploadError) throw uploadError;
+  }
+  const { error } = await supabase.from("meal_plan_entries").insert({
+    id,
+    created_at: new Date().toISOString(),
+    user_id: input.userId,
+    date: input.date,
+    meal_slot: input.meal_slot,
+    food_type: "quick_entry",
+    quick_entry_name: input.name,
+    quick_entry_calories: input.calories,
+    quick_entry_protein_g: input.protein_g,
+    quick_entry_carbs_g: input.carbs_g,
+    quick_entry_fat_g: input.fat_g,
+    quick_entry_fiber_g: input.fiber_g,
+    quick_entry_sugar_g: input.sugar_g,
+    sort_order: input.sort_order ?? 0,
+    snapshot_name: input.name,
+    snapshot_calories: input.calories,
+    snapshot_protein_g: input.protein_g,
+    snapshot_carbs_g: input.carbs_g,
+    snapshot_fat_g: input.fat_g,
+    snapshot_fiber_g: input.fiber_g,
+    snapshot_sugar_g: input.sugar_g,
+    photo_path: photoPath,
+    photo_items: input.items,
+  });
+  if (error) {
+    if (photoPath) await removeMealPhoto(photoPath).catch(() => {});
+    throw error;
+  }
+}
+
 /**
  * Kopiert einen bestehenden Eintrag auf ein anderes Datum/Slot.
  * Es wird ein neuer Datensatz mit frischem Nährwert-Snapshot angelegt
@@ -784,6 +860,7 @@ export type MealPlanEntryPatch = Partial<
     | "quick_entry_fat_g"
     | "quick_entry_fiber_g"
     | "quick_entry_sugar_g"
+    | "photo_items"
     | "selected_variant_ids"
     | "group_choices"
     | "input_mode"

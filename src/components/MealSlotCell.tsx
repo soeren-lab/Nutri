@@ -11,6 +11,7 @@ import {
   Utensils,
 } from "lucide-react";
 
+import { useMealPhotoUrl } from "@/hooks/use-meal-photo";
 import { useSignedImage } from "@/hooks/use-signed-image";
 import { batchRoleOf } from "@/lib/batch";
 import { getCategoryGradient } from "@/lib/categories";
@@ -36,7 +37,9 @@ export function MealEntryRow({
   onClick: () => void;
   className?: string;
 }) {
-  const { data: imageUrl } = useSignedImage(entryImageUrl(entry));
+  const { data: signedUrl } = useSignedImage(entryImageUrl(entry));
+  const photoUrl = useMealPhotoUrl(entry.photo_path);
+  const imageUrl = photoUrl ?? signedUrl;
   const kcal = entryKcal(entry);
   const amount = entryAmountLabel(entry);
   const isQuick = entry.food_type === "quick_entry";

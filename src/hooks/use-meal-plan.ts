@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { cleanupBatchGroup } from "@/lib/batch";
 import { lateNoticeFor, recalculatePointsForDate } from "@/lib/points";
@@ -12,6 +13,7 @@ import type { IngredientMasterRow } from "@/lib/meal-plan";
 import {
   MEAL_SLOTS,
   addFoodEntry,
+  addPhotoScanEntry,
   addQuickEntry,
   addRecipeEntry,
   copyMealPlanEntry,
@@ -20,6 +22,7 @@ import {
   foodSnapshot,
   mealPlanQuery,
   recipeSnapshot,
+  removeMealPhoto,
   snapshotForPatch,
   startOfWeek,
   toISODate,
@@ -406,6 +409,47 @@ export function useMealPlan(weekStart: Date) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  /** Foto-Scan (Max): Eintrag mit Tellerfoto und erkannten Positionen. */
+  const planPhoto = useMutation({
+    mutationFn: (v: {
+      date: Date;
+      slot: MealSlot;
+      name: string;
+      calories: number;
+      protein_g: number;
+      carbs_g: number;
+      fat_g: number;
+      fiber_g: number;
+      sugar_g: number;
+      items: Json;
+      photo: Blob | null;
+    }) => {
+      if (!user) throw new Error("Nicht angemeldet");
+      return addPhotoScanEntry({
+        userId: user.id,
+        date: toISODate(v.date),
+        meal_slot: v.slot,
+        name: v.name,
+        calories: v.calories,
+        protein_g: v.protein_g,
+        carbs_g: v.carbs_g,
+        fat_g: v.fat_g,
+        fiber_g: v.fiber_g,
+        sugar_g: v.sugar_g,
+        items: v.items,
+        photo: v.photo,
+        sort_order: getEntries(v.date, v.slot).length,
+      });
+    },
+    onSuccess: (_data, v) => {
+      invalidate();
+      recalcPoints(v.date);
+      const notice = lateNoticeFor(v.date);
+      toast.success("Eingetragen", notice ? { description: notice } : undefined);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   type UpdatePatch = {
     id: string;
     servings?: number | null;
@@ -425,6 +469,7 @@ export function useMealPlan(weekStart: Date) {
     quick_entry_fat_g?: number | null;
     quick_entry_fiber_g?: number | null;
     quick_entry_sugar_g?: number | null;
+    photo_items?: Json | null;
   };
 
   const update = useMutation({
@@ -504,6 +549,7 @@ export function useMealPlan(weekStart: Date) {
       const entry = entries.find((e) => e.id === id) ?? null;
       const date = entry?.date ?? null;
       await deleteMealPlanEntry(id);
+      if (entry?.photo_path) await removeMealPhoto(entry.photo_path).catch(() => {});
       // Verwaiste Batch-Verknüpfungen der übrigen Tage aufräumen.
       await cleanupBatchGroup(entry?.batch_group_id ?? null).catch(() => {});
       return { date };
@@ -527,6 +573,7 @@ export function useMealPlan(weekStart: Date) {
     planRecipe,
     planFood,
     planQuick,
+    planPhoto,
     update,
     copy,
     remove,

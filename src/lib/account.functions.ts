@@ -30,6 +30,19 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     );
     const userId = context.userId;
 
+    // Essensfotos des Foto-Scans (privater Bucket, Ordner = user_id) mitlöschen.
+    for (let page = 0; page < 20; page++) {
+      const { data: files, error: listError } = await supabaseAdmin.storage
+        .from("meal-photos")
+        .list(userId, { limit: 1000 });
+      if (listError) throw new Error(listError.message);
+      if (!files || files.length === 0) break;
+      const { error: removeError } = await supabaseAdmin.storage
+        .from("meal-photos")
+        .remove(files.map((f) => `${userId}/${f.name}`));
+      if (removeError) throw new Error(removeError.message);
+    }
+
     for (const table of USER_TABLES) {
       const { error } = await supabaseAdmin
         .from(table)

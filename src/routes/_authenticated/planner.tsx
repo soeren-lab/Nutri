@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Apple,
   BookOpen,
+  Camera,
   Check,
   Clock,
   CookingPot,
@@ -16,6 +17,10 @@ import {
   Utensils,
 } from "lucide-react";
 import { useTracking } from "@/hooks/use-tracking";
+import { usePlan } from "@/hooks/use-plan";
+import { planAtLeast } from "@/lib/plans";
+import { PhotoScanSheet } from "@/components/PhotoScanSheet";
+import { parseStoredItems } from "@/lib/photoNutrition";
 import type { TrackableMacroKey } from "@/lib/tracking";
 import { ShoppingListGenerateSheet } from "@/components/ShoppingListGenerateSheet";
 import { Button } from "@/components/ui/button";
@@ -158,7 +163,7 @@ export const Route = createFileRoute("/_authenticated/planner")({
 });
 
 type Target = { date: Date; slot: MealSlot };
-type PickerMode = "choose" | "recipe" | "food" | "quick";
+type PickerMode = "choose" | "recipe" | "food" | "quick" | "photo";
 
 function PlannerPage() {
   const navigate = useNavigate();
@@ -176,12 +181,15 @@ function PlannerPage() {
     planRecipe,
     planFood,
     planQuick,
+    planPhoto,
     update,
     copy,
     remove,
   } = useMealPlan(weekStart);
   const { targetsFor } = useTargetsForDate();
   const { saveTemplate, bumpUse } = useQuickEntryTemplates();
+  const { plan } = usePlan();
+  const isMax = planAtLeast(plan, "max");
 
   const [target, setTarget] = useState<Target | null>(null);
   const [mode, setMode] = useState<PickerMode | null>(null);
@@ -262,7 +270,8 @@ function PlannerPage() {
   }
 
   const needsRecipes = mode === "recipe" || !!suggestTarget || !!variantPending || !!portionPending;
-  const needsFoods = mode === "food" || !!suggestTarget;
+  const needsFoods =
+    mode === "food" || mode === "photo" || !!suggestTarget || !!quickEditEntry?.photo_items;
   const { data: recipes = [] } = useQuery({ ...recipesQuery(), enabled: needsRecipes });
   const { data: foods = [] } = useQuery({
     ...ingredientsMasterQuery(),
@@ -417,6 +426,17 @@ function PlannerPage() {
     setSuggestTarget(null);
     setTarget(null);
     void navigate({ to: "/recipes/$id/edit", params: { id: data.id } });
+  }
+
+  function openPhotoScan() {
+    if (!isMax) {
+      toast.info("Der Foto-Scan ist im Max-Plan enthalten.");
+      setMode(null);
+      setTarget(null);
+      void navigate({ to: "/profile/settings/plan" });
+      return;
+    }
+    setMode("photo");
   }
 
   function openAdd(date: Date, slot: MealSlot) {
@@ -647,6 +667,14 @@ function PlannerPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2">
+            <Button variant="secondary" onClick={openPhotoScan}>
+              <Camera className="mr-2 h-4 w-4" /> Foto-Scan
+              {!isMax && (
+                <span className="ml-2 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                  Max
+                </span>
+              )}
+            </Button>
             <Button variant="secondary" onClick={() => setMode("recipe")}>
               <BookOpen className="mr-2 h-4 w-4" /> Rezept
             </Button>
@@ -830,8 +858,65 @@ function PlannerPage() {
         />
       )}
 
+      {/* Foto-Scan (Max) */}
+      {mode === "photo" && target && (
+        <PhotoScanSheet
+          title={`Foto-Scan · ${target.slot} ${formatDayShort(target.date)}`}
+          masters={foods}
+          onClose={() => {
+            setMode(null);
+            setTarget(null);
+          }}
+          onSubmit={(v) => {
+            planPhoto.mutate({
+              date: target.date,
+              slot: target.slot,
+              name: v.name,
+              calories: v.macros.calories,
+              protein_g: v.macros.protein_g,
+              carbs_g: v.macros.carbs_g,
+              fat_g: v.macros.fat_g,
+              fiber_g: v.macros.fiber_g,
+              sugar_g: v.macros.sugar_g,
+              items: v.items,
+              photo: v.photo,
+            });
+            setMode(null);
+            setTarget(null);
+          }}
+        />
+      )}
+
+      {/* Foto-Scan-Eintrag bearbeiten (Positionen aus der Auswertung) */}
+      {quickEditEntry && quickEditEntry.photo_items != null && (
+        <PhotoScanSheet
+          title="Foto-Eintrag bearbeiten"
+          submitLabel="Speichern"
+          masters={foods}
+          initial={{
+            name: quickEditEntry.quick_entry_name ?? "",
+            items: parseStoredItems(quickEditEntry.photo_items),
+          }}
+          onClose={() => setQuickEditEntry(null)}
+          onSubmit={(v) => {
+            update.mutate({
+              id: quickEditEntry.id,
+              quick_entry_name: v.name,
+              quick_entry_calories: v.macros.calories,
+              quick_entry_protein_g: v.macros.protein_g,
+              quick_entry_carbs_g: v.macros.carbs_g,
+              quick_entry_fat_g: v.macros.fat_g,
+              quick_entry_fiber_g: v.macros.fiber_g,
+              quick_entry_sugar_g: v.macros.sugar_g,
+              photo_items: v.items,
+            });
+            setQuickEditEntry(null);
+          }}
+        />
+      )}
+
       {/* Schnelleintrag bearbeiten */}
-      {quickEditEntry && (
+      {quickEditEntry && quickEditEntry.photo_items == null && (
         <QuickEntryDialog
           title="Schnelleintrag bearbeiten"
           submitLabel="Speichern"

@@ -557,6 +557,8 @@ export type Database = {
           food_type: string;
           group_choices: Json | null;
           id: string;
+          photo_items: Json | null;
+          photo_path: string | null;
           ingredient_master_id: string | null;
           input_grams_value: number | null;
           input_mode: string;
@@ -598,6 +600,8 @@ export type Database = {
           food_type?: string;
           group_choices?: Json | null;
           id?: string;
+          photo_items?: Json | null;
+          photo_path?: string | null;
           ingredient_master_id?: string | null;
           input_grams_value?: number | null;
           input_mode?: string;
@@ -639,6 +643,8 @@ export type Database = {
           food_type?: string;
           group_choices?: Json | null;
           id?: string;
+          photo_items?: Json | null;
+          photo_path?: string | null;
           ingredient_master_id?: string | null;
           input_grams_value?: number | null;
           input_mode?: string;
@@ -784,6 +790,24 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      photo_scan_log: {
+        Row: {
+          created_at: string;
+          id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          user_id?: string;
+        };
+        Relationships: [];
       };
       push_subscriptions: {
         Row: {

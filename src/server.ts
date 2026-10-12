@@ -3,6 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { registerPushToken, broadcastAppUpdate } from "./lib/push-notifications.functions";
+import { analyzeMealPhoto } from "./lib/photoScan.functions";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -51,11 +52,14 @@ const SERVER_FN_PREFIX = "/_serverFn/";
  * Server-Function-Pfade, die die native App auch per POST cross-origin
  * erreichen darf (Pfade sind build-generierte Hashes, deshalb zur Laufzeit
  * aus den echten Function-Objekten gelesen statt von Hand eingetragen).
- * Beide bleiben durch requireSupabaseAuth abgesichert, broadcastAppUpdate
- * zusätzlich durch einen serverseitigen has_role-Check – CORS ist hier nur
+ * Alle bleiben durch requireSupabaseAuth abgesichert, broadcastAppUpdate
+ * zusätzlich durch einen serverseitigen has_role-Check, analyzeMealPhoto durch
+ * einen serverseitigen Max-Plan-Check und ein Tageslimit – CORS ist hier nur
  * Erreichbarkeit, nicht die Sicherheitsgrenze.
  */
-const NATIVE_CORS_POST_PATHS = new Set([registerPushToken, broadcastAppUpdate].map((fn) => fn.url));
+const NATIVE_CORS_POST_PATHS = new Set(
+  [registerPushToken, broadcastAppUpdate, analyzeMealPhoto].map((fn) => fn.url),
+);
 
 /**
  * Die Capacitor-App hat kein `server.url` (siehe capacitor.config.ts) und ruft
