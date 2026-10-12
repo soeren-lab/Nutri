@@ -55,19 +55,25 @@ export function IngredientDeleteDialog({
   }, [open, ingredient]);
 
   const archiveMut = useMutation({
-    onMutate: () => {
+    onMutate: (id: string) => {
       const previous = qc.getQueriesData<IngredientMaster[]>({ queryKey: ["ingredients_master"] });
       qc.setQueriesData(
         { queryKey: ["ingredients_master"] },
         (old: IngredientMaster[] | undefined) =>
-          (old ?? []).map((m) => (m.id === ingredient!.id ? { ...m, archived: true } : m)),
+          (old ?? []).map((m) => (m.id === id ? { ...m, archived: true } : m)),
       );
       toast.success("Zutat gelöscht");
       onDone?.();
       onOpenChange(false);
       return { previous };
     },
-    mutationFn: () => archiveIngredientMaster(ingredient!.id),
+    // ID als Argument statt über den `ingredient`-Closure lesen: onMutate ruft
+    // oben onOpenChange(false) auf, wodurch der Elternstate `ingredient` auf
+    // null setzt, bevor diese Funktion tatsächlich ausgeführt wird – TanStack
+    // Query verwendet dabei immer den Closure des LETZTEN Renders, nicht den
+    // vom Zeitpunkt des mutate()-Aufrufs (führte zu "Cannot read properties
+    // of null (reading 'id')").
+    mutationFn: (id: string) => archiveIngredientMaster(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["ingredients_master"] });
     },
@@ -104,7 +110,7 @@ export function IngredientDeleteDialog({
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
-              archiveMut.mutate();
+              archiveMut.mutate(ingredient.id);
             }}
             disabled={archiveMut.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

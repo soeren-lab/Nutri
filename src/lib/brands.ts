@@ -60,7 +60,8 @@ export async function countBrandUsage(id: string): Promise<number> {
   const { count, error } = await supabase
     .from("ingredients_master")
     .select("id", { count: "exact", head: true })
-    .eq("brand_id", id);
+    .eq("brand_id", id)
+    .eq("archived", false);
   if (error) throw error;
   return count ?? 0;
 }

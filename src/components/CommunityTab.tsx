@@ -33,10 +33,7 @@ import {
   type CommunityIngredient,
 } from "@/lib/community";
 import { ingredientsMasterQuery, type IngredientMaster } from "@/lib/ingredients-master";
-import {
-  DEFAULT_INGREDIENT_CATEGORY,
-  INGREDIENT_CATEGORIES,
-} from "@/lib/categories";
+import { DEFAULT_INGREDIENT_CATEGORY, INGREDIENT_CATEGORIES } from "@/lib/categories";
 import { toast } from "sonner";
 
 export function CommunityTab() {
@@ -56,7 +53,13 @@ export function CommunityTab() {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const importedSourceIds = useMemo(
-    () => new Set(own.map((m) => m.source_ingredient_id).filter(Boolean) as string[]),
+    () =>
+      new Set(
+        own
+          .filter((m) => !m.archived)
+          .map((m) => m.source_ingredient_id)
+          .filter(Boolean) as string[],
+      ),
     [own],
   );
 

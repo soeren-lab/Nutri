@@ -3,16 +3,38 @@ import { supabase } from "@/integrations/supabase/client";
 import { searchOffProducts, type OffProduct } from "@/lib/openfoodfacts.functions";
 import { DEFAULT_INGREDIENT_CATEGORY } from "@/lib/categories";
 import type { IngredientMaster } from "@/lib/ingredients-master";
+import { isNativeApp } from "@/lib/platform";
 
 export type { OffProduct };
 
 export const OFF_SOURCE = "openfoodfacts";
 
+// Muss mit WORKER_URL in scripts/build-capacitor-shell.mjs übereinstimmen.
+const PRODUCTION_ORIGIN = "https://tanstack-start-ts.nutriapp.workers.dev";
+
+/**
+ * Die Capacitor-App läuft komplett lokal gebündelt (kein `server.url`, siehe
+ * capacitor.config.ts) – ein relativer `/_serverFn/…`-Aufruf geht dort ins
+ * Leere. Für die OFF-Suche hängen wir den Aufruf deshalb nativ explizit auf
+ * die echte, deployte Worker-URL um. CORS dafür ist gezielt für GET-
+ * Server-Functions in src/server.ts freigeschaltet (die OFF-Suche braucht
+ * keine Authentifizierung).
+ */
+function nativeServerFnFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url = typeof input === "string" ? input : input.toString();
+  const absolute = url.startsWith("http") ? url : `${PRODUCTION_ORIGIN}${url}`;
+  return fetch(absolute, init);
+}
+
 /** Suche in Open Food Facts. Fehler blockieren die eigene Suche nie. */
 export const offSearchQuery = (query: string) =>
   queryOptions({
     queryKey: ["off-search", query.trim().toLowerCase()],
-    queryFn: () => searchOffProducts({ data: { query: query.trim() } }),
+    queryFn: () =>
+      searchOffProducts({
+        data: { query: query.trim() },
+        ...(isNativeApp() ? { fetch: nativeServerFnFetch } : {}),
+      }),
     enabled: query.trim().length >= 2,
     staleTime: 1000 * 60 * 10,
     retry: false,
@@ -50,12 +72,25 @@ export async function importOffProduct(p: OffProduct): Promise<IngredientMaster>
 
   const { data: dupe } = await supabase
     .from("ingredients_master")
-    .select("id, name")
+    .select("id, name, archived")
     .eq("user_id", uid)
     .eq("source_barcode", p.id)
     .limit(1)
     .maybeSingle();
-  if (dupe) throw new Error(`„${dupe.name}" ist bereits in deiner Bibliothek`);
+  if (dupe) {
+    if (!dupe.archived) throw new Error(`„${dupe.name}" ist bereits in deiner Bibliothek`);
+    // War bereits importiert, aber zwischenzeitlich gelöscht (archiviert) –
+    // stattdessen wiederherstellen statt einen "bereits vorhanden"-Fehler zu
+    // werfen, sonst könnte man eine gelöschte OFF-Zutat nie wieder importieren.
+    const { data: restored, error } = await supabase
+      .from("ingredients_master")
+      .update({ archived: false })
+      .eq("id", dupe.id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return restored;
+  }
 
   const brand_id = await resolveBrandId(uid, p.brand);
 

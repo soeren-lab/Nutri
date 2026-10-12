@@ -3,14 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, ImageIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  importOffProduct,
-  offSearchQuery,
-  type OffProduct,
-} from "@/lib/openfoodfacts";
+import { importOffProduct, offSearchQuery, type OffProduct } from "@/lib/openfoodfacts";
 import type { IngredientMaster } from "@/lib/ingredients-master";
 import { cn } from "@/lib/utils";
-import { isNativeApp } from "@/lib/platform";
 
 function useDebounced(value: string, delay = 450) {
   const [debounced, setDebounced] = useState(value);
@@ -96,13 +91,9 @@ export function OffResultsSection({
   variant?: "rows" | "cards";
 }) {
   const debounced = useDebounced(query.trim());
-  const native = isNativeApp();
-  const { data, isFetching } = useQuery({ ...offSearchQuery(debounced), enabled: !native });
+  const { data, isFetching } = useQuery(offSearchQuery(debounced));
   const { mut, pendingId } = useOffImport(onImported);
 
-  // In der App-Version aktuell nicht verfügbar (braucht einen erreichbaren
-  // eigenen Server) – die lokale/Community-Suche funktioniert unverändert.
-  if (native) return null;
   if (debounced.length < 2) return null;
 
   const products = data?.products ?? [];
@@ -149,9 +140,7 @@ export function OffResultsSection({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-base font-semibold leading-tight">
-                        {p.name}
-                      </div>
+                      <div className="truncate text-base font-semibold leading-tight">{p.name}</div>
                       {p.brand && (
                         <div className="mt-0.5 truncate text-sm text-muted-foreground">
                           {p.brand}

@@ -12,8 +12,16 @@ import {
 } from "@/lib/theme";
 
 /**
- * Wendet die Darstellungs-Einstellung an: lokal gespeicherter Wert greift
- * sofort, der Profilwert (geräteübergreifend) überschreibt ihn nach dem Laden.
+ * Der klassische Hell/Dunkel/System-Modus ist tot geschaltet: Liquid Glass
+ * (siehe use-experimental-mode.ts) ist jetzt der verpflichtende Standard-Look
+ * und überstimmt ihn optisch ohnehin per CSS-Reihenfolge (src/styles.css).
+ * `theme` ist deshalb hart auf `"light"` verdrahtet – zusätzliche
+ * Absicherung, falls `.glass`/`.glass-light` aus irgendeinem Grund mal nicht
+ * greift, damit der unsichtbare Unterbau nie auf Dunkel/System zurückfällt.
+ * `setTheme`/die Mutation/`storeTheme`/`readStoredTheme` bleiben als toter,
+ * aber vorhandener Pfad bestehen (nicht gelöscht) – aufgerufen wird das
+ * inzwischen von nirgends mehr, da AppearanceSection.tsx nicht mehr verlinkt
+ * ist.
  */
 export function useTheme() {
   const { user } = useAuth();
@@ -21,23 +29,22 @@ export function useTheme() {
   const profileQuery = useQuery({ ...userProfileQuery(), staleTime: 60_000 });
   const [local, setLocal] = useState<ThemePreference>("system");
 
-  // Lokalen Wert nach der Hydration anwenden.
+  // Lokalen Wert nach der Hydration anwenden (toter Pfad, siehe oben).
   useEffect(() => {
     const stored = readStoredTheme();
     setLocal(stored);
-    applyTheme(stored);
+    applyTheme("light");
   }, []);
 
-  const raw = (profileQuery.data as { theme_preference?: unknown } | null)
-    ?.theme_preference;
+  const raw = (profileQuery.data as { theme_preference?: unknown } | null)?.theme_preference;
   const remote: ThemePreference | null = isThemePreference(raw) ? raw : null;
-  const theme = remote ?? local;
+  const theme: ThemePreference = "light";
 
   useEffect(() => {
     if (!remote) return;
     storeTheme(remote);
     setLocal(remote);
-    applyTheme(remote);
+    applyTheme("light");
   }, [remote]);
 
   const mutation = useMutation({
@@ -45,10 +52,7 @@ export function useTheme() {
       if (!user) return;
       const { error } = await supabase
         .from("user_profile")
-        .upsert(
-          { user_id: user.id, theme_preference: pref } as never,
-          { onConflict: "user_id" },
-        );
+        .upsert({ user_id: user.id, theme_preference: pref } as never, { onConflict: "user_id" });
       if (error) throw error;
     },
     onSuccess: () => {

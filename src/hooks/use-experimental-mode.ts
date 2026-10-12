@@ -7,10 +7,20 @@ import { useAuth } from "@/hooks/use-auth";
 import { applyGlassMode, isGlassVariant, type GlassVariant } from "@/lib/theme";
 
 /**
- * Experimenteller Glass-Modus: für alle angemeldeten Nutzer sicht-/schaltbar
- * (offiziell freigegeben, war zuvor nur für Admins), wendet bei Aktivierung
- * app-weit die `.glass`/`.glass-light`-Klasse an (siehe src/styles.css) –
- * Variante ist unabhängig von der normalen Hell/Dunkel-Wahl.
+ * Liquid Glass ist seit diesem Rollout der goldene Standard-Look der App,
+ * nicht mehr optional/experimentell – `enabled` ist deshalb hart auf `true`
+ * verdrahtet statt aus `user_profile.experimental_glass_ui` gelesen. Das ist
+ * die robusteste Garantie dafür, dass er sich nicht abschalten lässt,
+ * unabhängig vom DB-Zustand oder von noch erreichbaren, aber unverlinkten
+ * alten UI-Pfaden (siehe ExperimentalSettingsSection.tsx). `setEnabled`/die
+ * DB-Spalte bleiben als toter Alt-/Killswitch-Mechanismus im Code bestehen
+ * (nicht gelöscht), wirken sich aber nicht mehr auf `enabled` aus.
+ *
+ * Der klassische Hell/Dunkel/System-Modus (use-theme.ts, AppearanceSection.tsx)
+ * ist ebenfalls im Code vorhanden, aber aus der UI entfernt/unsichtbar.
+ *
+ * TODO Performance-Modus: geplanter, leichtgewichtigerer Look als Alternative
+ * zu Glass für schwächere Geräte – noch nicht umgesetzt.
  */
 export function useExperimentalMode() {
   const { user } = useAuth();
@@ -21,10 +31,10 @@ export function useExperimentalMode() {
     experimental_glass_ui?: unknown;
     experimental_glass_variant?: unknown;
   } | null;
-  const enabled = data?.experimental_glass_ui === true;
+  const enabled = true;
   const variant: GlassVariant = isGlassVariant(data?.experimental_glass_variant)
     ? data.experimental_glass_variant
-    : "dark";
+    : "light";
 
   // Kein Cleanup hier: dieser Hook läuft gleichzeitig im Shell (dauerhaft) UND
   // auf der Experimental-Settings-Seite (nur während sie sichtbar ist). Ein

@@ -5,7 +5,6 @@ import type { Brand } from "@/lib/brands";
 import { getAvatarSignedUrls } from "@/lib/avatar";
 import { fetchSharedSourceIds, sharedSourceHasUpdate } from "@/lib/shared-sources";
 
-
 export type CommunityIngredient = IngredientMaster & {
   brand: Brand | null;
   author_username?: string | null;
@@ -18,9 +17,7 @@ export type AuthorProfile = { username: string; avatarUrl: string | null };
  * Liefert eine Map user_id → { username, avatarUrl } für die übergebenen IDs
  * (Security-Definer-RPC + signierte Avatar-URLs).
  */
-export async function fetchAuthorProfiles(
-  userIds: string[],
-): Promise<Map<string, AuthorProfile>> {
+export async function fetchAuthorProfiles(userIds: string[]): Promise<Map<string, AuthorProfile>> {
   const map = new Map<string, AuthorProfile>();
   if (userIds.length === 0) return map;
   const { data, error } = await supabase.rpc("get_user_avatars", {
@@ -38,7 +35,7 @@ export async function fetchAuthorProfiles(
   for (const row of rows) {
     map.set(row.user_id, {
       username: row.username,
-      avatarUrl: row.avatar_url ? urlMap.get(row.avatar_url) ?? null : null,
+      avatarUrl: row.avatar_url ? (urlMap.get(row.avatar_url) ?? null) : null,
     });
   }
   return map;
@@ -49,7 +46,6 @@ export async function fetchUsernames(userIds: string[]): Promise<Map<string, str
   const profiles = await fetchAuthorProfiles(userIds);
   return new Map(Array.from(profiles, ([id, p]) => [id, p.username]));
 }
-
 
 async function requireUid(): Promise<string> {
   const { data } = await supabase.auth.getUser();
@@ -81,7 +77,6 @@ export async function fetchCommunityIngredients(): Promise<CommunityIngredient[]
     r.author_username = a?.username ?? null;
     r.author_avatar_url = a?.avatarUrl ?? null;
   }
-
 
   const seen = new Set<string>();
   const out: CommunityIngredient[] = [];
@@ -124,11 +119,7 @@ function levenshtein(a: string, b: string): number {
   for (let i = 1; i <= m; i++) {
     const cur = [i];
     for (let j = 1; j <= n; j++) {
-      cur[j] = Math.min(
-        prev[j] + 1,
-        cur[j - 1] + 1,
-        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
-      );
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
     }
     prev = cur;
   }
@@ -207,14 +198,9 @@ export async function unpublishIngredient(id: string): Promise<void> {
 /** Eigene Marke für eine veröffentlichte Fremd-Marke finden oder anlegen. */
 async function resolveOwnBrand(uid: string, sourceBrand: Brand | null): Promise<string | null> {
   if (!sourceBrand) return null;
-  const { data: own, error } = await supabase
-    .from("brands")
-    .select("*")
-    .eq("user_id", uid);
+  const { data: own, error } = await supabase.from("brands").select("*").eq("user_id", uid);
   if (error) throw error;
-  const match = (own ?? []).find(
-    (b) => normalizeName(b.name) === normalizeName(sourceBrand.name),
-  );
+  const match = (own ?? []).find((b) => normalizeName(b.name) === normalizeName(sourceBrand.name));
   if (match) return match.id;
   const { data: created, error: cErr } = await supabase
     .from("brands")
@@ -230,6 +216,29 @@ export async function importCommunityIngredient(
   source: CommunityIngredient,
 ): Promise<IngredientMaster> {
   const uid = await requireUid();
+
+  const { data: dupe } = await supabase
+    .from("ingredients_master")
+    .select("*")
+    .eq("user_id", uid)
+    .eq("source_ingredient_id", source.id)
+    .limit(1)
+    .maybeSingle();
+  if (dupe) {
+    if (!dupe.archived) return dupe;
+    // War bereits importiert, aber zwischenzeitlich gelöscht (archiviert) –
+    // stattdessen wiederherstellen statt einen Duplikat-Fehler zu werfen,
+    // sonst könnte man eine gelöschte Community-Zutat nie wieder importieren.
+    const { data: restored, error: restoreErr } = await supabase
+      .from("ingredients_master")
+      .update({ archived: false })
+      .eq("id", dupe.id)
+      .select("*")
+      .single();
+    if (restoreErr) throw restoreErr;
+    return restored;
+  }
+
   const brandId = await resolveOwnBrand(uid, source.brand ?? null);
 
   const { data, error } = await supabase
@@ -312,7 +321,6 @@ export async function fetchIngredientUpdates(): Promise<IngredientUpdate[]> {
   return out;
 }
 
-
 export const ingredientUpdatesQuery = () =>
   queryOptions({
     queryKey: ["ingredient_updates"],
@@ -339,7 +347,6 @@ export async function applyIngredientUpdate(update: IngredientUpdate): Promise<v
       dismissed_version: null,
       source_updated_at: source.updated_at,
       dismissed_source_updated_at: null,
-
     })
     .eq("id", copy.id);
   if (error) throw error;
@@ -383,10 +390,7 @@ const DIFF_FIELDS: Array<{
   { key: "density_g_per_ml", label: "Dichte", suffix: " g/ml" },
 ];
 
-export function diffIngredient(
-  copy: IngredientMaster,
-  source: IngredientMaster,
-): DiffField[] {
+export function diffIngredient(copy: IngredientMaster, source: IngredientMaster): DiffField[] {
   const out: DiffField[] = [];
   for (const f of DIFF_FIELDS) {
     const a = copy[f.key] ?? null;

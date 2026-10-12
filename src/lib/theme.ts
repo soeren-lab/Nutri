@@ -1,7 +1,11 @@
 import { Style, StatusBar } from "@capacitor/status-bar";
 import { isNativeApp } from "@/lib/platform";
 
-/** Darstellungs-Einstellung: hell, dunkel oder Systemvorgabe. */
+/**
+ * Klassischer Hell/Dunkel/System-Modus: im Code weiterhin vorhanden, aber
+ * aus der UI entfernt/unsichtbar (siehe use-theme.ts) – Liquid Glass ist
+ * jetzt der verpflichtende Standard-Look, siehe use-experimental-mode.ts.
+ */
 export type ThemePreference = "light" | "dark" | "system";
 
 export const THEME_STORAGE_KEY = "theme-preference";
@@ -50,6 +54,11 @@ export type GlassVariant = "dark" | "light";
 export function isGlassVariant(value: unknown): value is GlassVariant {
   return value === "dark" || value === "light";
 }
+
+export const GLASS_VARIANT_LABELS: Record<GlassVariant, string> = {
+  light: "Hell",
+  dark: "Dunkel",
+};
 
 /**
  * Schaltet den experimentellen Glass-Look app-weit um, in der gewählten

@@ -1,3 +1,7 @@
+// Klassischer Hell/Dunkel/System-Picker: bewusst im Code belassen, aber
+// aktuell von keiner Route mehr referenziert – Liquid Glass ist der
+// verpflichtende Standard-Look (siehe use-experimental-mode.ts), die
+// "Darstellung"-Route zeigt stattdessen LiquidGlassAppearanceSection.tsx.
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { THEME_LABELS, type ThemePreference } from "@/lib/theme";
