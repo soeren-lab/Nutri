@@ -23,11 +23,11 @@ type Field = keyof NutritionValue;
 
 const FIELDS: Array<{ key: Field; label: string; short: string }> = [
   { key: "calories", label: "kcal", short: "kcal" },
-  { key: "protein_g", label: "Protein (g)", short: "P" },
-  { key: "carbs_g", label: "Kohlenhydrate (g)", short: "KH" },
   { key: "fat_g", label: "Fett (g)", short: "F" },
-  { key: "fiber_g", label: "Ballaststoffe (g)", short: "BS" },
+  { key: "carbs_g", label: "Kohlenhydrate (g)", short: "KH" },
   { key: "sugar_g", label: "davon Zucker (g)", short: "Zucker" },
+  { key: "fiber_g", label: "Ballaststoffe (g)", short: "BS" },
+  { key: "protein_g", label: "Protein (g)", short: "P" },
 ];
 
 export function NutritionInput({

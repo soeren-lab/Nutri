@@ -137,10 +137,10 @@ export function GramsOrServingsInput({
         <div className="grid grid-cols-4 gap-2 rounded-xl border border-border p-2 text-center">
           {[
             { label: "kcal", v: preview.calories },
-            { label: "P", v: preview.protein_g },
-            { label: "KH", v: preview.carbs_g },
             { label: "F", v: preview.fat_g },
+            { label: "KH", v: preview.carbs_g },
             { label: "BS", v: preview.fiber_g },
+            { label: "P", v: preview.protein_g },
           ].map((x) => (
             <div key={x.label}>
               <p className="text-sm font-semibold tabular-nums">{Math.round(x.v)}</p>

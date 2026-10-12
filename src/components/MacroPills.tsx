@@ -35,7 +35,7 @@ const BADGES = {
 } as const;
 
 /**
- * Kompakte Makro-Anzeige (P · KH · F · BS · Z) als zentrierte Badge-Gruppe.
+ * Kompakte Makro-Anzeige (F · KH · Z · BS · P) als zentrierte Badge-Gruppe.
  * - immer 1 Nachkommastelle
  * - optionale Werte (BS/Z) nur bei vorhandenem Wert
  * - farbige Mini-Badges für die Kürzel
@@ -49,12 +49,12 @@ export function MacroPills({
   className,
 }: MacroPillsProps) {
   const items: { key: keyof typeof BADGES; value: number }[] = [
-    { key: "protein_g", value: protein_g ?? 0 },
-    { key: "carbs_g", value: carbs_g ?? 0 },
     { key: "fat_g", value: fat_g ?? 0 },
+    { key: "carbs_g", value: carbs_g ?? 0 },
   ];
-  if (fiber_g != null) items.push({ key: "fiber_g", value: fiber_g });
   if (sugar_g != null) items.push({ key: "sugar_g", value: sugar_g });
+  if (fiber_g != null) items.push({ key: "fiber_g", value: fiber_g });
+  items.push({ key: "protein_g", value: protein_g ?? 0 });
 
   return (
     <div

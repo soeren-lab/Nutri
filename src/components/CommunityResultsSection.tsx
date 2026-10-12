@@ -99,7 +99,7 @@ export function CommunityResultsSection({
                 </span>
                 {(m.protein_g != null || m.carbs_g != null || m.fat_g != null) && (
                   <span className="block truncate text-[11px] text-muted-foreground">
-                    P {m.protein_g ?? "–"}g · KH {m.carbs_g ?? "–"}g · F {m.fat_g ?? "–"}g
+                    F {m.fat_g ?? "–"}g · KH {m.carbs_g ?? "–"}g · P {m.protein_g ?? "–"}g
                   </span>
                 )}
               </span>

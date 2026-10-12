@@ -111,7 +111,7 @@ export function RankPanel() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Pro Tag bis zu 140 Punkte (Kalorien 35, Protein 25, KH 20, Fett 20 – mit
+              Pro Tag bis zu 140 Punkte (Kalorien 35, Fett 20, KH 20, Protein 25 – mit
               Teilpunkten bei 60 % / 30 % je nach Abweichung, mehr Protein wird nicht
               bestraft, +40 Bonus bei allen vier voll getroffen). Darauf der
               Streak-Multiplikator (ab 3/7/14 Tagen ×1.1/×1.2/×1.3) sowie einmalige

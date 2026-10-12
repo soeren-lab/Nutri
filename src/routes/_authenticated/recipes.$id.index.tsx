@@ -527,11 +527,11 @@ function RecipeDetailPage() {
                         <tr className="border-b border-border text-left text-xs text-muted-foreground">
                           <th className="py-2 pr-3 font-normal">Zutat</th>
                           <th className="py-2 pr-3 text-right font-normal">kcal</th>
-                          <th className="py-2 pr-3 text-right font-normal">P</th>
-                          <th className="py-2 pr-3 text-right font-normal">KH</th>
                           <th className="py-2 pr-3 text-right font-normal">F</th>
+                          <th className="py-2 pr-3 text-right font-normal">KH</th>
+                          <th className="py-2 pr-3 text-right font-normal">Zucker</th>
                           <th className="py-2 pr-3 text-right font-normal">BS</th>
-                          <th className="py-2 text-right font-normal">Zucker</th>
+                          <th className="py-2 text-right font-normal">P</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -549,18 +549,18 @@ function RecipeDetailPage() {
                               {ing.calories ?? "–"}
                             </td>
                             <td className="py-2 pr-3 text-right tabular-nums">
-                              {ing.protein_g ?? "–"}
+                              {ing.fat_g ?? "–"}
                             </td>
                             <td className="py-2 pr-3 text-right tabular-nums">
                               {ing.carbs_g ?? "–"}
                             </td>
                             <td className="py-2 pr-3 text-right tabular-nums">
-                              {ing.fat_g ?? "–"}
+                              {ing.sugar_g ?? "–"}
                             </td>
                             <td className="py-2 pr-3 text-right tabular-nums">
                               {ing.fiber_g ?? "–"}
                             </td>
-                            <td className="py-2 text-right tabular-nums">{ing.sugar_g ?? "–"}</td>
+                            <td className="py-2 text-right tabular-nums">{ing.protein_g ?? "–"}</td>
                           </tr>
                         ))}
                       </tbody>

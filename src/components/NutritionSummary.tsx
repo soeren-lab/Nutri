@@ -9,11 +9,11 @@ interface Totals {
 
 const CELLS: Array<{ label: string; key: keyof Totals; unit: string }> = [
   { label: "Kalorien", key: "calories", unit: "kcal" },
-  { label: "Protein", key: "protein_g", unit: "g" },
-  { label: "Kohlenhydrate", key: "carbs_g", unit: "g" },
   { label: "Fett", key: "fat_g", unit: "g" },
-  { label: "Ballaststoffe", key: "fiber_g", unit: "g" },
+  { label: "Kohlenhydrate", key: "carbs_g", unit: "g" },
   { label: "davon Zucker", key: "sugar_g", unit: "g" },
+  { label: "Ballaststoffe", key: "fiber_g", unit: "g" },
+  { label: "Protein", key: "protein_g", unit: "g" },
 ];
 
 export function NutritionSummary({

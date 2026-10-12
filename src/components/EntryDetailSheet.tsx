@@ -24,11 +24,11 @@ function formatWhen(entry: MealPlanEntryFull): string {
 
 const MACROS = [
   { key: "calories", label: "kcal" },
-  { key: "protein_g", label: "Protein" },
-  { key: "carbs_g", label: "KH" },
   { key: "fat_g", label: "Fett" },
-  { key: "fiber_g", label: "Ballaststoffe" },
+  { key: "carbs_g", label: "KH" },
   { key: "sugar_g", label: "davon Zucker" },
+  { key: "fiber_g", label: "Ballaststoffe" },
+  { key: "protein_g", label: "Protein" },
 ] as const;
 
 /**

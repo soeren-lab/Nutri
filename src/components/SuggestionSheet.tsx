@@ -81,9 +81,9 @@ function AiSuggestionRow({
             </span>
           </span>
           <span className="mt-0.5 block text-[11px] tabular-nums text-muted-foreground">
-            ca. {r(s.estimated_kcal)} kcal · P {r(s.estimated_protein_g)} g · KH{" "}
-            {r(s.estimated_carbs_g)} g · F {r(s.estimated_fat_g)} g · BS{" "}
-            {r(s.estimated_fiber_g)} g
+            ca. {r(s.estimated_kcal)} kcal · F {r(s.estimated_fat_g)} g · KH{" "}
+            {r(s.estimated_carbs_g)} g · BS {r(s.estimated_fiber_g)} g · P{" "}
+            {r(s.estimated_protein_g)} g
           </span>
           {s.description && (
             <span className="mt-1 block text-[11px] leading-tight text-muted-foreground">
@@ -167,9 +167,9 @@ export function SuggestionSheet({
 
         {remaining && (
           <p className="text-xs tabular-nums text-muted-foreground">
-            Budget für diese Mahlzeit: {r(remaining.calories)} kcal · P {r(remaining.protein_g)} g
-            · KH {r(remaining.carbs_g)} g · F {r(remaining.fat_g)} g · BS{" "}
-            {r(remaining.fiber_g)} g
+            Budget für diese Mahlzeit: {r(remaining.calories)} kcal · F {r(remaining.fat_g)} g
+            · KH {r(remaining.carbs_g)} g · BS {r(remaining.fiber_g)} g · P{" "}
+            {r(remaining.protein_g)} g
           </p>
         )}
 

@@ -233,23 +233,23 @@ export function QuickEntryDialog({
             onClick={() => setDetails((d) => !d)}
             className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
-            Details (Protein / KH / Fett / Ballaststoffe / Zucker)
+            Details (Fett / KH / Zucker / Ballaststoffe / Protein)
             <ChevronDown className={cn("h-4 w-4 transition-transform", details && "rotate-180")} />
           </button>
           {details && (
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label htmlFor="qe-p" className="text-xs">
-                  Protein (g)
+                <Label htmlFor="qe-f" className="text-xs">
+                  Fett (g)
                 </Label>
                 <Input
-                  id="qe-p"
+                  id="qe-f"
                   type="number"
                   inputMode="decimal"
                   min={0}
                   step="any"
-                  value={protein}
-                  onChange={(e) => setProtein(e.target.value)}
+                  value={fat}
+                  onChange={(e) => setFat(e.target.value)}
                 />
               </div>
               <div className="space-y-1">
@@ -267,17 +267,17 @@ export function QuickEntryDialog({
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="qe-f" className="text-xs">
-                  Fett (g)
+                <Label htmlFor="qe-z" className="text-xs">
+                  Zucker (g)
                 </Label>
                 <Input
-                  id="qe-f"
+                  id="qe-z"
                   type="number"
                   inputMode="decimal"
                   min={0}
                   step="any"
-                  value={fat}
-                  onChange={(e) => setFat(e.target.value)}
+                  value={sugar}
+                  onChange={(e) => setSugar(e.target.value)}
                 />
               </div>
               <div className="space-y-1">
@@ -295,17 +295,17 @@ export function QuickEntryDialog({
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="qe-z" className="text-xs">
-                  Zucker (g)
+                <Label htmlFor="qe-p" className="text-xs">
+                  Protein (g)
                 </Label>
                 <Input
-                  id="qe-z"
+                  id="qe-p"
                   type="number"
                   inputMode="decimal"
                   min={0}
                   step="any"
-                  value={sugar}
-                  onChange={(e) => setSugar(e.target.value)}
+                  value={protein}
+                  onChange={(e) => setProtein(e.target.value)}
                 />
               </div>
             </div>

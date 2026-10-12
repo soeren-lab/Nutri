@@ -106,10 +106,10 @@ export type MacroKey = "calories" | "protein_g" | "carbs_g" | "fat_g" | "fiber_g
 
 export const MACRO_LABELS: Record<MacroKey, string> = {
   calories: "Kalorien",
-  protein_g: "Protein",
-  carbs_g: "Kohlenhydrate",
   fat_g: "Fett",
+  carbs_g: "Kohlenhydrate",
   fiber_g: "Ballaststoffe",
+  protein_g: "Protein",
 };
 
 export type PointsBreakdown = {
@@ -202,7 +202,7 @@ export const LIFETIME_WEIGHTS: PointsWeights = {
 
 /**
  * Punkte eines Tages: pro Nährwert gestaffelte Teilpunkte (Kalorien 30,
- * Protein 25, KH 15, Fett 15, Ballaststoffe 15), +50 Bonus bei fünf vollen
+ * Fett 15, KH 15, Ballaststoffe 15, Protein 25), +50 Bonus bei fünf vollen
  * Treffern (max. 150 Basis), darauf der Streak-Multiplikator.
  * Hinweis: Das Tagesmaximum ist von ~182 auf ~195 Punkte gestiegen – die
  * Balance der RANK_THRESHOLDS sollte ggf. neu geprüft werden.

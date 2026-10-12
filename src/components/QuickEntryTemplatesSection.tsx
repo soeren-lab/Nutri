@@ -36,11 +36,11 @@ export function QuickEntryTemplatesSection() {
                 <p className="truncate text-sm font-medium">{t.name}</p>
                 <p className="text-[11px] tabular-nums text-muted-foreground">
                   {Math.round(Number(t.calories))} kcal
-                  {t.protein_g != null && ` · P ${Math.round(Number(t.protein_g))} g`}
-                  {t.carbs_g != null && ` · KH ${Math.round(Number(t.carbs_g))} g`}
                   {t.fat_g != null && ` · F ${Math.round(Number(t.fat_g))} g`}
-                  {t.fiber_g != null && ` · BS ${Math.round(Number(t.fiber_g))} g`}
+                  {t.carbs_g != null && ` · KH ${Math.round(Number(t.carbs_g))} g`}
                   {t.sugar_g != null && ` · Z ${Math.round(Number(t.sugar_g))} g`}
+                  {t.fiber_g != null && ` · BS ${Math.round(Number(t.fiber_g))} g`}
+                  {t.protein_g != null && ` · P ${Math.round(Number(t.protein_g))} g`}
                   {` · ${t.use_count}×`}
                 </p>
               </div>

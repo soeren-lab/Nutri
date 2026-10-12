@@ -49,11 +49,11 @@ const NUTRITION_FIELDS: Array<{
   unit: string;
 }> = [
   { key: "calories", label: "kcal", unit: "" },
-  { key: "protein_g", label: "Protein", unit: "g" },
-  { key: "carbs_g", label: "KH", unit: "g" },
   { key: "fat_g", label: "Fett", unit: "g" },
-  { key: "fiber_g", label: "Ballaststoffe", unit: "g" },
+  { key: "carbs_g", label: "KH", unit: "g" },
   { key: "sugar_g", label: "Zucker", unit: "g" },
+  { key: "fiber_g", label: "Ballaststoffe", unit: "g" },
+  { key: "protein_g", label: "Protein", unit: "g" },
 ];
 
 export function IngredientInput({

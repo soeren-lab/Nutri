@@ -383,10 +383,10 @@ const DIFF_FIELDS: Array<{
   { key: "unit", label: "Basis-Einheit" },
   { key: "category", label: "Kategorie" },
   { key: "calories", label: "Kalorien", suffix: " kcal" },
-  { key: "protein_g", label: "Protein", suffix: " g" },
-  { key: "carbs_g", label: "Kohlenhydrate", suffix: " g" },
   { key: "fat_g", label: "Fett", suffix: " g" },
+  { key: "carbs_g", label: "Kohlenhydrate", suffix: " g" },
   { key: "fiber_g", label: "Ballaststoffe", suffix: " g" },
+  { key: "protein_g", label: "Protein", suffix: " g" },
   { key: "density_g_per_ml", label: "Dichte", suffix: " g/ml" },
 ];
 

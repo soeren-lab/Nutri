@@ -150,10 +150,10 @@ export function useRankStatistics(rangeDays: 7 | 30 = 7): RankStatistics {
     /* --- 4. Punkte-Herkunft ------------------------------------------- */
     const macroSums: Record<MacroKey, number> = {
       calories: 0,
-      protein_g: 0,
-      carbs_g: 0,
       fat_g: 0,
+      carbs_g: 0,
       fiber_g: 0,
+      protein_g: 0,
     };
     let bonusSum = 0;
     let milestoneSum = 0;

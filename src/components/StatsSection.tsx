@@ -57,10 +57,10 @@ const QUICK_RANGES: { label: string; get: () => Range }[] = [
 ];
 
 const macroConfig = {
-  protein_g: { label: "Protein", color: "var(--primary)" },
-  carbs_g: { label: "Kohlenhydrate", color: "var(--accent)" },
   fat_g: { label: "Fett", color: "var(--muted-foreground)" },
+  carbs_g: { label: "Kohlenhydrate", color: "var(--accent)" },
   fiber_g: { label: "Ballaststoffe", color: "var(--chart-2, #10b981)" },
+  protein_g: { label: "Protein", color: "var(--primary)" },
   targetProtein: { label: "Ziel Protein", color: "var(--foreground)" },
 } satisfies ChartConfig;
 
@@ -200,13 +200,8 @@ function StatsContent({ range }: { range: Range }) {
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
         <AvgTile label="Ø kcal" value={averages.calories} target={avgTargets.calories} />
-        {tracking.protein_g && (
-          <AvgTile
-            label="Ø P"
-            value={averages.protein_g}
-            target={avgTargets.protein_g}
-            unit="g"
-          />
+        {tracking.fat_g && (
+          <AvgTile label="Ø F" value={averages.fat_g} target={avgTargets.fat_g} unit="g" />
         )}
         {tracking.carbs_g && (
           <AvgTile
@@ -216,8 +211,11 @@ function StatsContent({ range }: { range: Range }) {
             unit="g"
           />
         )}
-        {tracking.fat_g && (
-          <AvgTile label="Ø F" value={averages.fat_g} target={avgTargets.fat_g} unit="g" />
+        {tracking.sugar_g && (
+          <SugarAvgTile
+            value={averages.sugar_g ?? 0}
+            max={avgTargets.sugar_max_g}
+          />
         )}
         {tracking.fiber_g && (
           <AvgTile
@@ -227,10 +225,12 @@ function StatsContent({ range }: { range: Range }) {
             unit="g"
           />
         )}
-        {tracking.sugar_g && (
-          <SugarAvgTile
-            value={averages.sugar_g ?? 0}
-            max={avgTargets.sugar_max_g}
+        {tracking.protein_g && (
+          <AvgTile
+            label="Ø P"
+            value={averages.protein_g}
+            target={avgTargets.protein_g}
+            unit="g"
           />
         )}
       </div>
@@ -268,20 +268,20 @@ function StatsContent({ range }: { range: Range }) {
             <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={10} />
             <YAxis tickLine={false} axisLine={false} fontSize={10} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            {tracking.protein_g && (
-              <Bar dataKey="protein_g" stackId="m" fill="var(--color-protein_g)" />
+            {tracking.fat_g && (
+              <Bar dataKey="fat_g" stackId="m" fill="var(--color-fat_g)" />
             )}
             {tracking.carbs_g && (
               <Bar dataKey="carbs_g" stackId="m" fill="var(--color-carbs_g)" />
             )}
-            {tracking.fat_g && (
-              <Bar dataKey="fat_g" stackId="m" fill="var(--color-fat_g)" />
-            )}
             {tracking.fiber_g && (
+              <Bar dataKey="fiber_g" stackId="m" fill="var(--color-fiber_g)" />
+            )}
+            {tracking.protein_g && (
               <Bar
-                dataKey="fiber_g"
+                dataKey="protein_g"
                 stackId="m"
-                fill="var(--color-fiber_g)"
+                fill="var(--color-protein_g)"
                 radius={[3, 3, 0, 0]}
               />
             )}

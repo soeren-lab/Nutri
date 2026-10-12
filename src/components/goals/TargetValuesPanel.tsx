@@ -40,24 +40,6 @@ export function TargetValuesPanel() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="tp">Protein (g)</Label>
-              <Input
-                id="tp"
-                inputMode="decimal"
-                value={form.target_protein_g}
-                onChange={(e) => set("target_protein_g", e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="tk">Kohlenhydrate (g)</Label>
-              <Input
-                id="tk"
-                inputMode="decimal"
-                value={form.target_carbs_g}
-                onChange={(e) => set("target_carbs_g", e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
               <Label htmlFor="tf">Fett (g)</Label>
               <Input
                 id="tf"
@@ -67,12 +49,12 @@ export function TargetValuesPanel() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="tb">Ballaststoffe (g)</Label>
+              <Label htmlFor="tk">Kohlenhydrate (g)</Label>
               <Input
-                id="tb"
+                id="tk"
                 inputMode="decimal"
-                value={form.target_fiber_g}
-                onChange={(e) => set("target_fiber_g", e.target.value)}
+                value={form.target_carbs_g}
+                onChange={(e) => set("target_carbs_g", e.target.value)}
               />
             </div>
             <div className="space-y-1.5">
@@ -88,11 +70,29 @@ export function TargetValuesPanel() {
                 Maximalwert, kein Ziel-Korridor
               </p>
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tb">Ballaststoffe (g)</Label>
+              <Input
+                id="tb"
+                inputMode="decimal"
+                value={form.target_fiber_g}
+                onChange={(e) => set("target_fiber_g", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tp">Protein (g)</Label>
+              <Input
+                id="tp"
+                inputMode="decimal"
+                value={form.target_protein_g}
+                onChange={(e) => set("target_protein_g", e.target.value)}
+              />
+            </div>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">
-            Basierend auf deinen Angaben (Mifflin-St-Jeor, Protein 2 g/kg, Fett 25 % der
-            Kalorien, Ballaststoffe 14 g pro 1000 kcal).
+            Basierend auf deinen Angaben (Mifflin-St-Jeor, Fett 25 % der Kalorien,
+            Ballaststoffe 14 g pro 1000 kcal, Protein 2 g/kg).
           </p>
         )}
       </section>
@@ -103,11 +103,11 @@ export function TargetValuesPanel() {
             <p className="text-sm font-semibold">Deine Ziel-Werte</p>
             <div className="grid grid-cols-3 gap-2 text-center sm:grid-cols-5">
               <TargetTile label="kcal" value={preview.calories} />
-              <TargetTile label="Protein" value={preview.protein_g} suffix="g" />
-              <TargetTile label="KH" value={preview.carbs_g} suffix="g" />
               <TargetTile label="Fett" value={preview.fat_g} suffix="g" />
-              <TargetTile label="Ballaststoffe" value={preview.fiber_g} suffix="g" />
+              <TargetTile label="KH" value={preview.carbs_g} suffix="g" />
               <TargetTile label="Zucker max." value={preview.sugar_max_g} suffix="g" />
+              <TargetTile label="Ballaststoffe" value={preview.fiber_g} suffix="g" />
+              <TargetTile label="Protein" value={preview.protein_g} suffix="g" />
             </div>
             {preview.tdee > 0 && (
               <p className="text-xs text-muted-foreground">

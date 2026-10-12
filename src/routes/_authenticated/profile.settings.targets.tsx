@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/profile/settings/targets")
       { property: "og:title", content: "Tagesziele" },
       {
         property: "og:description",
-        content: "Kalorien, Protein, Kohlenhydrate, Fett, Ballaststoffe und Zucker.",
+        content: "Kalorien, Fett, Kohlenhydrate, Zucker, Ballaststoffe und Protein.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

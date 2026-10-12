@@ -3,31 +3,31 @@ import type { IngredientMaster } from "@/lib/ingredients-master";
 /** Nährwert-Felder, nach denen sortiert und gefiltert werden kann. */
 export const NUTRIENT_FIELDS = [
   "calories",
-  "protein_g",
-  "carbs_g",
   "fat_g",
-  "fiber_g",
+  "carbs_g",
   "sugar_g",
+  "fiber_g",
+  "protein_g",
 ] as const;
 
 export type NutrientField = (typeof NUTRIENT_FIELDS)[number];
 
 export const NUTRIENT_LABELS: Record<NutrientField, string> = {
   calories: "kcal",
-  protein_g: "Protein",
-  carbs_g: "Kohlenhydrate",
   fat_g: "Fett",
-  fiber_g: "Ballaststoffe",
+  carbs_g: "Kohlenhydrate",
   sugar_g: "Zucker",
+  fiber_g: "Ballaststoffe",
+  protein_g: "Protein",
 };
 
 export const NUTRIENT_UNITS: Record<NutrientField, string> = {
   calories: "kcal",
-  protein_g: "g",
-  carbs_g: "g",
   fat_g: "g",
-  fiber_g: "g",
+  carbs_g: "g",
   sugar_g: "g",
+  fiber_g: "g",
+  protein_g: "g",
 };
 
 export type IngredientSort =
@@ -41,16 +41,16 @@ export const INGREDIENT_SORT_LABELS: Record<IngredientSort, string> = {
   name_desc: "Name Z–A",
   calories_asc: "kcal (niedrig → hoch)",
   calories_desc: "kcal (hoch → niedrig)",
-  protein_g_asc: "Protein (niedrig → hoch)",
-  protein_g_desc: "Protein (hoch → niedrig)",
-  carbs_g_asc: "Kohlenhydrate (niedrig → hoch)",
-  carbs_g_desc: "Kohlenhydrate (hoch → niedrig)",
   fat_g_asc: "Fett (niedrig → hoch)",
   fat_g_desc: "Fett (hoch → niedrig)",
-  fiber_g_asc: "Ballaststoffe (niedrig → hoch)",
-  fiber_g_desc: "Ballaststoffe (hoch → niedrig)",
+  carbs_g_asc: "Kohlenhydrate (niedrig → hoch)",
+  carbs_g_desc: "Kohlenhydrate (hoch → niedrig)",
   sugar_g_asc: "Zucker (niedrig → hoch)",
   sugar_g_desc: "Zucker (hoch → niedrig)",
+  fiber_g_asc: "Ballaststoffe (niedrig → hoch)",
+  fiber_g_desc: "Ballaststoffe (hoch → niedrig)",
+  protein_g_asc: "Protein (niedrig → hoch)",
+  protein_g_desc: "Protein (hoch → niedrig)",
 };
 
 export type NutrientRange = { min: number | null; max: number | null };

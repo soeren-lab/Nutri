@@ -584,10 +584,10 @@ const RECIPE_DIFF_FIELDS: Array<{
   { key: "prep_time_minutes", label: "Vorbereitung", suffix: " Min" },
   { key: "cook_time_minutes", label: "Kochzeit", suffix: " Min" },
   { key: "calories", label: "Kalorien", suffix: " kcal" },
-  { key: "protein_g", label: "Protein", suffix: " g" },
-  { key: "carbs_g", label: "Kohlenhydrate", suffix: " g" },
   { key: "fat_g", label: "Fett", suffix: " g" },
+  { key: "carbs_g", label: "Kohlenhydrate", suffix: " g" },
   { key: "fiber_g", label: "Ballaststoffe", suffix: " g" },
+  { key: "protein_g", label: "Protein", suffix: " g" },
   { key: "categories", label: "Kategorien" },
 ];
 

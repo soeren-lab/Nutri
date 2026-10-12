@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/profile/settings/tracking"
       { property: "og:title", content: "Tracking-Einstellungen" },
       {
         property: "og:description",
-        content: "Protein, Kohlenhydrate, Fett, Ballaststoffe und Zucker an- oder abwählen.",
+        content: "Fett, Kohlenhydrate, Zucker, Ballaststoffe und Protein an- oder abwählen.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

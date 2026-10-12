@@ -1076,11 +1076,12 @@ function PlannerPage() {
 }
 
 /** Reihenfolge und Kurzlabels der Makro-Zeile im Tages-Block. */
-const MACRO_ROW: { key: TrackableMacroKey; label: string }[] = [
-  { key: "protein_g", label: "P" },
-  { key: "carbs_g", label: "KH" },
+const MACRO_ROW: { key: TrackableMacroKey | "sugar_g"; label: string }[] = [
   { key: "fat_g", label: "F" },
+  { key: "carbs_g", label: "KH" },
+  { key: "sugar_g", label: "Z" },
   { key: "fiber_g", label: "BS" },
+  { key: "protein_g", label: "P" },
 ];
 
 function DayHeading({
@@ -1117,24 +1118,23 @@ function DayHeading({
       {targets && (
         <MacroGrid
           items={[
-            ...activeMacros.map(({ key, label }) => ({
-              key,
-              label,
-              value: totals?.[key] ?? 0,
-              target: targets[key],
-              isMax: false,
-            })),
-            ...(tracking.sugar_g
-              ? [
-                  {
-                    key: "sugar_g",
-                    label: "Z",
+            ...activeMacros.map(({ key, label }) =>
+              key === "sugar_g"
+                ? {
+                    key,
+                    label,
                     value: totals?.sugar_g ?? 0,
                     target: targets.sugar_max_g,
                     isMax: true,
+                  }
+                : {
+                    key,
+                    label,
+                    value: totals?.[key] ?? 0,
+                    target: targets[key],
+                    isMax: false,
                   },
-                ]
-              : []),
+            ),
           ]}
         />
       )}
@@ -1153,7 +1153,7 @@ type MacroGridItem = {
 
 /**
  * Makro-Zeile im Tages-Block: einheitliches Raster mit Kürzel-Labels
- * (P/KH/F/BS/Z), immer 3 Zellen pro Zeile und zentrierter letzter Zeile –
+ * (F/KH/Z/BS/P), immer 3 Zellen pro Zeile und zentrierter letzter Zeile –
  * unabhängig davon, wie viele Kategorien aktiv getrackt werden.
  */
 function MacroGrid({ items }: { items: MacroGridItem[] }) {
@@ -1272,26 +1272,23 @@ function DayAnalysisDialog({
   const dow = WEEKDAYS[(day.getDay() + 6) % 7];
   const dateLabel = formatDayShort(day);
 
-  const insightRows = [
-    ...MACRO_ROW.filter((m) => tracking[m.key]).map(({ key, label }) => ({
-      key,
-      label,
-      value: totals?.[key] ?? 0,
-      target: targets?.[key] ?? 0,
-      contributor: topContributor(entries, key),
-    })),
-    ...(tracking.sugar_g
-      ? [
-          {
-            key: "sugar_g" as const,
-            label: "Zucker",
-            value: totals?.sugar_g ?? 0,
-            target: targets?.sugar_max_g ?? 0,
-            contributor: topContributor(entries, "sugar_g" as keyof MacroTotals),
-          },
-        ]
-      : []),
-  ];
+  const insightRows = MACRO_ROW.filter((m) => tracking[m.key]).map(({ key, label }) =>
+    key === "sugar_g"
+      ? {
+          key,
+          label: "Zucker",
+          value: totals?.sugar_g ?? 0,
+          target: targets?.sugar_max_g ?? 0,
+          contributor: topContributor(entries, "sugar_g" as keyof MacroTotals),
+        }
+      : {
+          key,
+          label,
+          value: totals?.[key] ?? 0,
+          target: targets?.[key] ?? 0,
+          contributor: topContributor(entries, key),
+        },
+  );
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
@@ -1342,8 +1339,8 @@ function DayAnalysisDialog({
                       <p className="truncate text-sm font-medium">{entryTitle(e)}</p>
                       {m && (
                         <p className="truncate text-[11px] text-muted-foreground tabular-nums">
-                          P {Math.round(m.protein_g)}g · KH {Math.round(m.carbs_g)}g · F{" "}
-                          {Math.round(m.fat_g)}g
+                          F {Math.round(m.fat_g)}g · KH {Math.round(m.carbs_g)}g · P{" "}
+                          {Math.round(m.protein_g)}g
                         </p>
                       )}
                     </div>

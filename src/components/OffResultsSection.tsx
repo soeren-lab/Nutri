@@ -67,11 +67,11 @@ function nutritionLine(p: OffProduct) {
   return `${p.calories ?? "–"} kcal / 100${p.unit}`;
 }
 
-/** Kompakte Makro-Zeile (P/KH/F) – nur wenn mindestens ein Wert bekannt ist. */
+/** Kompakte Makro-Zeile (F/KH/P) – nur wenn mindestens ein Wert bekannt ist. */
 function macroLine(p: OffProduct): string | null {
   if (p.protein_g == null && p.carbs_g == null && p.fat_g == null) return null;
   const round = (v: number | null) => (v == null ? "–" : Math.round(v * 10) / 10);
-  return `P ${round(p.protein_g)}g · KH ${round(p.carbs_g)}g · F ${round(p.fat_g)}g`;
+  return `F ${round(p.fat_g)}g · KH ${round(p.carbs_g)}g · P ${round(p.protein_g)}g`;
 }
 
 /**

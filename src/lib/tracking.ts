@@ -36,18 +36,18 @@ export const TRACKING_COLUMNS: Record<
 };
 
 export const TRACKABLE_KEYS: TrackableMacroKey[] = [
-  "protein_g",
-  "carbs_g",
   "fat_g",
+  "carbs_g",
   "fiber_g",
+  "protein_g",
 ];
 
 export const TRACKING_LABELS: Record<TrackableMacroKey | "sugar_g", string> = {
-  protein_g: "Protein",
-  carbs_g: "Kohlenhydrate",
   fat_g: "Fett",
-  fiber_g: "Ballaststoffe",
+  carbs_g: "Kohlenhydrate",
   sugar_g: "Zucker",
+  fiber_g: "Ballaststoffe",
+  protein_g: "Protein",
 };
 
 

@@ -52,7 +52,7 @@ export function hasUnpublishedChanges(m: IngredientMaster): boolean {
 
 /**
  * Einheitliche Zutaten-Card (Zutaten-Tab & Marken-Detailseite).
- * Enthält Badges (P/KH/F/BS/Z), Community-Tag und Drei-Punkte-Menü.
+ * Enthält Badges (F/KH/Z/BS/P), Community-Tag und Drei-Punkte-Menü.
  */
 export type CommunityCardInfo = {
   /** "du" oder "@username" */

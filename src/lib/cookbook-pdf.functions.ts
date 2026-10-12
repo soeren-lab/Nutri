@@ -471,10 +471,10 @@ export const generateCookbookPdf = createServerFn({ method: "POST" })
       const per = nutritionPerServing(recipe as any);
       const nutrition = [
         `${Math.round(per.calories ?? 0)} kcal`,
-        `${(per.protein_g ?? 0).toFixed(1)} g Eiweiß`,
-        `${(per.carbs_g ?? 0).toFixed(1)} g Kohlenhydrate`,
         `${(per.fat_g ?? 0).toFixed(1)} g Fett`,
+        `${(per.carbs_g ?? 0).toFixed(1)} g Kohlenhydrate`,
         `${(per.fiber_g ?? 0).toFixed(1)} g Ballaststoffe`,
+        `${(per.protein_g ?? 0).toFixed(1)} g Eiweiß`,
       ].join("  ·  ");
 
 

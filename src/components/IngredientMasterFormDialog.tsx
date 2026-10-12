@@ -388,11 +388,11 @@ export function IngredientMasterFormDialog({
             {(
               [
                 ["kcal", calories, setCalories],
-                ["Protein (g)", protein, setProtein],
-                ["KH (g)", carbs, setCarbs],
                 ["Fett (g)", fat, setFat],
-                ["Ballaststoffe (g)", fiber, setFiber],
+                ["KH (g)", carbs, setCarbs],
                 ["davon Zucker (g)", sugar, setSugar],
+                ["Ballaststoffe (g)", fiber, setFiber],
+                ["Protein (g)", protein, setProtein],
               ] as const
             ).map(([label, val, setter]) => (
               <div key={label} className="space-y-1">
