@@ -1541,6 +1541,7 @@ function AmountDialog({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             aria-label="Menge"
+            className="min-w-0 flex-1"
             autoFocus
           />
           <span className="w-14 shrink-0 text-sm text-muted-foreground">{unit}</span>
