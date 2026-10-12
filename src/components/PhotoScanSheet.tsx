@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Camera, ImagePlus, Info, Loader2, Mic, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
+import { isNativeApp } from "@/lib/platform";
 import { Button } from "@/components/ui/button";
 import { FormSheet } from "@/components/FormSheet";
 import { Input } from "@/components/ui/input";
@@ -55,16 +56,58 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-/** Mikrofon-Knopf (Web Speech API); fehlt die Unterstützung, hilft das Tastatur-Mikrofon. */
+/**
+ * Mikrofon-Knopf: in der App über die native Spracherkennung (Capacitor-Plugin), im Browser über
+ * die Web Speech API. Fehlt beides, hilft das Mikrofon der Tastatur.
+ */
 function MicButton({ onText }: { onText: (text: string) => void }) {
-  const Recognition = useMemo(() => getSpeechRecognition(), []);
+  const native = isNativeApp();
+  const Recognition = useMemo(() => (native ? null : getSpeechRecognition()), [native]);
   const [listening, setListening] = useState(false);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => () => recRef.current?.stop(), []);
-  if (!Recognition) return null;
+  if (!native && !Recognition) return null;
+
+  async function listenNative() {
+    setListening(true);
+    try {
+      const { SpeechRecognition } = await import("@capacitor-community/speech-recognition");
+      const { available } = await SpeechRecognition.available();
+      if (!available) {
+        toast.error("Spracherkennung ist hier nicht verfügbar. Nutze das Mikrofon der Tastatur.");
+        return;
+      }
+      const permission = await SpeechRecognition.requestPermissions();
+      if (permission.speechRecognition !== "granted") {
+        toast.error("Mikrofon-Zugriff wurde nicht erlaubt.");
+        return;
+      }
+      const result = await SpeechRecognition.start({
+        language: "de-DE",
+        maxResults: 1,
+        prompt: "Jetzt sprechen",
+        partialResults: false,
+        popup: true,
+      });
+      const text = result.matches?.[0]?.trim();
+      if (text) onText(text);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "";
+      // Abbruch durch den Nutzer ist kein Fehler.
+      if (!/cancel|abbr|no match|nomatch/i.test(message)) {
+        toast.error("Spracherkennung fehlgeschlagen. Nutze das Mikrofon der Tastatur.");
+      }
+    } finally {
+      setListening(false);
+    }
+  }
 
   function toggle() {
+    if (native) {
+      if (!listening) void listenNative();
+      return;
+    }
     if (listening) {
       recRef.current?.stop();
       return;

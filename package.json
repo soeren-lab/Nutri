@@ -16,6 +16,7 @@
     "build-capacitor-shell": "node scripts/build-capacitor-shell.mjs"
   },
   "dependencies": {
+    "@capacitor-community/speech-recognition": "^7.0.1",
     "@capacitor/android": "^8.5.1",
     "@capacitor/core": "^8.5.1",
     "@capacitor/network": "^8.0.1",
