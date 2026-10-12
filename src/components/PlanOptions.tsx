@@ -1,7 +1,8 @@
 import { Check, Crown, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { CURRENT_PLAN, type PlanId } from "@/lib/plans";
+import { usePlan } from "@/hooks/use-plan";
+import { type PlanId } from "@/lib/plans";
 
 type PlanDef = {
   id: PlanId;
@@ -45,16 +46,18 @@ const PLANS: readonly PlanDef[] = [
       "Unbegrenzte KI-Vorschläge",
       "Prioritäts-Support",
       "Frühzugriff auf neue Features",
+      "Foto-Kalorienschätzung (bald)",
     ],
   },
 ];
 
 /** Drei Plan-Stufen als vertikal gestapelte Cards (Mobile-First). */
 export function PlanOptions() {
+  const { plan: currentPlan } = usePlan();
   return (
     <div className="space-y-4">
       {PLANS.map((plan) => (
-        <PlanCard key={plan.id} plan={plan} current={plan.id === CURRENT_PLAN} />
+        <PlanCard key={plan.id} plan={plan} current={plan.id === currentPlan} />
       ))}
       <p className="px-1 text-center text-[11px] text-muted-foreground">
         Preise sind Platzhalter. Zahlungen sind noch nicht aktiv.

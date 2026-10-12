@@ -20,7 +20,8 @@ import {
 import { SettingsActionRow, SettingsGroup, SettingsRow } from "@/components/settings/SettingsList";
 import { BroadcastUpdateButton } from "@/components/BroadcastUpdateButton";
 import { UsernameDisplay } from "@/components/UsernameDisplay";
-import { CURRENT_PLAN, PLAN_LABELS } from "@/lib/plans";
+import { PLAN_LABELS } from "@/lib/plans";
+import { usePlan } from "@/hooks/use-plan";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useExperimentalMode } from "@/hooks/use-experimental-mode";
@@ -37,6 +38,7 @@ export function SettingsListTab() {
   const { variant } = useExperimentalMode();
   const { avatarUrl } = useUserAvatar();
   const { isAdmin } = useIsAdmin();
+  const { plan } = usePlan();
   const { templates } = useQuickEntryTemplates();
   const { data: recipes = [] } = useQuery(recipesQuery());
   const sideDishCount = useMemo(() => findSideDishCandidates(recipes).length, [recipes]);
@@ -45,7 +47,7 @@ export function SettingsListTab() {
     <div className="space-y-6">
       <div className="space-y-2">
         <UsernameDisplay />
-        {CURRENT_PLAN === "free" && (
+        {plan === "free" && (
           <Link
             to="/profile/settings/plan"
             className="inline-flex h-11 items-center justify-center self-start rounded-xl bg-gradient-to-br from-primary via-primary to-indigo-600 px-5 text-sm font-bold text-white transition-transform active:scale-[0.98]"
@@ -108,7 +110,7 @@ export function SettingsListTab() {
           to="/profile/settings/plan"
           icon={CreditCard}
           title="Mein Plan"
-          subtitle={PLAN_LABELS[CURRENT_PLAN]}
+          subtitle={PLAN_LABELS[plan]}
         />
       </SettingsGroup>
 

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BillingPanel } from "@/components/AccountSection";
 import { PlanOptions } from "@/components/PlanOptions";
-import { CURRENT_PLAN } from "@/lib/plans";
+import { usePlan } from "@/hooks/use-plan";
 import { SettingsSubPage } from "@/components/settings/SettingsSubPage";
 
 export const Route = createFileRoute("/_authenticated/profile/settings/plan")({
@@ -18,10 +18,15 @@ export const Route = createFileRoute("/_authenticated/profile/settings/plan")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => (
+  component: PlanPage,
+});
+
+function PlanPage() {
+  const { plan } = usePlan();
+  return (
     <SettingsSubPage title="Mein Plan">
       <PlanOptions />
-      {CURRENT_PLAN !== "free" && <BillingPanel />}
+      {plan !== "free" && <BillingPanel />}
     </SettingsSubPage>
-  ),
-});
+  );
+}
