@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { planAtLeast } from "@/lib/plans";
 import { scanItemSchema, type ScanItem } from "@/lib/photoNutrition";
+import { describePlate, plateInfoSchema } from "@/lib/plates";
 
 /** Maximale Foto-Auswertungen pro User in einem rollierenden 24-h-Fenster. */
 const PHOTO_SCAN_DAILY_LIMIT = 40;
@@ -25,6 +26,7 @@ const inputSchema = z
     previous: z.array(scanItemSchema).max(30).optional(),
     correction: z.string().max(1000).optional(),
     candidates: z.array(candidateSchema).max(400),
+    plate: plateInfoSchema.optional(),
   })
   .refine((v) => !!v.image || (!!v.previous?.length && !!v.correction?.trim()), {
     message: "Foto oder Korrektur fehlt",
@@ -36,6 +38,7 @@ Regeln:
 - Jede Position hat name (kurz, deutsch), amount und unit. Verwende "g" für feste Lebensmittel, "ml" für Flüssigkeiten und "Stück" nur, wenn die passende Bibliotheks-Zutat die Einheit Stück hat.
 - Wähle für master_id bevorzugt einen Eintrag aus der Bibliotheksliste des Nutzers (nur IDs aus der Liste, nie erfinden). Wenn nichts passt, setze master_id auf null und gib per100 mit groben Richtwerten pro 100 g bzw. 100 ml an.
 - Beachte den Zustand: Reis, Nudeln und Hülsenfrüchte auf dem Teller sind gekocht. Gibt es nur einen Rohwert-Eintrag, rechne die Menge auf das Rohgewicht um.
+- Ist ein Teller bzw. eine Schüssel mit Maßen angegeben, ist genau dieses Geschirr auf dem Foto. Nutze die Maße als absoluten Maßstab: schätze, welchen Anteil der Fläche bzw. des Volumens das Essen belegt, wie hoch es liegt und bei Schüsseln mit Fassungsvermögen den Füllgrad. Ohne Maße schätze anhand von Tellergröße, Besteck und Proportionen.
 - Schätze realistische Mengen anhand von Tellergröße, Besteck und Proportionen. Gib low und high als plausible Spanne derselben Menge an (typisch plus/minus 15 bis 25 Prozent) und confidence (high, medium, low).
 - Das Referenzfoto (falls vorhanden) zeigt Zutaten oder Packungen und die Notiz nennt Verstecktes (Öl, Butter, Käse, Sauce, Zucker). Nutze beides und lege Öle und Fette als eigene Position an, wenn sie verwendet wurden.
 - Stelle höchstens eine Rückfrage (question), und nur, wenn eine Position mehr als etwa 60 kcal Unsicherheit hat und das Foto sie nicht klärt.
@@ -164,6 +167,8 @@ export const analyzeMealPhoto = createServerFn({ method: "POST" })
     const parts: string[] = [
       `Bibliothek des Nutzers (id | Name | Einheit):\n${library || "(leer)"}`,
     ];
+    if (data.plate)
+      parts.push(`Geschirr auf dem Foto: ${data.plate.name} (${describePlate(data.plate)}).`);
     if (data.note?.trim()) parts.push(`Notiz des Nutzers: ${data.note.trim()}`);
     if (data.previous?.length) {
       parts.push(`Bisherige Positionen (JSON): ${JSON.stringify(data.previous)}`);
@@ -171,6 +176,13 @@ export const analyzeMealPhoto = createServerFn({ method: "POST" })
     if (data.correction?.trim()) parts.push(`Korrektur des Nutzers: ${data.correction.trim()}`);
     content.push({ type: "text", text: parts.join("\n\n") });
 
+    const requestBody = JSON.stringify({
+      model: process.env.PHOTO_SCAN_MODEL || DEFAULT_MODEL,
+      max_tokens: 2000,
+      system: SYSTEM_PROMPT,
+      tools: [TOOL],
+      messages: [{ role: "user", content }],
+    });
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -178,18 +190,23 @@ export const analyzeMealPhoto = createServerFn({ method: "POST" })
         "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
       },
-      body: JSON.stringify({
-        model: process.env.PHOTO_SCAN_MODEL || DEFAULT_MODEL,
-        max_tokens: 2000,
-        system: SYSTEM_PROMPT,
-        tools: [TOOL],
-        tool_choice: { type: "tool", name: "report_meal" },
-        messages: [{ role: "user", content }],
-      }),
+      body: requestBody,
     });
     if (!response.ok) {
-      console.error("[photo-scan] Anthropic-Fehler", response.status, await response.text());
-      throw new Error("Die KI-Auswertung ist fehlgeschlagen. Bitte erneut versuchen.");
+      const bodyText = await response.text();
+      let detail = "";
+      try {
+        const parsed = JSON.parse(bodyText) as { error?: { message?: string } };
+        detail = parsed.error?.message ?? "";
+      } catch {
+        // Antwort war kein JSON
+      }
+      console.error(
+        `[photo-scan] Anthropic-Fehler ${response.status} rid=${response.headers.get("request-id")} body=${JSON.stringify(bodyText.slice(0, 600))}`,
+      );
+      throw new Error(
+        `Die KI-Auswertung ist fehlgeschlagen (${response.status})${detail ? `: ${detail}` : ""}`,
+      );
     }
 
     const json = (await response.json()) as {

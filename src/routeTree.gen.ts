@@ -44,6 +44,7 @@ import { Route as AuthenticatedProfileSettingsTrackingRouteImport } from './rout
 import { Route as AuthenticatedProfileSettingsTargetsRouteImport } from './routes/_authenticated/profile.settings.targets'
 import { Route as AuthenticatedProfileSettingsSideDishesRouteImport } from './routes/_authenticated/profile.settings.side-dishes'
 import { Route as AuthenticatedProfileSettingsQuickEntriesRouteImport } from './routes/_authenticated/profile.settings.quick-entries'
+import { Route as AuthenticatedProfileSettingsPlatesRouteImport } from './routes/_authenticated/profile.settings.plates'
 import { Route as AuthenticatedProfileSettingsPlanRouteImport } from './routes/_authenticated/profile.settings.plan'
 import { Route as AuthenticatedProfileSettingsPatchNotesRouteImport } from './routes/_authenticated/profile.settings.patch-notes'
 import { Route as AuthenticatedProfileSettingsPasswordRouteImport } from './routes/_authenticated/profile.settings.password'
@@ -253,6 +254,12 @@ const AuthenticatedProfileSettingsQuickEntriesRoute =
     path: '/profile/settings/quick-entries',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProfileSettingsPlatesRoute =
+  AuthenticatedProfileSettingsPlatesRouteImport.update({
+    id: '/profile/settings/plates',
+    path: '/profile/settings/plates',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfileSettingsPlanRoute =
   AuthenticatedProfileSettingsPlanRouteImport.update({
     id: '/profile/settings/plan',
@@ -351,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/profile/settings/password': typeof AuthenticatedProfileSettingsPasswordRoute
   '/profile/settings/patch-notes': typeof AuthenticatedProfileSettingsPatchNotesRoute
   '/profile/settings/plan': typeof AuthenticatedProfileSettingsPlanRoute
+  '/profile/settings/plates': typeof AuthenticatedProfileSettingsPlatesRoute
   '/profile/settings/quick-entries': typeof AuthenticatedProfileSettingsQuickEntriesRoute
   '/profile/settings/side-dishes': typeof AuthenticatedProfileSettingsSideDishesRoute
   '/profile/settings/targets': typeof AuthenticatedProfileSettingsTargetsRoute
@@ -398,6 +406,7 @@ export interface FileRoutesByTo {
   '/profile/settings/password': typeof AuthenticatedProfileSettingsPasswordRoute
   '/profile/settings/patch-notes': typeof AuthenticatedProfileSettingsPatchNotesRoute
   '/profile/settings/plan': typeof AuthenticatedProfileSettingsPlanRoute
+  '/profile/settings/plates': typeof AuthenticatedProfileSettingsPlatesRoute
   '/profile/settings/quick-entries': typeof AuthenticatedProfileSettingsQuickEntriesRoute
   '/profile/settings/side-dishes': typeof AuthenticatedProfileSettingsSideDishesRoute
   '/profile/settings/targets': typeof AuthenticatedProfileSettingsTargetsRoute
@@ -447,6 +456,7 @@ export interface FileRoutesById {
   '/_authenticated/profile/settings/password': typeof AuthenticatedProfileSettingsPasswordRoute
   '/_authenticated/profile/settings/patch-notes': typeof AuthenticatedProfileSettingsPatchNotesRoute
   '/_authenticated/profile/settings/plan': typeof AuthenticatedProfileSettingsPlanRoute
+  '/_authenticated/profile/settings/plates': typeof AuthenticatedProfileSettingsPlatesRoute
   '/_authenticated/profile/settings/quick-entries': typeof AuthenticatedProfileSettingsQuickEntriesRoute
   '/_authenticated/profile/settings/side-dishes': typeof AuthenticatedProfileSettingsSideDishesRoute
   '/_authenticated/profile/settings/targets': typeof AuthenticatedProfileSettingsTargetsRoute
@@ -496,6 +506,7 @@ export interface FileRouteTypes {
     | '/profile/settings/password'
     | '/profile/settings/patch-notes'
     | '/profile/settings/plan'
+    | '/profile/settings/plates'
     | '/profile/settings/quick-entries'
     | '/profile/settings/side-dishes'
     | '/profile/settings/targets'
@@ -543,6 +554,7 @@ export interface FileRouteTypes {
     | '/profile/settings/password'
     | '/profile/settings/patch-notes'
     | '/profile/settings/plan'
+    | '/profile/settings/plates'
     | '/profile/settings/quick-entries'
     | '/profile/settings/side-dishes'
     | '/profile/settings/targets'
@@ -591,6 +603,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile/settings/password'
     | '/_authenticated/profile/settings/patch-notes'
     | '/_authenticated/profile/settings/plan'
+    | '/_authenticated/profile/settings/plates'
     | '/_authenticated/profile/settings/quick-entries'
     | '/_authenticated/profile/settings/side-dishes'
     | '/_authenticated/profile/settings/targets'
@@ -866,6 +879,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileSettingsQuickEntriesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile/settings/plates': {
+      id: '/_authenticated/profile/settings/plates'
+      path: '/profile/settings/plates'
+      fullPath: '/profile/settings/plates'
+      preLoaderRoute: typeof AuthenticatedProfileSettingsPlatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile/settings/plan': {
       id: '/_authenticated/profile/settings/plan'
       path: '/profile/settings/plan'
@@ -970,6 +990,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileSettingsPasswordRoute: typeof AuthenticatedProfileSettingsPasswordRoute
   AuthenticatedProfileSettingsPatchNotesRoute: typeof AuthenticatedProfileSettingsPatchNotesRoute
   AuthenticatedProfileSettingsPlanRoute: typeof AuthenticatedProfileSettingsPlanRoute
+  AuthenticatedProfileSettingsPlatesRoute: typeof AuthenticatedProfileSettingsPlatesRoute
   AuthenticatedProfileSettingsQuickEntriesRoute: typeof AuthenticatedProfileSettingsQuickEntriesRoute
   AuthenticatedProfileSettingsSideDishesRoute: typeof AuthenticatedProfileSettingsSideDishesRoute
   AuthenticatedProfileSettingsTargetsRoute: typeof AuthenticatedProfileSettingsTargetsRoute
@@ -1019,6 +1040,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileSettingsPatchNotesRoute:
     AuthenticatedProfileSettingsPatchNotesRoute,
   AuthenticatedProfileSettingsPlanRoute: AuthenticatedProfileSettingsPlanRoute,
+  AuthenticatedProfileSettingsPlatesRoute:
+    AuthenticatedProfileSettingsPlatesRoute,
   AuthenticatedProfileSettingsQuickEntriesRoute:
     AuthenticatedProfileSettingsQuickEntriesRoute,
   AuthenticatedProfileSettingsSideDishesRoute:

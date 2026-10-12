@@ -8,6 +8,7 @@ const USER_TABLES = [
   "points_log",
   "shopping_list_items",
   "quick_entry_templates",
+  "user_plates",
   "meal_plan_entries",
   "favorites",
   "target_history",

@@ -836,6 +836,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_plates: {
+        Row: {
+          capacity_ml: number | null;
+          created_at: string;
+          depth_cm: number;
+          id: string;
+          length_cm: number | null;
+          name: string;
+          photo_path: string | null;
+          shape: string;
+          updated_at: string;
+          user_id: string;
+          width_cm: number;
+        };
+        Insert: {
+          capacity_ml?: number | null;
+          created_at?: string;
+          depth_cm: number;
+          id?: string;
+          length_cm?: number | null;
+          name: string;
+          photo_path?: string | null;
+          shape?: string;
+          updated_at?: string;
+          user_id: string;
+          width_cm: number;
+        };
+        Update: {
+          capacity_ml?: number | null;
+          created_at?: string;
+          depth_cm?: number;
+          id?: string;
+          length_cm?: number | null;
+          name?: string;
+          photo_path?: string | null;
+          shape?: string;
+          updated_at?: string;
+          user_id?: string;
+          width_cm?: number;
+        };
+        Relationships: [];
+      };
       user_plans: {
         Row: {
           created_at: string;

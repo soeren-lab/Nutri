@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Circle,
   CreditCard,
   Download,
   FileText,
@@ -94,6 +95,12 @@ export function SettingsListTab() {
           icon={Zap}
           title="Meine Schnelleinträge"
           subtitle={templates.length === 1 ? "1 Vorlage" : `${templates.length} Vorlagen`}
+        />
+        <SettingsRow
+          to="/profile/settings/plates"
+          icon={Circle}
+          title="Meine Teller"
+          subtitle="Maße für den Foto-Scan"
         />
         {sideDishCount > 0 && (
           <SettingsRow

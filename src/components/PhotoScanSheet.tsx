@@ -4,7 +4,11 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FormSheet } from "@/components/FormSheet";
 import { Input } from "@/components/ui/input";
+import { PlateFormSheet } from "@/components/PlateFormSheet";
+import { PlatePicker } from "@/components/PlatePicker";
 import { SearchSheet, SearchSheetRow } from "@/components/SearchSheet";
+import { usePlates } from "@/hooks/use-plates";
+import { getLastPlateId, plateToInfo, setLastPlateId } from "@/lib/plates";
 import { resizeImage, type ResizedImage } from "@/lib/image-resize";
 import { analyzeMeal } from "@/lib/photo-scan";
 import {
@@ -238,6 +242,18 @@ export function PhotoScanSheet({
   const [correction, setCorrection] = useState("");
   const [busy, setBusy] = useState(false);
   const [picker, setPicker] = useState<Picker | null>(null);
+  const { plates } = usePlates();
+  const [plateId, setPlateId] = useState<string | null>(null);
+  const [plateFormOpen, setPlateFormOpen] = useState(false);
+  const plateInit = useRef(false);
+  // Zuletzt benutzten Teller vorauswählen, sobald die Liste geladen ist.
+  useEffect(() => {
+    if (plateInit.current || plates.length === 0) return;
+    plateInit.current = true;
+    const last = getLastPlateId();
+    if (last && plates.some((p) => p.id === last)) setPlateId(last);
+  }, [plates]);
+  const selectedPlate = plates.find((p) => p.id === plateId) ?? null;
 
   // Vorschau-URLs beim Schließen freigeben.
   const previews = useRef<string[]>([]);
@@ -275,8 +291,10 @@ export function PhotoScanSheet({
         image: food.base64,
         refImage: ref?.base64,
         note: note.trim() || undefined,
+        plate: selectedPlate ? plateToInfo(selectedPlate) : undefined,
         masters: scanMasters,
       });
+      setLastPlateId(plateId);
       setItems(res.items);
       setName(res.summary_name);
       setQuestion(res.question);
@@ -292,7 +310,12 @@ export function PhotoScanSheet({
     if (!text) return;
     setBusy(true);
     try {
-      const res = await analyzeMeal({ previous: items, correction: text, masters: scanMasters });
+      const res = await analyzeMeal({
+        previous: items,
+        correction: text,
+        plate: selectedPlate ? plateToInfo(selectedPlate) : undefined,
+        masters: scanMasters,
+      });
       setItems(res.items);
       setQuestion(res.question);
       setCorrection("");
@@ -368,6 +391,17 @@ export function PhotoScanSheet({
       <FormSheet open onOpenChange={(v) => !v && onClose()} title={title} footer={footer}>
         {step === "capture" && (
           <div className="space-y-3 p-4">
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground">
+                Teller oder Schüssel (die Maße dienen als Maßstab)
+              </p>
+              <PlatePicker
+                plates={plates}
+                value={plateId}
+                onChange={setPlateId}
+                onNew={() => setPlateFormOpen(true)}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <PhotoSlot
                 label="Essen"
@@ -578,6 +612,10 @@ export function PhotoScanSheet({
           </div>
         )}
       </FormSheet>
+
+      {plateFormOpen && (
+        <PlateFormSheet onClose={() => setPlateFormOpen(false)} onSaved={(p) => setPlateId(p.id)} />
+      )}
 
       <SearchSheet
         open={!!picker}
