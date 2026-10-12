@@ -3,6 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Circle,
+  Coins,
   CreditCard,
   Download,
   FileText,
@@ -15,6 +16,7 @@ import {
   ScrollText,
   Trash2,
   Utensils,
+  Wallet,
   Wrench,
   Zap,
 } from "lucide-react";
@@ -23,6 +25,7 @@ import { BroadcastUpdateButton } from "@/components/BroadcastUpdateButton";
 import { UsernameDisplay } from "@/components/UsernameDisplay";
 import { PLAN_LABELS } from "@/lib/plans";
 import { usePlan } from "@/hooks/use-plan";
+import { creditBalanceQuery, formatUsd } from "@/lib/credits";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useExperimentalMode } from "@/hooks/use-experimental-mode";
@@ -40,6 +43,7 @@ export function SettingsListTab() {
   const { avatarUrl } = useUserAvatar();
   const { isAdmin } = useIsAdmin();
   const { plan } = usePlan();
+  const { data: creditBalance } = useQuery(creditBalanceQuery(user?.id));
   const { templates } = useQuickEntryTemplates();
   const { data: recipes = [] } = useQuery(recipesQuery());
   const sideDishCount = useMemo(() => findSideDishCandidates(recipes).length, [recipes]);
@@ -119,6 +123,12 @@ export function SettingsListTab() {
           title="Mein Plan"
           subtitle={PLAN_LABELS[plan]}
         />
+        <SettingsRow
+          to="/profile/settings/credits"
+          icon={Wallet}
+          title="Mein Guthaben"
+          subtitle={creditBalance != null ? formatUsd(creditBalance) : "Foto-Scan"}
+        />
       </SettingsGroup>
 
       <SettingsGroup title="Rechtliches">
@@ -141,6 +151,12 @@ export function SettingsListTab() {
             to="/profile/settings/patch-notes"
             icon={Wrench}
             title="Patch Notes verwalten"
+          />
+          <SettingsRow
+            to="/profile/settings/credits-admin"
+            icon={Coins}
+            title="Guthaben & KI-Kosten"
+            subtitle="Aufladen, Verbrauch pro User"
           />
           <BroadcastUpdateButton />
         </SettingsGroup>

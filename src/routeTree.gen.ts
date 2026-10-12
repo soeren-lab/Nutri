@@ -52,6 +52,8 @@ import { Route as AuthenticatedProfileSettingsExportRouteImport } from './routes
 import { Route as AuthenticatedProfileSettingsExperimentalRouteImport } from './routes/_authenticated/profile.settings.experimental'
 import { Route as AuthenticatedProfileSettingsEmailRouteImport } from './routes/_authenticated/profile.settings.email'
 import { Route as AuthenticatedProfileSettingsDeleteRouteImport } from './routes/_authenticated/profile.settings.delete'
+import { Route as AuthenticatedProfileSettingsCreditsAdminRouteImport } from './routes/_authenticated/profile.settings.credits-admin'
+import { Route as AuthenticatedProfileSettingsCreditsRouteImport } from './routes/_authenticated/profile.settings.credits'
 import { Route as AuthenticatedProfileSettingsBodyRouteImport } from './routes/_authenticated/profile.settings.body'
 import { Route as AuthenticatedProfileSettingsAvatarRouteImport } from './routes/_authenticated/profile.settings.avatar'
 import { Route as AuthenticatedProfileSettingsAppearanceRouteImport } from './routes/_authenticated/profile.settings.appearance'
@@ -302,6 +304,18 @@ const AuthenticatedProfileSettingsDeleteRoute =
     path: '/profile/settings/delete',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProfileSettingsCreditsAdminRoute =
+  AuthenticatedProfileSettingsCreditsAdminRouteImport.update({
+    id: '/profile/settings/credits-admin',
+    path: '/profile/settings/credits-admin',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfileSettingsCreditsRoute =
+  AuthenticatedProfileSettingsCreditsRouteImport.update({
+    id: '/profile/settings/credits',
+    path: '/profile/settings/credits',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfileSettingsBodyRoute =
   AuthenticatedProfileSettingsBodyRouteImport.update({
     id: '/profile/settings/body',
@@ -351,6 +365,8 @@ export interface FileRoutesByFullPath {
   '/profile/settings/appearance': typeof AuthenticatedProfileSettingsAppearanceRoute
   '/profile/settings/avatar': typeof AuthenticatedProfileSettingsAvatarRoute
   '/profile/settings/body': typeof AuthenticatedProfileSettingsBodyRoute
+  '/profile/settings/credits': typeof AuthenticatedProfileSettingsCreditsRoute
+  '/profile/settings/credits-admin': typeof AuthenticatedProfileSettingsCreditsAdminRoute
   '/profile/settings/delete': typeof AuthenticatedProfileSettingsDeleteRoute
   '/profile/settings/email': typeof AuthenticatedProfileSettingsEmailRoute
   '/profile/settings/experimental': typeof AuthenticatedProfileSettingsExperimentalRoute
@@ -399,6 +415,8 @@ export interface FileRoutesByTo {
   '/profile/settings/appearance': typeof AuthenticatedProfileSettingsAppearanceRoute
   '/profile/settings/avatar': typeof AuthenticatedProfileSettingsAvatarRoute
   '/profile/settings/body': typeof AuthenticatedProfileSettingsBodyRoute
+  '/profile/settings/credits': typeof AuthenticatedProfileSettingsCreditsRoute
+  '/profile/settings/credits-admin': typeof AuthenticatedProfileSettingsCreditsAdminRoute
   '/profile/settings/delete': typeof AuthenticatedProfileSettingsDeleteRoute
   '/profile/settings/email': typeof AuthenticatedProfileSettingsEmailRoute
   '/profile/settings/experimental': typeof AuthenticatedProfileSettingsExperimentalRoute
@@ -449,6 +467,8 @@ export interface FileRoutesById {
   '/_authenticated/profile/settings/appearance': typeof AuthenticatedProfileSettingsAppearanceRoute
   '/_authenticated/profile/settings/avatar': typeof AuthenticatedProfileSettingsAvatarRoute
   '/_authenticated/profile/settings/body': typeof AuthenticatedProfileSettingsBodyRoute
+  '/_authenticated/profile/settings/credits': typeof AuthenticatedProfileSettingsCreditsRoute
+  '/_authenticated/profile/settings/credits-admin': typeof AuthenticatedProfileSettingsCreditsAdminRoute
   '/_authenticated/profile/settings/delete': typeof AuthenticatedProfileSettingsDeleteRoute
   '/_authenticated/profile/settings/email': typeof AuthenticatedProfileSettingsEmailRoute
   '/_authenticated/profile/settings/experimental': typeof AuthenticatedProfileSettingsExperimentalRoute
@@ -499,6 +519,8 @@ export interface FileRouteTypes {
     | '/profile/settings/appearance'
     | '/profile/settings/avatar'
     | '/profile/settings/body'
+    | '/profile/settings/credits'
+    | '/profile/settings/credits-admin'
     | '/profile/settings/delete'
     | '/profile/settings/email'
     | '/profile/settings/experimental'
@@ -547,6 +569,8 @@ export interface FileRouteTypes {
     | '/profile/settings/appearance'
     | '/profile/settings/avatar'
     | '/profile/settings/body'
+    | '/profile/settings/credits'
+    | '/profile/settings/credits-admin'
     | '/profile/settings/delete'
     | '/profile/settings/email'
     | '/profile/settings/experimental'
@@ -596,6 +620,8 @@ export interface FileRouteTypes {
     | '/_authenticated/profile/settings/appearance'
     | '/_authenticated/profile/settings/avatar'
     | '/_authenticated/profile/settings/body'
+    | '/_authenticated/profile/settings/credits'
+    | '/_authenticated/profile/settings/credits-admin'
     | '/_authenticated/profile/settings/delete'
     | '/_authenticated/profile/settings/email'
     | '/_authenticated/profile/settings/experimental'
@@ -935,6 +961,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileSettingsDeleteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile/settings/credits-admin': {
+      id: '/_authenticated/profile/settings/credits-admin'
+      path: '/profile/settings/credits-admin'
+      fullPath: '/profile/settings/credits-admin'
+      preLoaderRoute: typeof AuthenticatedProfileSettingsCreditsAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile/settings/credits': {
+      id: '/_authenticated/profile/settings/credits'
+      path: '/profile/settings/credits'
+      fullPath: '/profile/settings/credits'
+      preLoaderRoute: typeof AuthenticatedProfileSettingsCreditsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile/settings/body': {
       id: '/_authenticated/profile/settings/body'
       path: '/profile/settings/body'
@@ -983,6 +1023,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileSettingsAppearanceRoute: typeof AuthenticatedProfileSettingsAppearanceRoute
   AuthenticatedProfileSettingsAvatarRoute: typeof AuthenticatedProfileSettingsAvatarRoute
   AuthenticatedProfileSettingsBodyRoute: typeof AuthenticatedProfileSettingsBodyRoute
+  AuthenticatedProfileSettingsCreditsRoute: typeof AuthenticatedProfileSettingsCreditsRoute
+  AuthenticatedProfileSettingsCreditsAdminRoute: typeof AuthenticatedProfileSettingsCreditsAdminRoute
   AuthenticatedProfileSettingsDeleteRoute: typeof AuthenticatedProfileSettingsDeleteRoute
   AuthenticatedProfileSettingsEmailRoute: typeof AuthenticatedProfileSettingsEmailRoute
   AuthenticatedProfileSettingsExperimentalRoute: typeof AuthenticatedProfileSettingsExperimentalRoute
@@ -1027,6 +1069,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileSettingsAvatarRoute:
     AuthenticatedProfileSettingsAvatarRoute,
   AuthenticatedProfileSettingsBodyRoute: AuthenticatedProfileSettingsBodyRoute,
+  AuthenticatedProfileSettingsCreditsRoute:
+    AuthenticatedProfileSettingsCreditsRoute,
+  AuthenticatedProfileSettingsCreditsAdminRoute:
+    AuthenticatedProfileSettingsCreditsAdminRoute,
   AuthenticatedProfileSettingsDeleteRoute:
     AuthenticatedProfileSettingsDeleteRoute,
   AuthenticatedProfileSettingsEmailRoute:

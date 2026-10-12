@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { planAtLeast } from "@/lib/plans";
 import { scanItemSchema, type ScanItem } from "@/lib/photoNutrition";
+import { usageCostUsd } from "@/lib/credits";
 import { describePlate, plateInfoSchema } from "@/lib/plates";
 
 /** Maximale Foto-Auswertungen pro User in einem rollierenden 24-h-Fenster. */
@@ -128,6 +129,17 @@ export const analyzeMealPhoto = createServerFn({ method: "POST" })
       throw new Error("Der Foto-Scan ist nur im Max-Plan verfügbar.");
     }
 
+    // Guthaben: ohne Guthaben kein Scan. Die Abbuchung erfolgt nach dem Aufruf mit den echten Tokens.
+    const { data: creditRow, error: creditError } = await context.supabase
+      .from("user_credits")
+      .select("balance_usd")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (creditError) throw new Error("Guthaben konnte nicht geprüft werden");
+    if (Number(creditRow?.balance_usd ?? 0) <= 0) {
+      throw new Error("Guthaben muss aufgeladen werden.");
+    }
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey)
       throw new Error("Foto-Scan ist noch nicht eingerichtet (ANTHROPIC_API_KEY fehlt).");
@@ -176,8 +188,9 @@ export const analyzeMealPhoto = createServerFn({ method: "POST" })
     if (data.correction?.trim()) parts.push(`Korrektur des Nutzers: ${data.correction.trim()}`);
     content.push({ type: "text", text: parts.join("\n\n") });
 
+    const model = process.env.PHOTO_SCAN_MODEL || DEFAULT_MODEL;
     const requestBody = JSON.stringify({
-      model: process.env.PHOTO_SCAN_MODEL || DEFAULT_MODEL,
+      model,
       max_tokens: 2000,
       system: SYSTEM_PROMPT,
       tools: [TOOL],
@@ -211,7 +224,30 @@ export const analyzeMealPhoto = createServerFn({ method: "POST" })
 
     const json = (await response.json()) as {
       content?: Array<{ type: string; input?: unknown }>;
+      usage?: { input_tokens?: number; output_tokens?: number };
     };
+
+    // Die Anfrage hat Geld gekostet, egal ob am Ende Essen erkannt wurde: jetzt abbuchen.
+    const usage = {
+      input_tokens: json.usage?.input_tokens ?? 0,
+      output_tokens: json.usage?.output_tokens ?? 0,
+    };
+    const costUsd = usageCostUsd(model, usage);
+    let balanceUsd: number | null = null;
+    const { data: newBalance, error: chargeError } = await context.supabase.rpc(
+      "charge_credit_usage",
+      {
+        _amount_usd: costUsd,
+        _model: model,
+        _input_tokens: usage.input_tokens,
+        _output_tokens: usage.output_tokens,
+      },
+    );
+    if (chargeError) {
+      console.error("[photo-scan] Abbuchung fehlgeschlagen", chargeError.message);
+    } else {
+      balanceUsd = Number(newBalance);
+    }
     const block = json.content?.find((b) => b.type === "tool_use");
     const raw = (block?.input ?? {}) as {
       summary_name?: unknown;
@@ -236,5 +272,7 @@ export const analyzeMealPhoto = createServerFn({ method: "POST" })
       items,
       question:
         typeof raw.question === "string" && raw.question.trim() ? raw.question.trim() : null,
+      cost_usd: costUsd,
+      balance_usd: balanceUsd,
     };
   });

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, ImagePlus, Info, Loader2, Mic, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { isNativeApp } from "@/lib/platform";
@@ -8,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { PlateFormSheet } from "@/components/PlateFormSheet";
 import { PlatePicker } from "@/components/PlatePicker";
 import { SearchSheet, SearchSheetRow } from "@/components/SearchSheet";
+import { useAuth } from "@/hooks/use-auth";
 import { usePlates } from "@/hooks/use-plates";
+import { creditBalanceQuery, formatUsd } from "@/lib/credits";
 import { getLastPlateId, plateToInfo, setLastPlateId } from "@/lib/plates";
 import { resizeImage, type ResizedImage } from "@/lib/image-resize";
 import { analyzeMeal } from "@/lib/photo-scan";
@@ -286,6 +289,11 @@ export function PhotoScanSheet({
   const [busy, setBusy] = useState(false);
   const [picker, setPicker] = useState<Picker | null>(null);
   const { plates } = usePlates();
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const { data: balance } = useQuery(creditBalanceQuery(user?.id));
+  const noCredit = balance != null && balance <= 0;
+  const [lastCost, setLastCost] = useState<{ cost: number; balance: number | null } | null>(null);
   const [plateId, setPlateId] = useState<string | null>(null);
   const [plateFormOpen, setPlateFormOpen] = useState(false);
   const plateInit = useRef(false);
@@ -341,6 +349,8 @@ export function PhotoScanSheet({
       setItems(res.items);
       setName(res.summary_name);
       setQuestion(res.question);
+      setLastCost({ cost: res.cost_usd, balance: res.balance_usd });
+      void qc.invalidateQueries({ queryKey: ["credits-balance"] });
       setStep("review");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Auswertung fehlgeschlagen");
@@ -361,6 +371,8 @@ export function PhotoScanSheet({
       });
       setItems(res.items);
       setQuestion(res.question);
+      setLastCost({ cost: res.cost_usd, balance: res.balance_usd });
+      void qc.invalidateQueries({ queryKey: ["credits-balance"] });
       setCorrection("");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Korrektur fehlgeschlagen");
@@ -420,7 +432,7 @@ export function PhotoScanSheet({
 
   const footer =
     step === "capture" ? (
-      <Button className="w-full" onClick={analyze} disabled={!food || busy}>
+      <Button className="w-full" onClick={analyze} disabled={!food || busy || noCredit}>
         <Sparkles className="mr-2 h-4 w-4" /> Auswerten
       </Button>
     ) : step === "review" ? (
@@ -434,6 +446,18 @@ export function PhotoScanSheet({
       <FormSheet open onOpenChange={(v) => !v && onClose()} title={title} footer={footer}>
         {step === "capture" && (
           <div className="space-y-3 p-4">
+            <p
+              className={cn(
+                "rounded-lg px-3 py-2 text-xs",
+                noCredit ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground",
+              )}
+            >
+              {noCredit
+                ? "Guthaben muss aufgeladen werden."
+                : balance != null
+                  ? `Guthaben: ${formatUsd(balance)}`
+                  : "Guthaben wird geladen…"}
+            </p>
             <div className="space-y-1.5">
               <p className="text-xs font-medium text-muted-foreground">
                 Teller oder Schüssel (die Maße dienen als Maßstab)
@@ -613,6 +637,12 @@ export function PhotoScanSheet({
               <p className="text-[11px] text-muted-foreground">
                 Schätzung aus Foto, Nährwerte stammen aus deiner Bibliothek.
               </p>
+              {lastCost && (
+                <p className="text-[11px] text-muted-foreground">
+                  Dieser Scan: {formatUsd(lastCost.cost)}
+                  {lastCost.balance != null && ` · Guthaben ${formatUsd(lastCost.balance)}`}
+                </p>
+              )}
             </div>
 
             {question && (

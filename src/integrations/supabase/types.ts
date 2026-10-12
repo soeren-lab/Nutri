@@ -836,6 +836,63 @@ export type Database = {
         };
         Relationships: [];
       };
+      credit_ledger: {
+        Row: {
+          amount_usd: number;
+          balance_after_usd: number;
+          created_at: string;
+          id: string;
+          input_tokens: number | null;
+          kind: string;
+          model: string | null;
+          note: string | null;
+          output_tokens: number | null;
+          user_id: string;
+        };
+        Insert: {
+          amount_usd: number;
+          balance_after_usd: number;
+          created_at?: string;
+          id?: string;
+          input_tokens?: number | null;
+          kind: string;
+          model?: string | null;
+          note?: string | null;
+          output_tokens?: number | null;
+          user_id: string;
+        };
+        Update: {
+          amount_usd?: number;
+          balance_after_usd?: number;
+          created_at?: string;
+          id?: string;
+          input_tokens?: number | null;
+          kind?: string;
+          model?: string | null;
+          note?: string | null;
+          output_tokens?: number | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      user_credits: {
+        Row: {
+          balance_usd: number;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          balance_usd?: number;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          balance_usd?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       user_plates: {
         Row: {
           capacity_ml: number | null;
@@ -1600,6 +1657,32 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_credit_overview: {
+        Args: never;
+        Returns: {
+          balance_usd: number;
+          email: string | null;
+          last_used: string | null;
+          scans: number;
+          topped_up_usd: number;
+          used_usd: number;
+          user_id: string;
+          username: string | null;
+        }[];
+      };
+      admin_credit_topup: {
+        Args: { _amount_usd: number; _kind?: string; _note?: string; _user_id: string };
+        Returns: number;
+      };
+      charge_credit_usage: {
+        Args: {
+          _amount_usd: number;
+          _input_tokens: number;
+          _model: string;
+          _output_tokens: number;
+        };
+        Returns: number;
+      };
       accept_friend_request: {
         Args: { _request_id: string };
         Returns: undefined;
