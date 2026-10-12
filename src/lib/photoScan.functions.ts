@@ -129,11 +129,10 @@ export const analyzeMealPhoto = createServerFn({ method: "POST" })
     if (!apiKey)
       throw new Error("Foto-Scan ist noch nicht eingerichtet (ANTHROPIC_API_KEY fehlt).");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const isNewScan = !!data.image;
     if (isNewScan) {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { count, error: countError } = await supabaseAdmin
+      const { count, error: countError } = await context.supabase
         .from("photo_scan_log")
         .select("id", { count: "exact", head: true })
         .eq("user_id", context.userId)
@@ -209,7 +208,7 @@ export const analyzeMealPhoto = createServerFn({ method: "POST" })
     }
 
     if (isNewScan) {
-      await supabaseAdmin.from("photo_scan_log").insert({ user_id: context.userId });
+      await context.supabase.from("photo_scan_log").insert({ user_id: context.userId });
     }
 
     return {

@@ -124,7 +124,7 @@ function PhotoSlot({
     if (file) onPick(file);
   };
   return (
-    <div className="flex min-h-[148px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-muted/30 p-2 text-center">
+    <div className="flex min-h-[168px] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-muted/30 p-2 text-center">
       <input
         ref={cameraRef}
         type="file"
@@ -155,10 +155,11 @@ function PhotoSlot({
               {badge}
             </span>
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex w-full flex-col gap-1.5">
             <Button
               type="button"
               size="sm"
+              className="w-full"
               variant="secondary"
               disabled={busy}
               onClick={() => cameraRef.current?.click()}
@@ -168,6 +169,7 @@ function PhotoSlot({
             <Button
               type="button"
               size="sm"
+              className="w-full"
               variant="outline"
               disabled={busy}
               onClick={() => galleryRef.current?.click()}
