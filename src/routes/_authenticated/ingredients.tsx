@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/EmptyState";
+import { BarcodeIngredientButton } from "@/components/BarcodeIngredientButton";
 import { IngredientMasterFormDialog } from "@/components/IngredientMasterFormDialog";
 import { IngredientDeleteDialog } from "@/components/IngredientDeleteDialog";
 import { IngredientMasterCard } from "@/components/IngredientMasterCard";
@@ -243,9 +244,12 @@ function IngredientsTab() {
           {list.length} Stammzutat{list.length === 1 ? "" : "en"}
           {archivedCount > 0 && !showArchived && <> · {archivedCount} archiviert</>}
         </p>
-        <Button onClick={openNew} className="gap-1.5">
-          <Plus className="h-4 w-4" /> Zutat
-        </Button>
+        <div className="flex items-center gap-2">
+          <BarcodeIngredientButton />
+          <Button onClick={openNew} className="gap-1.5">
+            <Plus className="h-4 w-4" /> Zutat
+          </Button>
+        </div>
       </div>
 
       {archivedCount > 0 && (

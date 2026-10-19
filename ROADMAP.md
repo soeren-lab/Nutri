@@ -18,6 +18,7 @@ Rezepte, Nährwerte und Meal Prep, plus der Plattform drumherum.
 **Nährwerte**
 - Eigene Zutaten-Datenbank pro User (Kalorien/Makros, Dichte für g↔ml)
 - Barcode-Import über OpenFoodFacts inkl. Quellen-Tracking
+- Barcode-Scan per Handykamera (Android-App) legt Zutaten vorbefüllt aus OpenFoodFacts an
 - Tagesziele mit Verlauf (`target_history`), Kalorienbereich, Nährwert-Score
   (Protein-Faktor-Farbcodierung), Körpermaße/Gewichtsverlauf
 
@@ -51,8 +52,7 @@ Architektur direkt umsetzbar sind.
   per URL (Titel/Zutaten/Schritte aus einer eingefügten Rezept-Webseite
   vorausfüllen)
 - **Nährwerte:** Mikronährstoffe (Ballaststoffe, Zucker, Salz, Vitamine) neben
-  den bestehenden Makros; Barcode-Scan direkt über die Handykamera statt
-  manueller Eingabe, jetzt möglich durch die native Android-App
+  den bestehenden Makros
 - **Meal Prep:** Wiederkehrende Wochenpläne (eine Woche als Vorlage speichern
   und erneut anwenden); automatische Vervollständigung eines Plans anhand der
   Tagesziele, aufbauend auf `mealSuggestions.ts`

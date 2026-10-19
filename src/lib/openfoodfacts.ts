@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { searchOffProducts, type OffProduct } from "@/lib/openfoodfacts.functions";
+import { lookupOffByBarcode, searchOffProducts, type OffProduct } from "@/lib/openfoodfacts.functions";
 import { DEFAULT_INGREDIENT_CATEGORY } from "@/lib/categories";
 import type { IngredientMaster } from "@/lib/ingredients-master";
 import { isNativeApp } from "@/lib/platform";
@@ -40,8 +40,16 @@ export const offSearchQuery = (query: string) =>
     retry: false,
   });
 
+/** Produkt per Barcode nachschlagen. `product: null` = nicht (vollständig) in OFF. */
+export function lookupBarcode(code: string) {
+  return lookupOffByBarcode({
+    data: { code },
+    ...(isNativeApp() ? { fetch: nativeServerFnFetch } : {}),
+  });
+}
+
 /** Marke nach Name finden (case-insensitive) oder neu anlegen. */
-async function resolveBrandId(userId: string, name: string | null): Promise<string | null> {
+export async function resolveBrandId(userId: string, name: string | null): Promise<string | null> {
   const trimmed = name?.trim();
   if (!trimmed) return null;
   const { data: existing } = await supabase

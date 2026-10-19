@@ -37,6 +37,7 @@ import {
   uploadIngredientImage,
   collectSubcategories,
   type IngredientMaster,
+  type IngredientPrefill,
 } from "@/lib/ingredients-master";
 import { useIngredientsMaster } from "@/hooks/use-ingredients-master";
 
@@ -54,12 +55,14 @@ export function IngredientMasterFormDialog({
   onOpenChange,
   existing,
   defaultName,
+  prefill,
   onSaved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existing?: IngredientMaster;
   defaultName?: string;
+  prefill?: IngredientPrefill;
   onSaved?: (m: IngredientMaster) => void;
 }) {
   const qc = useQueryClient();
@@ -89,22 +92,23 @@ export function IngredientMasterFormDialog({
 
   useEffect(() => {
     if (!open) return;
-    setName(existing?.name ?? defaultName ?? "");
-    setBrandId(existing?.brand_id ?? null);
+    const src = existing ?? prefill;
+    setName(existing?.name ?? prefill?.name ?? defaultName ?? "");
+    setBrandId(src?.brand_id ?? null);
     setCategory(existing?.category ?? DEFAULT_INGREDIENT_CATEGORY);
     setSubcategory(existing?.subcategory ?? "");
-    setUnit(existing ? normalizeUnit(existing.unit) : "g");
+    setUnit(src?.unit ? normalizeUnit(src.unit) : "g");
 
-    setCalories(existing?.calories ?? "");
-    setProtein(existing?.protein_g ?? "");
-    setCarbs(existing?.carbs_g ?? "");
-    setFat(existing?.fat_g ?? "");
-    setFiber(existing?.fiber_g ?? "");
-    setSugar(existing?.sugar_g ?? "");
+    setCalories(src?.calories ?? "");
+    setProtein(src?.protein_g ?? "");
+    setCarbs(src?.carbs_g ?? "");
+    setFat(src?.fat_g ?? "");
+    setFiber(src?.fiber_g ?? "");
+    setSugar(src?.sugar_g ?? "");
     setDensity(existing?.density_g_per_ml ?? "");
-    setImagePath(existing?.image_url ?? null);
+    setImagePath(src?.image_url ?? null);
     setLocalPreview(null);
-  }, [open, existing, defaultName]);
+  }, [open, existing, prefill, defaultName]);
 
   useEffect(() => {
     return () => {
@@ -157,6 +161,10 @@ export function IngredientMasterFormDialog({
       fiber_g: fiber === "" ? null : Number(fiber),
       sugar_g: sugar === "" ? null : Number(sugar),
       density_g_per_ml: density === "" ? null : Number(density),
+      // Herkunft nur bei Neuanlage aus Scan mitgeben, beim Bearbeiten bleibt sie unberührt.
+      ...(!existing && prefill?.source_barcode
+        ? { source: prefill.source ?? null, source_barcode: prefill.source_barcode }
+        : {}),
     };
   }
 
@@ -164,22 +172,26 @@ export function IngredientMasterFormDialog({
   // vom aktuellen Formularstand.
   const initialPayload = useMemo(() => {
     if (!open) return null;
+    const src = existing ?? prefill;
     return {
-      name: (existing?.name ?? defaultName ?? "").trim(),
-      brand_id: existing?.brand_id ?? null,
-      image_url: existing?.image_url ?? null,
-      unit: existing ? normalizeUnit(existing.unit) : "g",
+      name: (existing?.name ?? prefill?.name ?? defaultName ?? "").trim(),
+      brand_id: src?.brand_id ?? null,
+      image_url: src?.image_url ?? null,
+      unit: src?.unit ? normalizeUnit(src.unit) : "g",
       category: existing?.category ?? DEFAULT_INGREDIENT_CATEGORY,
       subcategory: (existing?.subcategory ?? "").trim() || null,
-      calories: existing?.calories ?? null,
-      protein_g: existing?.protein_g ?? null,
-      carbs_g: existing?.carbs_g ?? null,
-      fat_g: existing?.fat_g ?? null,
-      fiber_g: existing?.fiber_g ?? null,
-      sugar_g: existing?.sugar_g ?? null,
+      calories: src?.calories ?? null,
+      protein_g: src?.protein_g ?? null,
+      carbs_g: src?.carbs_g ?? null,
+      fat_g: src?.fat_g ?? null,
+      fiber_g: src?.fiber_g ?? null,
+      sugar_g: src?.sugar_g ?? null,
       density_g_per_ml: existing?.density_g_per_ml ?? null,
+      ...(!existing && prefill?.source_barcode
+        ? { source: prefill.source ?? null, source_barcode: prefill.source_barcode }
+        : {}),
     };
-  }, [open, existing, defaultName]);
+  }, [open, existing, prefill, defaultName]);
 
   const isDirty =
     open &&
@@ -237,7 +249,12 @@ export function IngredientMasterFormDialog({
     },
     onError: (e, _id, context) => {
       context?.previous.forEach(([key, data]) => qc.setQueryData(key, data));
-      toast.error(e instanceof Error ? e.message : "Fehler");
+      const message = e instanceof Error ? e.message : ((e as { message?: string })?.message ?? "");
+      toast.error(
+        /ingredients_master_user_name_key|duplicate key/i.test(message)
+          ? "Eine Zutat mit diesem Namen gibt es schon."
+          : message || "Fehler",
+      );
     },
   });
 

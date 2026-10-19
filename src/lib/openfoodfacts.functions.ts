@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { isValidBarcode } from "@/lib/barcode";
 
 /**
  * Suche in der Open Food Facts Datenbank (öffentliche JSON-API).
@@ -82,7 +83,41 @@ function normalize(raw: Record<string, unknown>): OffProduct | null {
   };
 }
 
-export const searchOffProducts = createServerFn({ method: "GET" })
+/** Einzelprodukt per Barcode aus Open Food Facts. */
+export const lookupOffByBarcode = createServerFn({ method: "GET" })
+  .inputValidator((input) =>
+    z.object({ code: z.string().refine(isValidBarcode, "Ungültiger Barcode") }).parse(input),
+  )
+  .handler(async ({ data }): Promise<{ product: OffProduct | null; error: string | null }> => {
+    const url = new URL(`https://world.openfoodfacts.org/api/v2/product/${data.code}.json`);
+    url.searchParams.set("fields", FIELDS);
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": "Nutri/1.0 (Lovable app; ingredient import)",
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.status === 404) return { product: null, error: null };
+      if (!res.ok) {
+        console.error("[OFF] barcode HTTP", res.status);
+        return { product: null, error: "Open Food Facts nicht erreichbar" };
+      }
+      const json = (await res.json()) as {
+        status?: number;
+        product?: Record<string, unknown>;
+      };
+      if (json.status === 0 || !json.product) return { product: null, error: null };
+      const product = normalize({ ...json.product, code: json.product["code"] ?? data.code });
+      return { product: product && product.calories != null ? product : null, error: null };
+    } catch (e) {
+      console.error("[OFF] barcode lookup failed", e);
+      return { product: null, error: "Open Food Facts nicht erreichbar" };
+    }
+  });
+
+export const searchOffProducts =createServerFn({ method: "GET" })
   .inputValidator((input) =>
     z.object({ query: z.string().min(2).max(80) }).parse(input),
   )

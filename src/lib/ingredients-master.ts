@@ -70,7 +70,29 @@ export type IngredientMasterInput = {
   fiber_g: number | null;
   sugar_g: number | null;
   density_g_per_ml: number | null;
+  /** Nur bei Anlage aus einem Scan/Import gesetzt; fehlt beim Bearbeiten. */
+  source?: string | null;
+  source_barcode?: string | null;
 };
+
+/** Vorbefüllung des Anlegen-Formulars (z. B. aus einem Barcode-Scan). */
+export type IngredientPrefill = Partial<
+  Pick<
+    IngredientMasterInput,
+    | "name"
+    | "brand_id"
+    | "image_url"
+    | "unit"
+    | "calories"
+    | "protein_g"
+    | "carbs_g"
+    | "fat_g"
+    | "fiber_g"
+    | "sugar_g"
+    | "source"
+    | "source_barcode"
+  >
+>;
 
 
 /**

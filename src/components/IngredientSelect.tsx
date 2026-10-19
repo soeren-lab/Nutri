@@ -9,6 +9,7 @@ import {
   matchesViaSubcategory,
   type IngredientMaster,
 } from "@/lib/ingredients-master";
+import { BarcodeIngredientButton } from "@/components/BarcodeIngredientButton";
 import { IngredientMasterFormDialog } from "@/components/IngredientMasterFormDialog";
 import { IngredientSortFilterBar } from "@/components/IngredientSortFilterBar";
 import { CommunityResultsSection } from "@/components/CommunityResultsSection";
@@ -109,7 +110,9 @@ export function IngredientSelect({
         placeholder="Zutat suchen oder eintippen…"
         items={items}
         toolbar={
-          <IngredientSortFilterBar
+          <>
+            <BarcodeIngredientButton className="mb-2 w-full gap-1.5" onSaved={pickAndClose} />
+            <IngredientSortFilterBar
             sort={sort}
             onSortChange={setSort}
             filters={nutrientFilters}
@@ -124,6 +127,7 @@ export function IngredientSelect({
             onClearCategories={() => setSelectedCats([])}
             compact
           />
+          </>
         }
         getSearchText={getSearchText}
         selectedId={masterId}
