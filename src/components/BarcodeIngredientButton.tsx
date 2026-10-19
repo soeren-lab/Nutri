@@ -75,6 +75,9 @@ export function BarcodeIngredientButton({
         setFormOpen(true);
         return;
       }
+      if (product.calories == null) {
+        toast.info("Produkt gefunden, aber ohne Nährwerte. Trag sie vom Etikett ein.");
+      }
       const brand_id = await resolveBrandId(uid, product.brand);
       void qc.invalidateQueries({ queryKey: ["brands"] });
       setExisting(undefined);

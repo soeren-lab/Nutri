@@ -83,34 +83,39 @@ function normalize(raw: Record<string, unknown>): OffProduct | null {
   };
 }
 
-/** Einzelprodukt per Barcode aus Open Food Facts. */
+/** Einzelprodukt per Barcode aus Open Food Facts (auch ohne Nährwerte). */
 export const lookupOffByBarcode = createServerFn({ method: "GET" })
   .inputValidator((input) =>
     z.object({ code: z.string().refine(isValidBarcode, "Ungültiger Barcode") }).parse(input),
   )
   .handler(async ({ data }): Promise<{ product: OffProduct | null; error: string | null }> => {
-    const url = new URL(`https://world.openfoodfacts.org/api/v2/product/${data.code}.json`);
-    url.searchParams.set("fields", FIELDS);
+    // 12-stellige UPC-A-Codes sind in OFF oft als EAN-13 mit führender 0 hinterlegt.
+    const candidates = data.code.length === 12 ? [data.code, `0${data.code}`] : [data.code];
     try {
-      const res = await fetch(url, {
-        headers: {
-          "User-Agent": "Nutri/1.0 (Lovable app; ingredient import)",
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(8000),
-      });
-      if (res.status === 404) return { product: null, error: null };
-      if (!res.ok) {
-        console.error("[OFF] barcode HTTP", res.status);
-        return { product: null, error: "Open Food Facts nicht erreichbar" };
+      for (const code of candidates) {
+        const url = new URL(`https://world.openfoodfacts.org/api/v2/product/${code}.json`);
+        url.searchParams.set("fields", FIELDS);
+        const res = await fetch(url, {
+          headers: {
+            "User-Agent": "Nutri/1.0 (Lovable app; ingredient import)",
+            Accept: "application/json",
+          },
+          signal: AbortSignal.timeout(8000),
+        });
+        if (res.status === 404) continue;
+        if (!res.ok) {
+          console.error("[OFF] barcode HTTP", res.status);
+          return { product: null, error: "Open Food Facts nicht erreichbar" };
+        }
+        const json = (await res.json()) as {
+          status?: number;
+          product?: Record<string, unknown>;
+        };
+        if (json.status === 0 || !json.product) continue;
+        const product = normalize({ ...json.product, code: json.product["code"] ?? code });
+        if (product) return { product, error: null };
       }
-      const json = (await res.json()) as {
-        status?: number;
-        product?: Record<string, unknown>;
-      };
-      if (json.status === 0 || !json.product) return { product: null, error: null };
-      const product = normalize({ ...json.product, code: json.product["code"] ?? data.code });
-      return { product: product && product.calories != null ? product : null, error: null };
+      return { product: null, error: null };
     } catch (e) {
       console.error("[OFF] barcode lookup failed", e);
       return { product: null, error: "Open Food Facts nicht erreichbar" };
