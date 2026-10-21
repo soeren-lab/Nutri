@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { UNREACHABLE_MESSAGE } from "@/lib/db-client";
+import { UNREACHABLE_MESSAGE, getApiBase, resolveApiBase } from "@/lib/db-client";
 
 /** Zeigt eine klare Meldung, wenn die NAS-API nicht erreichbar ist (statt leerer Bildschirme). */
 export function ApiStatusBanner() {
@@ -19,7 +19,8 @@ export function ApiStatusBanner() {
   const retry = useCallback(async () => {
     setChecking(true);
     try {
-      const base = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, "");
+      await resolveApiBase(true);
+      const base = getApiBase();
       const res = await fetch(`${base}/health`, { signal: AbortSignal.timeout(5000) });
       if (res.ok) {
         setDown(false);

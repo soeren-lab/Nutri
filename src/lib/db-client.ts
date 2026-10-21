@@ -35,14 +35,57 @@ type AuthEvent =
   | "USER_UPDATED";
 
 export const UNREACHABLE_MESSAGE =
-  "Der Server ist nicht erreichbar. Bist du mit dem Heimnetz (WLAN) verbunden?";
+  "Der Server ist nicht erreichbar. Bist du mit dem Heimnetz (WLAN) oder Tailscale verbunden?";
+
+/**
+ * `VITE_API_URL` darf mehrere Adressen enthalten, durch Komma getrennt
+ * (z. B. Heimnetz zuerst, dann Tailscale). Die erste erreichbare gewinnt.
+ */
+function configuredBases(): string[] {
+  const raw = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
+  return raw
+    .split(",")
+    .map((u) => u.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+}
+
+let activeBase: string | null = null;
+let probing: Promise<string> | null = null;
 
 function apiBase(): string {
-  const url = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, "");
-  if (!url) {
+  const bases = configuredBases();
+  if (!bases.length) {
     throw new Error("VITE_API_URL fehlt. Trage die Adresse deiner NAS-API in die .env-Datei ein.");
   }
-  return url;
+  return activeBase ?? bases[0];
+}
+
+/** Aktuell genutzte API-Adresse (für Statusprüfungen). */
+export function getApiBase(): string {
+  return apiBase();
+}
+
+/** Prüft alle Adressen parallel und wählt die erste (in Reihenfolge) mit Antwort auf /health. */
+export function resolveApiBase(force = false): Promise<string> {
+  const bases = configuredBases();
+  if (bases.length <= 1) return Promise.resolve(apiBase());
+  if (!force && activeBase) return Promise.resolve(activeBase);
+  if (probing) return probing;
+  probing = (async () => {
+    const results = await Promise.all(
+      bases.map((b) =>
+        fetch(`${b}/health`, { signal: AbortSignal.timeout(2500) })
+          .then((r) => r.ok)
+          .catch(() => false),
+      ),
+    );
+    const idx = results.indexOf(true);
+    if (idx >= 0) activeBase = bases[idx];
+    return activeBase ?? bases[0];
+  })().finally(() => {
+    probing = null;
+  });
+  return probing;
 }
 
 const STORAGE_KEY = "nutri.auth.v1";
@@ -88,10 +131,24 @@ function setSession(s: Session | null, event: AuthEvent) {
 let refreshing: Promise<Session | null> | null = null;
 
 async function rawFetch(path: string, init: RequestInit = {}): Promise<Response | null> {
+  const multi = configuredBases().length > 1;
   try {
+    if (multi && !activeBase) await resolveApiBase();
     return await fetch(`${apiBase()}${path}`, init);
   } catch (e) {
     if (e instanceof Error && e.message.startsWith("VITE_API_URL")) throw e;
+    if (multi) {
+      // Netzwechsel (WLAN <-> Mobilfunk/Tailscale): Adresse neu wählen, einmal wiederholen.
+      const before = activeBase;
+      await resolveApiBase(true);
+      if (activeBase && activeBase !== before) {
+        try {
+          return await fetch(`${apiBase()}${path}`, init);
+        } catch {
+          /* weiter zur Fehlermeldung */
+        }
+      }
+    }
     try {
       window.dispatchEvent(new CustomEvent("api-unreachable"));
     } catch {
