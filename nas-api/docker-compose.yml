@@ -45,6 +45,20 @@ services:
       # Projekt stoppen und starten genügt, ein Neu-Bauen ist nicht nötig.
       - ./src:/app/src:ro
 
+  # Datenbank im Browser ansehen: http://<NAS-IP>:8081 (Anmeldung: Benutzer nutri + DB_PASSWORD).
+  phpmyadmin:
+    image: phpmyadmin:5
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_ARBITRARY: 0
+      UPLOAD_LIMIT: 64M
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+
 # Docker verwaltet diese Speicherorte selbst (kein Anlegen von Ordnern nötig).
 volumes:
   nutri_db:
