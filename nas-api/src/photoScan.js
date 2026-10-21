@@ -58,7 +58,10 @@ Regeln:
 - Ist ein Teller bzw. eine Schüssel mit Maßen angegeben, ist genau dieses Geschirr auf dem Foto. Nutze die Maße als absoluten Maßstab: schätze, welchen Anteil der Fläche bzw. des Volumens das Essen belegt, wie hoch es liegt und bei Schüsseln mit Fassungsvermögen den Füllgrad. Ohne Maße schätze anhand von Tellergröße, Besteck und Proportionen.
 - Schätze realistische Mengen anhand von Tellergröße, Besteck und Proportionen. Gib low und high als plausible Spanne derselben Menge an (typisch plus/minus 15 bis 25 Prozent) und confidence (high, medium, low).
 - Das Referenzfoto (falls vorhanden) zeigt Zutaten oder Packungen und die Notiz nennt Verstecktes (Öl, Butter, Käse, Sauce, Zucker). Nutze beides und lege Öle und Fette als eigene Position an, wenn sie verwendet wurden.
-- Stelle höchstens eine Rückfrage (question), und nur, wenn eine Position mehr als etwa 60 kcal Unsicherheit hat und das Foto sie nicht klärt.
+- Ein Gericht ist nie eine einzelne Position. Zusammengesetzte Speisen (Auflauf, Gratin, Lasagne, Eintopf, Suppe, Pizza, Burger, Pfanne, Salat mit Beilagen usw.) zerlegst du in ihre Grundzutaten (z. B. Nudeln, Schinken, Käse, Sauce, Gemüse) mit geschätzten Anteilen. Den Namen des Gerichts setzt du nur in summary_name. Bei Teilen, die du unter anderen Zutaten nicht sehen kannst, schätzt du typische Anteile und setzt confidence auf "low".
+- Bibliotheks-Einträge, die selbst Fertigprodukte oder Gerichte sind (z. B. Fertigsoßen, Backmischungen, Tiefkühlgerichte), gelten nur für ihren eigenen Anteil, nie für das ganze Gericht. Eine Fertigsoße ist nur die Soße (kleine Menge), nicht der gesamte Auflauf. Nutze so einen Eintrag nur, wenn die Notiz, das Referenzfoto oder eine sichtbare Packung ihn nahelegt. Sonst gehe von selbst zubereiteten Grundzutaten aus.
+- Stelle höchstens eine Rückfrage (question), und nur, wenn eine Position mehr als etwa 60 kcal Unsicherheit hat und das Foto sie nicht klärt. Ein typischer Fall ist eine Sauce, die Fertigprodukt (aus der Bibliothek) oder selbst gemacht sein kann: frage dann kurz danach, es sei denn, die Notiz klärt es schon.
+- Setze kind pro Position auf "gericht", wenn die Position ein ganzes zusammengesetztes Gericht ist (das sollst du vermeiden), sonst auf "zutat".
 - Bei einer Korrektur bekommst du die bisherigen Positionen und die Änderung des Nutzers. Setze nur diese Änderung um, lasse alles andere unverändert und gib die vollständige neue Liste zurück.
 - Ist auf dem Foto kein Essen zu erkennen, gib eine leere items-Liste zurück.
 Antworte ausschließlich über das Werkzeug report_meal.`;
@@ -82,6 +85,7 @@ const TOOL = {
             low: { type: "number" },
             high: { type: "number" },
             confidence: { type: "string", enum: ["high", "medium", "low"] },
+            kind: { type: "string", enum: ["zutat", "gericht"] },
             per100: {
               type: ["object", "null"],
               properties: {
@@ -180,6 +184,50 @@ function describePlate(p) {
   return parts.join(", ");
 }
 
+// ---------------------------------------------------------------- Modellaufruf
+
+const DISH_WORDS = /auflauf|gratin|lasagne|eintopf|suppe|pizza|burger|pfanne|curry|bowl|salat|g(e)?richt|pasta|nudeln mit/i;
+
+function toolInput(json) {
+  const block = (json.content || []).find((b) => b.type === "tool_use");
+  return block?.input ?? {};
+}
+
+/** True, wenn nur eine einzige Position kam, die ein ganzes Gericht ist. */
+function needsDecomposition(raw, candidates) {
+  const items = Array.isArray(raw.items) ? raw.items : [];
+  if (items.length !== 1) return false;
+  const it = items[0];
+  if (it.kind === "gericht") return true;
+  // Name klingt nach Gericht, ist mengenmäßig eine ganze Mahlzeit und keine Zutat der Bibliothek,
+  // die genau so heißt (Fertigsoße "Nudelschinken Gratin" ist als einzelne kleine Position legitim).
+  const inLibrary = candidates.some((c) => c.id === it.master_id);
+  return DISH_WORDS.test(String(it.name)) && Number(it.amount) >= 250 && !inLibrary;
+}
+
+async function askModel(apiKey, model, content) {
+  let response;
+  try {
+    response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model, max_tokens: 2000, system: SYSTEM_PROMPT, tools: [TOOL], messages: [{ role: "user", content }] }),
+      signal: AbortSignal.timeout(120000),
+    });
+  } catch (e) {
+    console.error("[photo-scan] Anthropic nicht erreichbar", e?.message);
+    throw new ApiError("Die KI ist gerade nicht erreichbar. Prüfe die Internetverbindung der NAS.", "502");
+  }
+  if (!response.ok) {
+    const text = await response.text();
+    let detail = "";
+    try { detail = JSON.parse(text)?.error?.message ?? ""; } catch { /* kein JSON */ }
+    console.error(`[photo-scan] Anthropic-Fehler ${response.status} rid=${response.headers.get("request-id")} body=${JSON.stringify(text.slice(0, 600))}`);
+    throw new ApiError(`Die KI-Auswertung ist fehlgeschlagen (${response.status})${detail ? `: ${detail}` : ""}`, "502");
+  }
+  return response.json();
+}
+
 // ---------------------------------------------------------------- Hauptfunktion
 
 export async function analyzeMealPhoto(uid, body) {
@@ -222,29 +270,24 @@ export async function analyzeMealPhoto(uid, body) {
   content.push({ type: "text", text: parts.join("\n\n") });
 
   const model = process.env.PHOTO_SCAN_MODEL || DEFAULT_MODEL;
-  let response;
-  try {
-    response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model, max_tokens: 2000, system: SYSTEM_PROMPT, tools: [TOOL], messages: [{ role: "user", content }] }),
-      signal: AbortSignal.timeout(120000),
-    });
-  } catch (e) {
-    console.error("[photo-scan] Anthropic nicht erreichbar", e?.message);
-    throw new ApiError("Die KI ist gerade nicht erreichbar. Prüfe die Internetverbindung der NAS.", "502");
-  }
-  if (!response.ok) {
-    const text = await response.text();
-    let detail = "";
-    try { detail = JSON.parse(text)?.error?.message ?? ""; } catch { /* kein JSON */ }
-    console.error(`[photo-scan] Anthropic-Fehler ${response.status} rid=${response.headers.get("request-id")} body=${JSON.stringify(text.slice(0, 600))}`);
-    throw new ApiError(`Die KI-Auswertung ist fehlgeschlagen (${response.status})${detail ? `: ${detail}` : ""}`, "502");
-  }
-
-  const json = await response.json();
-  // Die Anfrage hat Geld gekostet, egal ob Essen erkannt wurde: jetzt abbuchen.
+  let json = await askModel(apiKey, model, content);
   const usage = { input_tokens: json.usage?.input_tokens ?? 0, output_tokens: json.usage?.output_tokens ?? 0 };
+
+  // Besteht das Ergebnis nur aus einem ganzen Gericht, einmal mit Zerlege-Hinweis wiederholen.
+  if (needsDecomposition(toolInput(json), data.candidates)) {
+    try {
+      const retry = await askModel(apiKey, model, [
+        ...content,
+        { type: "text", text: "Hinweis: Dein erstes Ergebnis war ein ganzes Gericht als einzelne Position. Zerlege das Essen auf dem Foto in seine Grundzutaten (jeweils eigene Position, plausible Anteile). Der Gerichtsname gehört nur in summary_name." },
+      ]);
+      usage.input_tokens += retry.usage?.input_tokens ?? 0;
+      usage.output_tokens += retry.usage?.output_tokens ?? 0;
+      if (!needsDecomposition(toolInput(retry), data.candidates)) json = retry;
+    } catch (e) {
+      console.error("[photo-scan] Zweiter Versuch fehlgeschlagen", e?.message);
+    }
+  }
+  // Die Anfrage(n) haben Geld gekostet, egal ob Essen erkannt wurde: jetzt abbuchen.
   const costUsd = usageCostUsd(model, usage);
   let balanceUsd = null;
   try {
@@ -255,8 +298,7 @@ export async function analyzeMealPhoto(uid, body) {
     console.error("[photo-scan] Abbuchung fehlgeschlagen", e?.message);
   }
 
-  const block = (json.content || []).find((b) => b.type === "tool_use");
-  const raw = block?.input ?? {};
+  const raw = toolInput(json);
   const ids = new Set(data.candidates.map((c) => c.id));
   const items = (Array.isArray(raw.items) ? raw.items : [])
     .map(cleanItem)
