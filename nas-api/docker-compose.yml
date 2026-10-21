@@ -1,0 +1,51 @@
+# Synology: Container Manager -> Projekt -> Neu -> diesen Ordner wählen (oder per SSH: docker compose up -d --build)
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: nutri
+      MARIADB_USER: nutri
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - nutri_db:/var/lib/mysql
+      - ./db/schema.mariadb.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./data.mariadb.sql:/import/data.mariadb.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+      start_period: 120s
+
+  api:
+    build: .
+    restart: unless-stopped
+    # JWT_SECRET, ALLOW_SIGNUP, ANTHROPIC_API_KEY, PHOTO_SCAN_MODEL kommen direkt aus der .env
+    # (wird bei jedem Start frisch gelesen, auch nach Änderungen).
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: db
+      DB_USER: nutri
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: nutri
+      STORAGE_DIR: /data/storage
+    volumes:
+      - nutri_files:/data/storage
+      # Der Programmcode wird direkt aus dem Projektordner gelesen: Dateien ersetzen,
+      # Projekt stoppen und starten genügt, ein Neu-Bauen ist nicht nötig.
+      - ./src:/app/src:ro
+
+# Docker verwaltet diese Speicherorte selbst (kein Anlegen von Ordnern nötig).
+volumes:
+  nutri_db:
+  nutri_files:

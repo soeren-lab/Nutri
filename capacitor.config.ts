@@ -17,6 +17,16 @@ const config: CapacitorConfig = {
   // deploy --config wrangler.json  3) bun run build-capacitor-shell
   // 4) npx cap sync android
   webDir: "www",
+  // Die NAS-API läuft im Heimnetz per http://<NAS-IP>:3000 (kein TLS). Die App-Oberfläche
+  // wird intern über localhost ausgeliefert (siehe server.androidScheme).
+  android: {
+    allowMixedContent: true,
+  },
+  // Die App läuft intern auf http://localhost statt https://localhost. Sonst blockiert Android
+  // Bilder von der NAS (http://<NAS-IP>:3000) als "Mixed Content", auch mit allowMixedContent.
+  server: {
+    androidScheme: "http",
+  },
 };
 
 export default config;

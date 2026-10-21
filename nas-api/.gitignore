@@ -1,0 +1,6 @@
+.env
+data/
+node_modules/
+db/data*.sql
+*.backup
+src/anthropic-key.txt

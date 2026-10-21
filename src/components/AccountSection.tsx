@@ -1,13 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import {
   CreditCard,
   Download,
   Loader2,
   Receipt,
-  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,8 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { deleteMyAccount } from "@/lib/account.functions";
-import { isNativeApp } from "@/lib/platform";
 
 function Panel({ children }: { children?: React.ReactNode }) {
   return (
@@ -141,66 +135,19 @@ export function PasswordPanel() {
   );
 }
 
-const DELETE_PHRASE = "LÖSCHEN";
-
-/** Account endgültig löschen – mit Bestätigungs-Eingabe. */
+/**
+ * Konto löschen: Platzhalter. Die Funktion lief früher über den Cloudflare-Worker und muss
+ * noch auf die NAS-API migriert werden (siehe nas-api/src/index.js, Route /account/delete).
+ */
 export function DeleteAccountPanel() {
-  const navigate = useNavigate();
-  const [phrase, setPhrase] = useState("");
-  const deleteFn = useServerFn(deleteMyAccount);
-
-  const mutation = useMutation({
-    mutationFn: () => deleteFn({ data: undefined }),
-    onSuccess: async () => {
-      toast.success("Account gelöscht");
-      await supabase.auth.signOut();
-      void navigate({ to: "/auth", replace: true });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  if (isNativeApp()) {
-    return (
-      <Panel>
-        <p className="text-sm font-semibold">Konto löschen</p>
-        <p className="text-xs text-muted-foreground">
-          In der App-Version aktuell nicht verfügbar. Bitte über die Website löschen.
-        </p>
-      </Panel>
-    );
-  }
-
   return (
     <Panel>
-      <div>
-        <p className="text-sm font-semibold text-destructive">
-          Wirklich unwiderruflich löschen?
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Alle Rezepte, Planer-Einträge und Profildaten werden unwiderruflich gelöscht.
-          Diese Aktion kann nicht rückgängig gemacht werden. Tippe „{DELETE_PHRASE}" ein,
-          um zu bestätigen.
-        </p>
-      </div>
-      <Input
-        value={phrase}
-        onChange={(e) => setPhrase(e.target.value)}
-        placeholder={DELETE_PHRASE}
-        aria-label="Bestätigung"
-      />
-      <Button
-        variant="destructive"
-        className="w-full"
-        disabled={phrase.trim() !== DELETE_PHRASE || mutation.isPending}
-        onClick={() => mutation.mutate()}
-      >
-        {mutation.isPending ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Trash2 className="mr-2 h-4 w-4" />
-        )}
-        Endgültig löschen
-      </Button>
+      <p className="text-sm font-semibold">Konto löschen</p>
+      <p className="text-xs text-muted-foreground">
+        Diese Funktion ist vorübergehend nicht verfügbar. Sie wird gerade auf das neue System
+        migriert und kommt in einem späteren Update zurück. Wenn du dein Konto jetzt löschen
+        lassen möchtest, wende dich bitte an den Admin.
+      </p>
     </Panel>
   );
 }

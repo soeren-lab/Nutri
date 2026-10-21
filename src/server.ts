@@ -3,7 +3,6 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { registerPushToken, broadcastAppUpdate } from "./lib/push-notifications.functions";
-import { analyzeMealPhoto } from "./lib/photoScan.functions";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -53,12 +52,12 @@ const SERVER_FN_PREFIX = "/_serverFn/";
  * erreichen darf (Pfade sind build-generierte Hashes, deshalb zur Laufzeit
  * aus den echten Function-Objekten gelesen statt von Hand eingetragen).
  * Alle bleiben durch requireSupabaseAuth abgesichert, broadcastAppUpdate
- * zusätzlich durch einen serverseitigen has_role-Check, analyzeMealPhoto durch
- * einen serverseitigen Max-Plan-Check und ein Tageslimit – CORS ist hier nur
- * Erreichbarkeit, nicht die Sicherheitsgrenze.
+ * zusätzlich durch einen serverseitigen has_role-Check – CORS ist hier nur
+ * Erreichbarkeit, nicht die Sicherheitsgrenze. (Der Foto-Scan läuft inzwischen
+ * über die NAS-API, siehe nas-api/src/photoScan.js.)
  */
 const NATIVE_CORS_POST_PATHS = new Set(
-  [registerPushToken, broadcastAppUpdate, analyzeMealPhoto].map((fn) => fn.url),
+  [registerPushToken, broadcastAppUpdate].map((fn) => fn.url),
 );
 
 /**

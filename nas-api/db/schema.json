@@ -1,0 +1,4239 @@
+{
+ "achievements": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "achievement_key": {
+    "t": "text",
+    "my": "VARCHAR(255)",
+    "nn": true,
+    "d": null
+   },
+   "unlocked_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "progress_value": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "achievement_key",
+   "unlocked_at",
+   "progress_value"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "achievements_user_id_achievement_key_key",
+    "cols": [
+     "user_id",
+     "achievement_key"
+    ]
+   }
+  ],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "achievements_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "ai_suggestion_cache": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "meal_slot": {
+    "t": "text",
+    "my": "VARCHAR(255)",
+    "nn": true,
+    "d": null
+   },
+   "date": {
+    "t": "date",
+    "my": "DATE",
+    "nn": true,
+    "d": null
+   },
+   "kcal_bucket": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": null
+   },
+   "protein_bucket": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": null
+   },
+   "carbs_bucket": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": null
+   },
+   "fat_bucket": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": null
+   },
+   "suggestions": {
+    "t": "json",
+    "my": "LONGTEXT",
+    "nn": true,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "expires_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "nowplus",
+     "s": 1800
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "meal_slot",
+   "date",
+   "kcal_bucket",
+   "protein_bucket",
+   "carbs_bucket",
+   "fat_bucket",
+   "suggestions",
+   "created_at",
+   "expires_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "ai_suggestion_cache_user_id_meal_slot_date_kcal_bucket_prot_",
+    "cols": [
+     "user_id",
+     "meal_slot",
+     "date",
+     "kcal_bucket",
+     "protein_bucket",
+     "carbs_bucket",
+     "fat_bucket"
+    ]
+   }
+  ],
+  "indexes": [
+   {
+    "name": "ai_suggestion_cache_expires_idx",
+    "cols": [
+     "expires_at"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "ai_suggestion_cache_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "body_measurements": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "date": {
+    "t": "date",
+    "my": "DATE",
+    "nn": true,
+    "d": null
+   },
+   "weight_kg": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "body_fat_percent": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "note": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "date",
+   "weight_kg",
+   "body_fat_percent",
+   "note",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "body_measurements_user_id_date_key",
+    "cols": [
+     "user_id",
+     "date"
+    ]
+   }
+  ],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "body_measurements_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "brands": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "name": {
+    "t": "text",
+    "my": "VARCHAR(255)",
+    "nn": true,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "is_published": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": false
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "name",
+   "created_at",
+   "updated_at",
+   "is_published"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "brands_user_id_name_key",
+    "cols": [
+     "user_id",
+     "name"
+    ]
+   }
+  ],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "brands_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "component_variants": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "component_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "label": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "sort_order": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "is_default": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": false
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "component_id",
+   "label",
+   "sort_order",
+   "is_default",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "component_variants_component_id_idx",
+    "cols": [
+     "component_id"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "component_variants_component_id_fkey",
+    "col": "component_id",
+    "ref": "recipe_components",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "cookbook_members": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "cookbook_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "role": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "viewer"
+    }
+   },
+   "added_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "cookbook_id",
+   "user_id",
+   "role",
+   "added_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "cookbook_members_cookbook_id_user_id_key",
+    "cols": [
+     "cookbook_id",
+     "user_id"
+    ]
+   }
+  ],
+  "indexes": [
+   {
+    "name": "cookbook_members_cookbook_id_idx",
+    "cols": [
+     "cookbook_id"
+    ]
+   },
+   {
+    "name": "cookbook_members_user_id_idx",
+    "cols": [
+     "user_id"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "cookbook_members_cookbook_id_fkey",
+    "col": "cookbook_id",
+    "ref": "cookbooks",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "cookbook_recipes": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "cookbook_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "recipe_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "sort_order": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "cookbook_id",
+   "recipe_id",
+   "sort_order",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "cookbook_recipes_cookbook_id_recipe_id_key",
+    "cols": [
+     "cookbook_id",
+     "recipe_id"
+    ]
+   }
+  ],
+  "indexes": [
+   {
+    "name": "cookbook_recipes_cookbook_id_idx",
+    "cols": [
+     "cookbook_id"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "cookbook_recipes_cookbook_id_fkey",
+    "col": "cookbook_id",
+    "ref": "cookbooks",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "cookbook_recipes_recipe_id_fkey",
+    "col": "recipe_id",
+    "ref": "recipes",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "cookbooks": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "title": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "description": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "cover_image_url": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "share_token": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "title",
+   "description",
+   "cover_image_url",
+   "share_token",
+   "created_at",
+   "updated_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "cookbooks_share_token_key",
+    "cols": [
+     "share_token"
+    ]
+   }
+  ],
+  "indexes": [
+   {
+    "name": "cookbooks_user_id_idx",
+    "cols": [
+     "user_id"
+    ]
+   }
+  ],
+  "fks": []
+ },
+ "credit_ledger": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "kind": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "amount_usd": {
+    "t": "num",
+    "my": "DECIMAL(14,6)",
+    "nn": true,
+    "d": null
+   },
+   "balance_after_usd": {
+    "t": "num",
+    "my": "DECIMAL(14,6)",
+    "nn": true,
+    "d": null
+   },
+   "note": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "model": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "input_tokens": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "output_tokens": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "kind",
+   "amount_usd",
+   "balance_after_usd",
+   "note",
+   "model",
+   "input_tokens",
+   "output_tokens",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "credit_ledger_user_created_idx",
+    "cols": [
+     "user_id",
+     "created_at"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "credit_ledger_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "favorites": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "recipe_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "recipe_id",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "favorites_user_id_recipe_id_key",
+    "cols": [
+     "user_id",
+     "recipe_id"
+    ]
+   }
+  ],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "favorites_recipe_id_fkey",
+    "col": "recipe_id",
+    "ref": "recipes",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "favorites_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "friend_requests": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "sender_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "receiver_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "status": {
+    "t": "text",
+    "my": "VARCHAR(255)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "pending"
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "responded_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": false,
+    "d": null
+   },
+   "sender_seen_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": false,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "sender_id",
+   "receiver_id",
+   "status",
+   "created_at",
+   "responded_at",
+   "sender_seen_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "friend_requests_unique_pair",
+    "cols": [
+     "sender_id",
+     "receiver_id"
+    ]
+   }
+  ],
+  "indexes": [
+   {
+    "name": "idx_friend_requests_receiver",
+    "cols": [
+     "receiver_id",
+     "status"
+    ]
+   },
+   {
+    "name": "idx_friend_requests_sender",
+    "cols": [
+     "sender_id",
+     "status"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "friend_requests_receiver_id_fkey",
+    "col": "receiver_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "friend_requests_sender_id_fkey",
+    "col": "sender_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "friendships": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id_a": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "user_id_b": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id_a",
+   "user_id_b",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "friendships_unique",
+    "cols": [
+     "user_id_a",
+     "user_id_b"
+    ]
+   }
+  ],
+  "indexes": [
+   {
+    "name": "idx_friendships_a",
+    "cols": [
+     "user_id_a"
+    ]
+   },
+   {
+    "name": "idx_friendships_b",
+    "cols": [
+     "user_id_b"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "friendships_user_id_a_fkey",
+    "col": "user_id_a",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "friendships_user_id_b_fkey",
+    "col": "user_id_b",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "ingredients": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "recipe_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "name": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "amount": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "unit": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "sort_order": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "calories": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "protein_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "carbs_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "fat_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "ingredient_master_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "component_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "variant_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "product_group": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "fiber_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "sugar_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "recipe_id",
+   "name",
+   "amount",
+   "unit",
+   "sort_order",
+   "calories",
+   "protein_g",
+   "carbs_g",
+   "fat_g",
+   "ingredient_master_id",
+   "component_id",
+   "variant_id",
+   "product_group",
+   "fiber_g",
+   "sugar_g"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "idx_ingredients_component_id",
+    "cols": [
+     "component_id"
+    ]
+   },
+   {
+    "name": "ingredients_recipe_idx",
+    "cols": [
+     "recipe_id"
+    ]
+   },
+   {
+    "name": "ingredients_variant_id_idx",
+    "cols": [
+     "variant_id"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "ingredients_component_id_fkey",
+    "col": "component_id",
+    "ref": "recipe_components",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "ingredients_ingredient_master_id_fkey",
+    "col": "ingredient_master_id",
+    "ref": "ingredients_master",
+    "refcol": "id",
+    "onDelete": "SET NULL"
+   },
+   {
+    "name": "ingredients_recipe_id_fkey",
+    "col": "recipe_id",
+    "ref": "recipes",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "ingredients_variant_id_fkey",
+    "col": "variant_id",
+    "ref": "component_variants",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "ingredients_master": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "name": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "unit": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "g"
+    }
+   },
+   "calories": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "protein_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "carbs_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "fat_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "density_g_per_ml": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "image_url": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "brand_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "category": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "Sonstiges"
+    }
+   },
+   "archived": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": false
+    }
+   },
+   "is_published": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": false
+    }
+   },
+   "published_version": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "source_ingredient_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "imported_version": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "dismissed_version": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "subcategory": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "published_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": false,
+    "d": null
+   },
+   "fiber_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "sugar_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "source_updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": false,
+    "d": null
+   },
+   "dismissed_source_updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": false,
+    "d": null
+   },
+   "source": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "source_barcode": {
+    "t": "text",
+    "my": "VARCHAR(255)",
+    "nn": false,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "name",
+   "unit",
+   "calories",
+   "protein_g",
+   "carbs_g",
+   "fat_g",
+   "created_at",
+   "updated_at",
+   "density_g_per_ml",
+   "image_url",
+   "brand_id",
+   "category",
+   "archived",
+   "is_published",
+   "published_version",
+   "source_ingredient_id",
+   "imported_version",
+   "dismissed_version",
+   "subcategory",
+   "published_at",
+   "fiber_g",
+   "sugar_g",
+   "source_updated_at",
+   "dismissed_source_updated_at",
+   "source",
+   "source_barcode"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "idx_ingredients_master_brand_id",
+    "cols": [
+     "brand_id"
+    ]
+   },
+   {
+    "name": "ingredients_master_archived_idx",
+    "cols": [
+     "user_id",
+     "archived"
+    ]
+   },
+   {
+    "name": "ingredients_master_published_idx",
+    "cols": [
+     "is_published"
+    ]
+   },
+   {
+    "name": "ingredients_master_source_idx",
+    "cols": [
+     "source_ingredient_id"
+    ]
+   },
+   {
+    "name": "ingredients_master_user_barcode_idx",
+    "cols": [
+     "user_id",
+     "source_barcode"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "ingredients_master_brand_id_fkey",
+    "col": "brand_id",
+    "ref": "brands",
+    "refcol": "id",
+    "onDelete": "SET NULL"
+   },
+   {
+    "name": "ingredients_master_source_ingredient_id_fkey",
+    "col": "source_ingredient_id",
+    "ref": "ingredients_master",
+    "refcol": "id",
+    "onDelete": "SET NULL"
+   },
+   {
+    "name": "ingredients_master_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "meal_plan_entries": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "date": {
+    "t": "date",
+    "my": "DATE",
+    "nn": true,
+    "d": null
+   },
+   "meal_slot": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "recipe_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "servings": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "food_type": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "recipe"
+    }
+   },
+   "ingredient_master_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "amount": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "unit": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "sort_order": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "quick_entry_name": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "quick_entry_calories": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "quick_entry_protein_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "quick_entry_carbs_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "quick_entry_fat_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "selected_variant_ids": {
+    "t": "json",
+    "my": "LONGTEXT",
+    "nn": false,
+    "d": null
+   },
+   "snapshot_name": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "snapshot_calories": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "snapshot_protein_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "snapshot_carbs_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "snapshot_fat_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "group_choices": {
+    "t": "json",
+    "my": "LONGTEXT",
+    "nn": false,
+    "d": null
+   },
+   "snapshot_variant_label": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "snapshot_ingredients": {
+    "t": "json",
+    "my": "LONGTEXT",
+    "nn": false,
+    "d": null
+   },
+   "days_late": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "input_mode": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "servings"
+    }
+   },
+   "input_grams_value": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "batch_group_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "batch_role": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "none"
+    }
+   },
+   "batch_cook_date": {
+    "t": "date",
+    "my": "DATE",
+    "nn": false,
+    "d": null
+   },
+   "batch_cooked_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": false,
+    "d": null
+   },
+   "snapshot_fiber_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "quick_entry_fiber_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "snapshot_sugar_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "quick_entry_sugar_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "skipped": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": false
+    }
+   },
+   "photo_path": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "photo_items": {
+    "t": "json",
+    "my": "LONGTEXT",
+    "nn": false,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "date",
+   "meal_slot",
+   "recipe_id",
+   "servings",
+   "created_at",
+   "updated_at",
+   "food_type",
+   "ingredient_master_id",
+   "amount",
+   "unit",
+   "sort_order",
+   "quick_entry_name",
+   "quick_entry_calories",
+   "quick_entry_protein_g",
+   "quick_entry_carbs_g",
+   "quick_entry_fat_g",
+   "selected_variant_ids",
+   "snapshot_name",
+   "snapshot_calories",
+   "snapshot_protein_g",
+   "snapshot_carbs_g",
+   "snapshot_fat_g",
+   "group_choices",
+   "snapshot_variant_label",
+   "snapshot_ingredients",
+   "days_late",
+   "input_mode",
+   "input_grams_value",
+   "batch_group_id",
+   "batch_role",
+   "batch_cook_date",
+   "batch_cooked_at",
+   "snapshot_fiber_g",
+   "quick_entry_fiber_g",
+   "snapshot_sugar_g",
+   "quick_entry_sugar_g",
+   "skipped",
+   "photo_path",
+   "photo_items"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "meal_plan_entries_batch_cook_date_idx",
+    "cols": [
+     "user_id",
+     "batch_cook_date"
+    ]
+   },
+   {
+    "name": "meal_plan_entries_batch_group_idx",
+    "cols": [
+     "batch_group_id"
+    ]
+   },
+   {
+    "name": "meal_plan_entries_user_date_idx",
+    "cols": [
+     "user_id",
+     "date"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "meal_plan_entries_ingredient_master_id_fkey",
+    "col": "ingredient_master_id",
+    "ref": "ingredients_master",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "meal_plan_entries_recipe_id_fkey",
+    "col": "recipe_id",
+    "ref": "recipes",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "meal_plan_entries_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "patch_note_sections": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "patch_note_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "subtitle": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": ""
+    }
+   },
+   "content": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": ""
+    }
+   },
+   "sort_order": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "patch_note_id",
+   "subtitle",
+   "content",
+   "sort_order",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "patch_note_sections_note_idx",
+    "cols": [
+     "patch_note_id",
+     "sort_order"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "patch_note_sections_patch_note_id_fkey",
+    "col": "patch_note_id",
+    "ref": "patch_notes",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "patch_notes": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "title": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "published_by": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "title",
+   "created_at",
+   "published_by"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "patch_notes_published_by_fkey",
+    "col": "published_by",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "photo_scan_log": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "photo_scan_log_user_created_idx",
+    "cols": [
+     "user_id",
+     "created_at"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "photo_scan_log_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "points_log": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "date": {
+    "t": "date",
+    "my": "DATE",
+    "nn": true,
+    "d": null
+   },
+   "points_earned": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "breakdown": {
+    "t": "json",
+    "my": "LONGTEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": {}
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "days_late": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "points_multiplier_applied": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 1
+    }
+   },
+   "season_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "date",
+   "points_earned",
+   "breakdown",
+   "created_at",
+   "days_late",
+   "points_multiplier_applied",
+   "season_id"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "points_log_user_id_date_key",
+    "cols": [
+     "user_id",
+     "date"
+    ]
+   }
+  ],
+  "indexes": [
+   {
+    "name": "points_log_user_date_idx",
+    "cols": [
+     "user_id",
+     "date"
+    ]
+   },
+   {
+    "name": "points_log_user_season_date_idx",
+    "cols": [
+     "user_id",
+     "season_id",
+     "date"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "points_log_season_id_fkey",
+    "col": "season_id",
+    "ref": "seasons",
+    "refcol": "id",
+    "onDelete": "SET NULL"
+   },
+   {
+    "name": "points_log_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "push_subscriptions": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "fcm_token": {
+    "t": "text",
+    "my": "VARCHAR(255)",
+    "nn": true,
+    "d": null
+   },
+   "platform": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "android"
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "fcm_token",
+   "platform",
+   "created_at",
+   "updated_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "push_subscriptions_user_id_fcm_token_key",
+    "cols": [
+     "user_id",
+     "fcm_token"
+    ]
+   }
+  ],
+  "indexes": [
+   {
+    "name": "push_subscriptions_user_idx",
+    "cols": [
+     "user_id"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "push_subscriptions_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "quick_entry_templates": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "name": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "calories": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": true,
+    "d": null
+   },
+   "protein_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "carbs_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "fat_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "use_count": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 1
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "fiber_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "sugar_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "name",
+   "calories",
+   "protein_g",
+   "carbs_g",
+   "fat_g",
+   "use_count",
+   "created_at",
+   "updated_at",
+   "fiber_g",
+   "sugar_g"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "quick_entry_templates_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "recipe_components": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "recipe_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "name": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "servings": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "sort_order": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "linked_recipe_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "component_type": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "fixed"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "recipe_id",
+   "name",
+   "servings",
+   "sort_order",
+   "linked_recipe_id",
+   "created_at",
+   "updated_at",
+   "component_type"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "idx_recipe_components_linked_recipe_id",
+    "cols": [
+     "linked_recipe_id"
+    ]
+   },
+   {
+    "name": "idx_recipe_components_recipe_id",
+    "cols": [
+     "recipe_id"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "recipe_components_linked_recipe_id_fkey",
+    "col": "linked_recipe_id",
+    "ref": "recipes",
+    "refcol": "id",
+    "onDelete": "SET NULL"
+   },
+   {
+    "name": "recipe_components_recipe_id_fkey",
+    "col": "recipe_id",
+    "ref": "recipes",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "recipes": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "title": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "description": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "image_url": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "servings": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "prep_time_minutes": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "cook_time_minutes": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "category": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "calories": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "protein_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "carbs_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "fat_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "nutrition_mode": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "simple"
+    }
+   },
+   "categories": {
+    "t": "arr",
+    "my": "LONGTEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": []
+    }
+   },
+   "tag": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "is_component_only": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": false
+    }
+   },
+   "is_published": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": false
+    }
+   },
+   "published_version": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "source_recipe_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "imported_version": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "dismissed_version": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "is_fixed_batch": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": false
+    }
+   },
+   "batch_servings": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "fiber_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "sugar_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "source_updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": false,
+    "d": null
+   },
+   "dismissed_source_updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": false,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "title",
+   "description",
+   "image_url",
+   "servings",
+   "prep_time_minutes",
+   "cook_time_minutes",
+   "category",
+   "created_at",
+   "updated_at",
+   "calories",
+   "protein_g",
+   "carbs_g",
+   "fat_g",
+   "nutrition_mode",
+   "categories",
+   "tag",
+   "is_component_only",
+   "is_published",
+   "published_version",
+   "source_recipe_id",
+   "imported_version",
+   "dismissed_version",
+   "is_fixed_batch",
+   "batch_servings",
+   "fiber_g",
+   "sugar_g",
+   "source_updated_at",
+   "dismissed_source_updated_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "recipes_is_published_idx",
+    "cols": [
+     "is_published"
+    ]
+   },
+   {
+    "name": "recipes_source_recipe_id_idx",
+    "cols": [
+     "source_recipe_id"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "recipes_source_recipe_id_fkey",
+    "col": "source_recipe_id",
+    "ref": "recipes",
+    "refcol": "id",
+    "onDelete": "SET NULL"
+   },
+   {
+    "name": "recipes_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "season_history": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "season_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "final_points": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "final_rank": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "final_placement_among_friends": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "season_id",
+   "final_points",
+   "final_rank",
+   "final_placement_among_friends",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "season_history_user_id_season_id_key",
+    "cols": [
+     "user_id",
+     "season_id"
+    ]
+   }
+  ],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "season_history_season_id_fkey",
+    "col": "season_id",
+    "ref": "seasons",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "season_history_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "season_points": {
+  "cols": {
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "season_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "total_points": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "current_streak_days": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "last_points_date": {
+    "t": "date",
+    "my": "DATE",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "user_id",
+   "season_id",
+   "total_points",
+   "current_streak_days",
+   "last_points_date",
+   "created_at",
+   "updated_at"
+  ],
+  "pk": [
+   "user_id",
+   "season_id"
+  ],
+  "unique": [],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "season_points_season_id_fkey",
+    "col": "season_id",
+    "ref": "seasons",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "season_points_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "season_points_log": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "season_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "date": {
+    "t": "date",
+    "my": "DATE",
+    "nn": true,
+    "d": null
+   },
+   "points_earned": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "breakdown": {
+    "t": "json",
+    "my": "LONGTEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": {}
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "season_id",
+   "date",
+   "points_earned",
+   "breakdown",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "season_points_log_user_id_season_id_date_key",
+    "cols": [
+     "user_id",
+     "season_id",
+     "date"
+    ]
+   }
+  ],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "season_points_log_season_id_fkey",
+    "col": "season_id",
+    "ref": "seasons",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "season_points_log_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "seasons": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "name": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "start_date": {
+    "t": "date",
+    "my": "DATE",
+    "nn": true,
+    "d": null
+   },
+   "end_date": {
+    "t": "date",
+    "my": "DATE",
+    "nn": true,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "is_active": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": true
+    }
+   },
+   "season_number": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "name",
+   "start_date",
+   "end_date",
+   "created_at",
+   "is_active",
+   "season_number"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [],
+  "fks": []
+ },
+ "shared_with_friends": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "owner_user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "friend_user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "content_type": {
+    "t": "text",
+    "my": "VARCHAR(255)",
+    "nn": true,
+    "d": null
+   },
+   "content_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "shared_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "owner_user_id",
+   "friend_user_id",
+   "content_type",
+   "content_id",
+   "shared_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "shared_with_friends_unique",
+    "cols": [
+     "owner_user_id",
+     "friend_user_id",
+     "content_type",
+     "content_id"
+    ]
+   }
+  ],
+  "indexes": [
+   {
+    "name": "idx_shared_with_friends_content",
+    "cols": [
+     "content_type",
+     "content_id"
+    ]
+   },
+   {
+    "name": "idx_shared_with_friends_friend",
+    "cols": [
+     "friend_user_id",
+     "content_type"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "shared_with_friends_friend_user_id_fkey",
+    "col": "friend_user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "shared_with_friends_owner_user_id_fkey",
+    "col": "owner_user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "shopping_list_items": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "ingredient_master_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "name": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "amount": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "unit": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "category": {
+    "t": "text",
+    "my": "VARCHAR(255)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "Sonstiges"
+    }
+   },
+   "is_checked": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": false
+    }
+   },
+   "is_manual": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": false
+    }
+   },
+   "source_recipe_ids": {
+    "t": "arr",
+    "my": "LONGTEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": []
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "ingredient_master_id",
+   "name",
+   "amount",
+   "unit",
+   "category",
+   "is_checked",
+   "is_manual",
+   "source_recipe_ids",
+   "created_at",
+   "updated_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "shopping_list_items_user_idx",
+    "cols": [
+     "user_id",
+     "category",
+     "is_checked"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "shopping_list_items_ingredient_master_id_fkey",
+    "col": "ingredient_master_id",
+    "ref": "ingredients_master",
+    "refcol": "id",
+    "onDelete": "SET NULL"
+   },
+   {
+    "name": "shopping_list_items_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "steps": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "recipe_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "step_number": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": null
+   },
+   "instruction": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "recipe_id",
+   "step_number",
+   "instruction"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "steps_recipe_idx",
+    "cols": [
+     "recipe_id"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "steps_recipe_id_fkey",
+    "col": "recipe_id",
+    "ref": "recipes",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "target_history": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "target_calories": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "target_protein_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "target_carbs_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "target_fat_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "valid_from": {
+    "t": "date",
+    "my": "DATE",
+    "nn": true,
+    "d": {
+     "k": "today"
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "target_fiber_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "target_sugar_max_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "target_calories",
+   "target_protein_g",
+   "target_carbs_g",
+   "target_fat_g",
+   "valid_from",
+   "created_at",
+   "target_fiber_g",
+   "target_sugar_max_g"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "target_history_user_id_valid_from_key",
+    "cols": [
+     "user_id",
+     "valid_from"
+    ]
+   }
+  ],
+  "indexes": [
+   {
+    "name": "idx_target_history_user_date",
+    "cols": [
+     "user_id",
+     "valid_from"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "target_history_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "user_credits": {
+  "cols": {
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "balance_usd": {
+    "t": "num",
+    "my": "DECIMAL(14,6)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "user_id",
+   "balance_usd",
+   "updated_at"
+  ],
+  "pk": [
+   "user_id"
+  ],
+  "unique": [],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "user_credits_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "user_plans": {
+  "cols": {
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "plan": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "free"
+    }
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "user_id",
+   "plan",
+   "created_at",
+   "updated_at"
+  ],
+  "pk": [
+   "user_id"
+  ],
+  "unique": [],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "user_plans_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "user_plates": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "name": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": null
+   },
+   "shape": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "round"
+    }
+   },
+   "width_cm": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": true,
+    "d": null
+   },
+   "length_cm": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "depth_cm": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": true,
+    "d": null
+   },
+   "capacity_ml": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "photo_path": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "name",
+   "shape",
+   "width_cm",
+   "length_cm",
+   "depth_cm",
+   "capacity_ml",
+   "photo_path",
+   "created_at",
+   "updated_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "user_plates_user_idx",
+    "cols": [
+     "user_id"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "user_plates_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "user_points": {
+  "cols": {
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "total_points": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "current_streak_days": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   },
+   "last_points_date": {
+    "t": "date",
+    "my": "DATE",
+    "nn": false,
+    "d": null
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "current_season_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": false,
+    "d": null
+   },
+   "bonus_points": {
+    "t": "int",
+    "my": "INT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": 0
+    }
+   }
+  },
+  "order": [
+   "user_id",
+   "total_points",
+   "current_streak_days",
+   "last_points_date",
+   "updated_at",
+   "current_season_id",
+   "bonus_points"
+  ],
+  "pk": [
+   "user_id"
+  ],
+  "unique": [],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "user_points_current_season_id_fkey",
+    "col": "current_season_id",
+    "ref": "seasons",
+    "refcol": "id",
+    "onDelete": "NO ACTION"
+   },
+   {
+    "name": "user_points_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "user_profile": {
+  "cols": {
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "weight_kg": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "height_cm": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "age": {
+    "t": "int",
+    "my": "INT",
+    "nn": false,
+    "d": null
+   },
+   "sex": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "activity_level": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "moderate"
+    }
+   },
+   "goal": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "maintain"
+    }
+   },
+   "goal_rate": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "moderate"
+    }
+   },
+   "target_calories": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "target_protein_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "target_carbs_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "target_fat_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "username": {
+    "t": "text",
+    "my": "VARCHAR(255)",
+    "nn": false,
+    "d": null
+   },
+   "avatar_url": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": false,
+    "d": null
+   },
+   "target_fiber_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "target_sugar_max_g": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": false,
+    "d": null
+   },
+   "track_protein": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": true
+    }
+   },
+   "track_carbs": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": true
+    }
+   },
+   "track_fat": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": true
+    }
+   },
+   "track_fiber": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": true
+    }
+   },
+   "track_sugar": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": true
+    }
+   },
+   "theme_preference": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "light"
+    }
+   },
+   "username_changed_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": false,
+    "d": null
+   },
+   "experimental_glass_ui": {
+    "t": "bool",
+    "my": "TINYINT(1)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": true
+    }
+   },
+   "experimental_glass_variant": {
+    "t": "text",
+    "my": "TEXT",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "light"
+    }
+   }
+  },
+  "order": [
+   "user_id",
+   "weight_kg",
+   "height_cm",
+   "age",
+   "sex",
+   "activity_level",
+   "goal",
+   "goal_rate",
+   "target_calories",
+   "target_protein_g",
+   "target_carbs_g",
+   "target_fat_g",
+   "created_at",
+   "updated_at",
+   "username",
+   "avatar_url",
+   "target_fiber_g",
+   "target_sugar_max_g",
+   "track_protein",
+   "track_carbs",
+   "track_fat",
+   "track_fiber",
+   "track_sugar",
+   "theme_preference",
+   "username_changed_at",
+   "experimental_glass_ui",
+   "experimental_glass_variant"
+  ],
+  "pk": [
+   "user_id"
+  ],
+  "unique": [
+   {
+    "name": "user_profile_username_unique",
+    "cols": [
+     "username"
+    ]
+   }
+  ],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "user_profile_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "user_roles": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "role": {
+    "t": "text",
+    "my": "VARCHAR(255)",
+    "nn": true,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "role",
+   "created_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [
+   {
+    "name": "user_roles_user_id_role_key",
+    "cols": [
+     "user_id",
+     "role"
+    ]
+   }
+  ],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "user_roles_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "user_seen_patch_notes": {
+  "cols": {
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "patch_note_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "seen_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "user_id",
+   "patch_note_id",
+   "seen_at"
+  ],
+  "pk": [
+   "user_id",
+   "patch_note_id"
+  ],
+  "unique": [],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "user_seen_patch_notes_patch_note_id_fkey",
+    "col": "patch_note_id",
+    "ref": "patch_notes",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "user_seen_patch_notes_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
+ "user_seen_seasons": {
+  "cols": {
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "season_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "seen_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "user_id",
+   "season_id",
+   "seen_at"
+  ],
+  "pk": [
+   "user_id",
+   "season_id"
+  ],
+  "unique": [],
+  "indexes": [],
+  "fks": [
+   {
+    "name": "user_seen_seasons_season_id_fkey",
+    "col": "season_id",
+    "ref": "seasons",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "user_seen_seasons_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ }
+}
