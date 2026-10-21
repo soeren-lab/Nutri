@@ -101,12 +101,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&family=Archivo+Black&display=swap",
-      },
+      // Schrift (SF Pro Display) lokal ausliefern: kein Google-Fonts-Abruf, funktioniert offline.
+      ...["regular", "medium", "bold"].map((w) => ({
+        rel: "preload",
+        as: "font",
+        type: "font/woff2",
+        href: `/fonts/sf-pro-display-${w}.woff2`,
+        crossOrigin: "anonymous" as const,
+      })),
     ],
   }),
   shellComponent: RootShell,
