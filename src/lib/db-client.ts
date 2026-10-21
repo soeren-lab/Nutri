@@ -49,8 +49,39 @@ function configuredBases(): string[] {
     .filter(Boolean);
 }
 
-let activeBase: string | null = null;
+const BASE_KEY = "nutri.apiBase.v1";
+
+// Zuletzt funktionierende Adresse merken: spart beim Start das Warten auf die
+// jeweils nicht erreichbare (z. B. Heimnetz-Adresse unterwegs).
+let activeBase: string | null = (() => {
+  try {
+    const saved = localStorage.getItem(BASE_KEY);
+    return saved && configuredBases().includes(saved) ? saved : null;
+  } catch {
+    return null;
+  }
+})();
 let probing: Promise<string> | null = null;
+let baseVerified = false;
+let verifying: Promise<void> | null = null;
+
+/** Einmal pro Start: gemerkte Adresse kurz prüfen, sonst neu wählen (nie lange hängen). */
+function verifyBase(): Promise<void> {
+  if (!verifying) {
+    verifying = (async () => {
+      if (activeBase) {
+        const ok = await fetch(`${activeBase}/health`, { signal: AbortSignal.timeout(1500) })
+          .then((r) => r.ok)
+          .catch(() => false);
+        if (!ok) await resolveApiBase(true);
+      } else {
+        await resolveApiBase(true);
+      }
+      baseVerified = true;
+    })();
+  }
+  return verifying;
+}
 
 function apiBase(): string {
   const bases = configuredBases();
@@ -74,13 +105,20 @@ export function resolveApiBase(force = false): Promise<string> {
   probing = (async () => {
     const results = await Promise.all(
       bases.map((b) =>
-        fetch(`${b}/health`, { signal: AbortSignal.timeout(2500) })
+        fetch(`${b}/health`, { signal: AbortSignal.timeout(1500) })
           .then((r) => r.ok)
           .catch(() => false),
       ),
     );
     const idx = results.indexOf(true);
-    if (idx >= 0) activeBase = bases[idx];
+    if (idx >= 0) {
+      activeBase = bases[idx];
+      try {
+        localStorage.setItem(BASE_KEY, activeBase);
+      } catch {
+        /* Speicher gesperrt */
+      }
+    }
     return activeBase ?? bases[0];
   })().finally(() => {
     probing = null;
@@ -133,7 +171,7 @@ let refreshing: Promise<Session | null> | null = null;
 async function rawFetch(path: string, init: RequestInit = {}): Promise<Response | null> {
   const multi = configuredBases().length > 1;
   try {
-    if (multi && !activeBase) await resolveApiBase();
+    if (multi && !baseVerified) await verifyBase();
     return await fetch(`${apiBase()}${path}`, init);
   } catch (e) {
     if (e instanceof Error && e.message.startsWith("VITE_API_URL")) throw e;
