@@ -43,7 +43,7 @@ import { useIngredientsMaster } from "@/hooks/use-ingredients-master";
 
 import { normalizeUnit } from "@/lib/unitConversion";
 import { useSignedIngredientImage } from "@/hooks/use-signed-image";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { toast } from "sonner";
 import { BrandSelect } from "@/components/BrandSelect";
 import { INGREDIENT_CATEGORIES, DEFAULT_INGREDIENT_CATEGORY } from "@/lib/categories";
@@ -122,7 +122,7 @@ export function IngredientMasterFormDialog({
     if (!file) return;
     try {
       setUploading(true);
-      const { data: userRes } = await supabase.auth.getUser();
+      const { data: userRes } = await db.auth.getUser();
       const uid = userRes.user?.id;
       if (!uid) throw new Error("Nicht angemeldet");
       const preview = URL.createObjectURL(file);

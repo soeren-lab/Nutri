@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Info } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useTracking } from "@/hooks/use-tracking";
 import { MACRO_POINTS } from "@/lib/points";
@@ -41,7 +41,7 @@ export function TrackingSettingsSection() {
               : column === "track_fiber"
                 ? { track_fiber: payload.value }
                 : { track_sugar: payload.value };
-      const { error } = await supabase
+      const { error } = await db
         .from("user_profile")
         .update(patch)
         .eq("user_id", user.id);

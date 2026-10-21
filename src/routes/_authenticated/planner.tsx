@@ -59,7 +59,7 @@ import { toast } from "sonner";
 import { SuggestionSheet } from "@/components/SuggestionSheet";
 import { useServerFn } from "@tanstack/react-start";
 import type { AiMealSuggestion } from "@/lib/aiSuggestions.functions";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 import { PlannerHero } from "@/components/PlannerHero";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -380,7 +380,7 @@ function PlannerPage() {
   /** KI-Idee als eigenes Rezept speichern (später verfeinerbar). */
   async function saveAiSuggestionAsRecipe(s: AiMealSuggestion) {
     if (!user) return;
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("recipes")
       .insert({
         user_id: user.id,
@@ -417,7 +417,7 @@ function PlannerPage() {
           ingredient_master_id: match?.id ?? null,
         };
       });
-      const { error: ingErr } = await supabase.from("ingredients").insert(rows);
+      const { error: ingErr } = await db.from("ingredients").insert(rows);
       if (ingErr) toast.error("Zutaten konnten nicht angelegt werden");
     }
 

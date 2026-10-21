@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { resolveIngredients } from "@/lib/resolveIngredient";
 import { addNutrition } from "@/lib/componentNutrition";
 import type { RecipeComponentWithRelations, RecipeListItem } from "@/types/recipe";
@@ -39,7 +39,7 @@ function positive(v: number | null | undefined) {
  * Danach wird die Komponente aus dem Ursprungsrezept entfernt.
  */
 export async function extractSideDishes(candidate: SideDishCandidate): Promise<number> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const uid = userRes.user?.id;
   if (!uid) throw new Error("Nicht angemeldet");
 
@@ -58,7 +58,7 @@ export async function extractSideDishes(candidate: SideDishCandidate): Promise<n
         })),
       );
       const servings = Math.round(positive(c.servings));
-      const { data: newRecipe, error } = await supabase
+      const { data: newRecipe, error } = await db
         .from("recipes")
         .insert({
           user_id: uid,
@@ -76,7 +76,7 @@ export async function extractSideDishes(candidate: SideDishCandidate): Promise<n
       if (error) throw error;
 
       if (rows.length > 0) {
-        const { error: ingErr } = await supabase.from("ingredients").insert(
+        const { error: ingErr } = await db.from("ingredients").insert(
           (c.ingredients ?? []).map((i, idx) => ({
             recipe_id: newRecipe.id,
             name: i.name,
@@ -97,7 +97,7 @@ export async function extractSideDishes(candidate: SideDishCandidate): Promise<n
       // Verlinktes Rezept nur als Beilage kennzeichnen.
       const target = c.linked;
       if (target && !(target.categories ?? []).includes("Beilage")) {
-        const { error } = await supabase
+        const { error } = await db
           .from("recipes")
           .update({ categories: [...(target.categories ?? []), "Beilage"] })
           .eq("id", c.linked_recipe_id);
@@ -105,7 +105,7 @@ export async function extractSideDishes(candidate: SideDishCandidate): Promise<n
       }
     }
 
-    const { error: delErr } = await supabase.from("recipe_components").delete().eq("id", c.id);
+    const { error: delErr } = await db.from("recipe_components").delete().eq("id", c.id);
     if (delErr) throw delErr;
   }
   return created;

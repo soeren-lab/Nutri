@@ -1,17 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireAuth } from "@/integrations/db/auth-middleware";
 
 /** Speichert/aktualisiert den FCM-Token des aktuellen Geräts für den angemeldeten User. */
 export const registerPushToken = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({ token: z.string().min(1), platform: z.string().min(1) }).parse(input),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAuth])
   .handler(async ({ context, data }) => {
     // RLS erlaubt Insert/Update der eigenen Zeile (user_id = auth.uid()) -
     // kein service_role-Client nötig.
-    const { error } = await context.supabase.from("push_subscriptions").upsert(
+    const { error } = await context.db.from("push_subscriptions").upsert(
       {
         user_id: context.userId,
         fcm_token: data.token,
@@ -30,9 +30,9 @@ export const registerPushToken = createServerFn({ method: "POST" })
  * get_other_push_tokens (siehe Migration), nicht nur im UI versteckt.
  */
 export const broadcastAppUpdate = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAuth])
   .handler(async ({ context }) => {
-    const { data: subs, error } = await context.supabase.rpc("get_other_push_tokens", {
+    const { data: subs, error } = await context.db.rpc("get_other_push_tokens", {
       _exclude_user_id: context.userId,
     });
     if (error) throw new Error(error.message);

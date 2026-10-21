@@ -23,8 +23,8 @@ import {
   UtensilsCrossed,
   type LucideIcon,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { db } from "@/integrations/db/client";
+import type { Tables } from "@/integrations/db/types";
 import { bestStreak, type ProgressDay } from "@/lib/progress";
 import type { BodyMeasurement } from "@/lib/bodyMeasurements";
 import type { Goal } from "@/lib/nutritionTargets";
@@ -463,7 +463,7 @@ export function evaluateAchievements(
 }
 
 export async function fetchAchievements(): Promise<Achievement[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("achievements")
     .select("*")
     .order("unlocked_at", { ascending: true });
@@ -484,7 +484,7 @@ export async function unlockAchievements(
   items: { key: string; progress_value: number }[],
 ): Promise<void> {
   if (items.length === 0) return;
-  const { error } = await supabase.from("achievements").upsert(
+  const { error } = await db.from("achievements").upsert(
     items.map((i) => ({
       user_id: userId,
       achievement_key: i.key,

@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { BookOpen, ChefHat, Clock, Flame, ImageIcon, LogIn, UserPlus } from "lucide-react";
 import { getCookbookByShareToken, type SharedCookbookPayload } from "@/lib/cookbooks-shared.functions";
 import { joinCookbookByToken } from "@/lib/cookbooks";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +23,7 @@ function SharedCookbookPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setAuthed(!!data.user));
+    db.auth.getUser().then(({ data }) => setAuthed(!!data.user));
   }, []);
 
   const native = isNativeApp();

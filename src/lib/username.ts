@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 export const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
 
@@ -33,7 +33,7 @@ export function usernameQuery(userId: string | undefined) {
     queryKey: ["username", userId ?? "anon"],
     enabled: !!userId,
     queryFn: async (): Promise<UsernameInfo> => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("user_profile")
         .select("username, username_changed_at")
         .eq("user_id", userId!)
@@ -49,7 +49,7 @@ export function usernameQuery(userId: string | undefined) {
 
 /** Live-Verfügbarkeitsprüfung über alle User hinweg (Security-Definer-RPC). */
 export async function isUsernameAvailable(value: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc("is_username_available", {
+  const { data, error } = await db.rpc("is_username_available", {
     _username: value.trim(),
   });
   if (error) throw error;
@@ -65,7 +65,7 @@ export async function saveUsername(
   const username = value.trim();
   const err = validateUsername(username);
   if (err) throw new Error(err);
-  const { error } = await supabase
+  const { error } = await db
     .from("user_profile")
     .upsert(
       {

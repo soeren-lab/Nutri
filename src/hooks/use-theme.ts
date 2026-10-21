@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userProfileQuery } from "@/lib/nutritionTargets";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
   applyTheme,
@@ -50,7 +50,7 @@ export function useTheme() {
   const mutation = useMutation({
     mutationFn: async (pref: ThemePreference) => {
       if (!user) return;
-      const { error } = await supabase
+      const { error } = await db
         .from("user_profile")
         .upsert({ user_id: user.id, theme_preference: pref } as never, { onConflict: "user_id" });
       if (error) throw error;

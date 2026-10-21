@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import {
   createCookbook,
   updateCookbook,
@@ -55,7 +55,7 @@ export function CookbookForm({ existing }: { existing?: Cookbook }) {
       let path = coverPath;
       if (file) {
         setUploading(true);
-        const { data: userRes } = await supabase.auth.getUser();
+        const { data: userRes } = await db.auth.getUser();
         const uid = userRes.user?.id;
         if (!uid) throw new Error("Nicht angemeldet");
         path = await uploadCookbookCover(uid, file);

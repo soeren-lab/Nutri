@@ -1,6 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { queryOptions } from "@tanstack/react-query";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/db/types";
 import { DEFAULT_INGREDIENT_CATEGORY } from "@/lib/categories";
 import { freeIngredients } from "@/lib/componentNutrition";
 import {
@@ -37,7 +37,7 @@ export type ShoppingListItem = Tables<"shopping_list_items"> & {
 export type ShoppingRangePreset = "week" | "next3" | "custom";
 
 export async function fetchShoppingList(): Promise<ShoppingListItem[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("shopping_list_items")
     .select("*")
     .order("created_at", { ascending: true });
@@ -51,7 +51,7 @@ export async function fetchShoppingList(): Promise<ShoppingListItem[]> {
   );
   if (masterIds.length === 0) return items;
 
-  const { data: masters, error: mErr } = await supabase
+  const { data: masters, error: mErr } = await db
     .from("ingredients_master")
     .select("id, image_url, brand:brands(name)")
     .in("id", masterIds);
@@ -321,7 +321,7 @@ export async function generateShoppingList(
         a.amount == null
           ? prev.amount
           : round1(Number(prev.amount ?? 0) + a.amount);
-      const { error } = await supabase
+      const { error } = await db
         .from("shopping_list_items")
         .update({ amount, source_recipe_ids: merged, is_checked: false })
         .eq("id", prev.id);
@@ -341,12 +341,12 @@ export async function generateShoppingList(
   }
 
   if (inserts.length > 0) {
-    const { error } = await supabase.from("shopping_list_items").insert(inserts as never);
+    const { error } = await db.from("shopping_list_items").insert(inserts as never);
     if (error) {
       // Einzeln nachfassen, damit ein fehlerhafter Datensatz nicht alle blockiert.
       console.warn("[Einkaufsliste] Sammel-Insert fehlgeschlagen, versuche einzeln", error);
       for (const row of inserts) {
-        const { error: e2 } = await supabase.from("shopping_list_items").insert(row as never);
+        const { error: e2 } = await db.from("shopping_list_items").insert(row as never);
         if (e2) console.warn("[Einkaufsliste] Zutat konnte nicht gespeichert werden", row.name, e2);
       }
     }
@@ -361,7 +361,7 @@ export async function addManualItem(input: {
   amount: number | null;
   unit: string | null;
 }): Promise<void> {
-  const { error } = await supabase.from("shopping_list_items").insert({
+  const { error } = await db.from("shopping_list_items").insert({
     user_id: input.userId,
     name: input.name,
     amount: input.amount,
@@ -377,7 +377,7 @@ export async function updateShoppingItem(
   id: string,
   input: { name: string; amount: number | null; unit: string | null; category: string },
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("shopping_list_items")
     .update({
       name: input.name,
@@ -390,7 +390,7 @@ export async function updateShoppingItem(
 }
 
 export async function setItemChecked(id: string, checked: boolean): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("shopping_list_items")
     .update({ is_checked: checked })
     .eq("id", id);
@@ -398,12 +398,12 @@ export async function setItemChecked(id: string, checked: boolean): Promise<void
 }
 
 export async function deleteShoppingItem(id: string): Promise<void> {
-  const { error } = await supabase.from("shopping_list_items").delete().eq("id", id);
+  const { error } = await db.from("shopping_list_items").delete().eq("id", id);
   if (error) throw error;
 }
 
 export async function clearShoppingList(userId: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("shopping_list_items")
     .delete()
     .eq("user_id", userId);

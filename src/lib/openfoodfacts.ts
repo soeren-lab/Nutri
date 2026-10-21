@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { lookupOffByBarcode, searchOffProducts, type OffProduct } from "@/lib/openfoodfacts.functions";
 import { DEFAULT_INGREDIENT_CATEGORY } from "@/lib/categories";
 import type { IngredientMaster } from "@/lib/ingredients-master";
@@ -52,7 +52,7 @@ export function lookupBarcode(code: string) {
 export async function resolveBrandId(userId: string, name: string | null): Promise<string | null> {
   const trimmed = name?.trim();
   if (!trimmed) return null;
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("brands")
     .select("id")
     .eq("user_id", userId)
@@ -60,7 +60,7 @@ export async function resolveBrandId(userId: string, name: string | null): Promi
     .limit(1)
     .maybeSingle();
   if (existing?.id) return existing.id;
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("brands")
     .insert({ name: trimmed, user_id: userId })
     .select("id")
@@ -74,11 +74,11 @@ export async function resolveBrandId(userId: string, name: string | null): Promi
  * Marke wird verknüpft bzw. angelegt, Bild-URL bleibt extern.
  */
 export async function importOffProduct(p: OffProduct): Promise<IngredientMaster> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const uid = userRes.user?.id;
   if (!uid) throw new Error("Nicht angemeldet");
 
-  const { data: dupe } = await supabase
+  const { data: dupe } = await db
     .from("ingredients_master")
     .select("id, name, archived")
     .eq("user_id", uid)
@@ -90,7 +90,7 @@ export async function importOffProduct(p: OffProduct): Promise<IngredientMaster>
     // War bereits importiert, aber zwischenzeitlich gelöscht (archiviert) –
     // stattdessen wiederherstellen statt einen "bereits vorhanden"-Fehler zu
     // werfen, sonst könnte man eine gelöschte OFF-Zutat nie wieder importieren.
-    const { data: restored, error } = await supabase
+    const { data: restored, error } = await db
       .from("ingredients_master")
       .update({ archived: false })
       .eq("id", dupe.id)
@@ -102,7 +102,7 @@ export async function importOffProduct(p: OffProduct): Promise<IngredientMaster>
 
   const brand_id = await resolveBrandId(uid, p.brand);
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients_master")
     .insert({
       user_id: uid,

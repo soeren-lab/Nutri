@@ -35,7 +35,7 @@ async function verifyJwt(token: string, secret: string): Promise<Record<string, 
   return claims;
 }
 
-export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
+export const requireAuth = createMiddleware({ type: "function" }).server(
   async ({ next }) => {
     const secret = process.env.JWT_SECRET;
     const apiUrl = process.env.NAS_API_URL;
@@ -57,7 +57,7 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
     return next({
       context: {
         // Token-gebundener Client gegen die NAS-API (RLS-äquivalente Regeln gelten wie in der App).
-        supabase: createTokenClient(apiUrl, token) as unknown as SupabaseClient<Database>,
+        db: createTokenClient(apiUrl, token) as unknown as SupabaseClient<Database>,
         userId: claims.sub,
         claims,
       },

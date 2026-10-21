@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireAuth } from "@/integrations/db/auth-middleware";
 
 const tokenSchema = z.object({ token: z.string().uuid() });
 
@@ -38,68 +38,22 @@ export type SharedCookbookPayload = {
   imageSignedUrls: Record<string, string | null>;
 };
 
+/**
+ * Kochbuch-Freigabe per Link: lief früher mit einem Admin-Zugriff am Cloudflare-Worker.
+ * Muss noch auf die NAS-API migriert werden (siehe ROADMAP.md, "Nacharbeit nach dem NAS-Umzug").
+ */
+const MIGRATION_PENDING =
+  "Die Kochbuch-Freigabe per Link wird gerade auf das neue System migriert und ist vorübergehend nicht verfügbar.";
+
 export const getCookbookByShareToken = createServerFn({ method: "GET" })
   .inputValidator((d) => tokenSchema.parse(d))
-  .handler(async ({ data }): Promise<SharedCookbookPayload | null> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: cb, error: cbErr } = await supabaseAdmin
-      .from("cookbooks")
-      .select("id, title, description, cover_image_url, share_token")
-      .eq("share_token", data.token)
-      .maybeSingle();
-    if (cbErr) throw cbErr;
-    if (!cb) return null;
-
-    const { data: links, error: linkErr } = await supabaseAdmin
-      .from("cookbook_recipes")
-      .select("sort_order, recipe:recipes(*)")
-      .eq("cookbook_id", cb.id)
-      .order("sort_order", { ascending: true });
-    if (linkErr) throw linkErr;
-
-    const recipes = (links ?? [])
-      .map((l) => l.recipe)
-      .filter(Boolean) as SharedCookbookPayload["recipes"];
-
-    let coverSignedUrl: string | null = null;
-    if (cb.cover_image_url) {
-      const { data: signed } = await supabaseAdmin.storage
-        .from("cookbook-covers")
-        .createSignedUrl(cb.cover_image_url, 60 * 60 * 24 * 7);
-      coverSignedUrl = signed?.signedUrl ?? null;
-    }
-
-    const imageSignedUrls: Record<string, string | null> = {};
-    for (const r of recipes) {
-      if (r.image_url) {
-        const { data: signed } = await supabaseAdmin.storage
-          .from("recipe-images")
-          .createSignedUrl(r.image_url, 60 * 60 * 24 * 7);
-        imageSignedUrls[r.id] = signed?.signedUrl ?? null;
-      }
-    }
-
-    return { cookbook: cb, recipes, coverSignedUrl, imageSignedUrls };
+  .handler(async (): Promise<SharedCookbookPayload | null> => {
+    throw new Error(MIGRATION_PENDING);
   });
 
 export const joinCookbookServerFn = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAuth])
   .inputValidator((d) => tokenSchema.parse(d))
-  .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: cb } = await supabaseAdmin
-      .from("cookbooks")
-      .select("id, user_id")
-      .eq("share_token", data.token)
-      .maybeSingle();
-    if (!cb) throw new Error("Ungültiger Link");
-    if (cb.user_id === context.userId) return { joined: false, cookbook_id: cb.id };
-    const { error } = await supabaseAdmin
-      .from("cookbook_members")
-      .upsert(
-        { cookbook_id: cb.id, user_id: context.userId, role: "viewer" },
-        { onConflict: "cookbook_id,user_id" },
-      );
-    if (error) throw error;
-    return { joined: true, cookbook_id: cb.id };
+  .handler(async (): Promise<{ joined: boolean; cookbook_id: string }> => {
+    throw new Error(MIGRATION_PENDING);
   });

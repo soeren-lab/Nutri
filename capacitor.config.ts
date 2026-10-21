@@ -4,8 +4,8 @@ const config: CapacitorConfig = {
   appId: "com.soeren.nutriapp",
   appName: "NUTRI",
   // Komplett lokal gebündelt (kein server.url) – die App startet dadurch
-  // sofort, auch ganz ohne Internet. Supabase-Aufrufe laufen ohnehin über
-  // eine feste externe URL. Die meisten POST-Server-Functions (Konto löschen,
+  // sofort, auch ganz ohne Internet. Daten-Aufrufe gehen ohnehin gegen die feste
+  // NAS-API-Adresse (VITE_API_URL). Die meisten POST-Server-Functions (Konto löschen,
   // PDF-Export, Kochbuch beitreten) bleiben bewusst "nicht verfügbar" in der
   // App (isNativeApp()-Guards) – die unauthentifizierten GET-Functions
   // (OFF-Suche, Kochbuch-Freigabelink) sowie zwei gezielt freigeschaltete

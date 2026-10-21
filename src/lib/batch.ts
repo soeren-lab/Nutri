@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { parseVariantSelection } from "@/lib/variants";
 import {
   addDays,
@@ -89,7 +89,7 @@ export async function createBatch(input: {
   // liegt – alle anderen Verzehrtage sind immer „Vorgekocht".
   const roleFor = (date: string): BatchRole => (date === cookDate ? "start" : "leftover");
 
-  const { error } = await supabase
+  const { error } = await db
     .from("meal_plan_entries")
     .update({
       batch_group_id: groupId,
@@ -106,7 +106,7 @@ export async function createBatch(input: {
   // aktualisieren (wenn weiterhin gewünscht) oder sauber entkoppeln.
   const remainingTargets = [...targets];
   if (entry.batch_group_id) {
-    const { data: existing, error: exErr } = await supabase
+    const { data: existing, error: exErr } = await db
       .from("meal_plan_entries")
       .select("id, date, meal_slot")
       .eq("batch_group_id", groupId)
@@ -118,7 +118,7 @@ export async function createBatch(input: {
       );
       if (idx >= 0) {
         remainingTargets.splice(idx, 1);
-        const { error: upErr } = await supabase
+        const { error: upErr } = await db
           .from("meal_plan_entries")
           .update({
             batch_group_id: groupId,
@@ -128,7 +128,7 @@ export async function createBatch(input: {
           .eq("id", row.id);
         if (upErr) throw upErr;
       } else {
-        const { error: clrErr } = await supabase
+        const { error: clrErr } = await db
           .from("meal_plan_entries")
           .update({ batch_group_id: null, batch_role: "none", batch_cook_date: null })
           .eq("id", row.id);
@@ -162,7 +162,7 @@ export async function createBatch(input: {
  */
 export async function cleanupBatchGroup(groupId: string | null | undefined): Promise<void> {
   if (!groupId) return;
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("meal_plan_entries")
     .select("id, date, batch_role, batch_cook_date")
     .eq("batch_group_id", groupId)
@@ -185,7 +185,7 @@ export async function cleanupBatchGroup(groupId: string | null | undefined): Pro
   for (const row of rows) {
     const role = startRow && row.id === startRow.id ? "start" : "leftover";
     if (row.batch_role === role) continue;
-    const { error: upErr } = await supabase
+    const { error: upErr } = await db
       .from("meal_plan_entries")
       .update({ batch_role: role, batch_cook_date: cookDate })
       .eq("id", row.id);
@@ -261,7 +261,7 @@ export function batchCookSummaries(
 
 /** Batch-Gruppe als gekocht markieren bzw. Häkchen entfernen. */
 export async function setBatchCooked(groupId: string, cooked: boolean): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("meal_plan_entries")
     .update({ batch_cooked_at: cooked ? new Date().toISOString() : null })
     .eq("batch_group_id", groupId);
@@ -278,7 +278,7 @@ export async function fetchBatchCookEntries(
   from: string,
   to: string,
 ): Promise<MealPlanEntryFull[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("meal_plan_entries")
     .select("*, recipe:recipes(*)")
     .not("batch_group_id", "is", null)
@@ -302,7 +302,7 @@ export const batchCookWeekQuery = (weekStart: Date) => {
 
 /** Batch-Verknüpfung lösen – die Einträge selbst bleiben erhalten. */
 export async function dissolveBatch(groupId: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("meal_plan_entries")
     .update({ batch_group_id: null, batch_role: "none", batch_cook_date: null })
     .eq("batch_group_id", groupId);
@@ -319,7 +319,7 @@ export async function fetchBatchGroupServings(
   const unique = Array.from(new Set(groupIds));
   const out = new Map<string, number>();
   if (unique.length === 0) return out;
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("meal_plan_entries")
     .select("batch_group_id, servings, recipe_id, recipes(servings)")
     .in("batch_group_id", unique);

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import { useMealPhotoUrl } from "@/hooks/use-meal-photo";
-import { useSignedImage } from "@/hooks/use-signed-image";
+import { useSignedImage, useSignedIngredientImage } from "@/hooks/use-signed-image";
 import { batchRoleOf } from "@/lib/batch";
 import { getCategoryGradient } from "@/lib/categories";
 import {
@@ -37,7 +37,13 @@ export function MealEntryRow({
   onClick: () => void;
   className?: string;
 }) {
-  const { data: signedUrl } = useSignedImage(entryImageUrl(entry));
+  // Zutaten-Bilder liegen im Bucket "ingredient-images" (oder sind externe Open-Food-Facts-URLs),
+  // Rezept-Bilder in "recipe-images" – jeweils mit dem passenden Signierer laden.
+  const imagePath = entryImageUrl(entry);
+  const isIngredient = entry.food_type === "ingredient";
+  const { data: recipeSignedUrl } = useSignedImage(isIngredient ? null : imagePath);
+  const { data: ingredientSignedUrl } = useSignedIngredientImage(isIngredient ? imagePath : null);
+  const signedUrl = isIngredient ? ingredientSignedUrl : recipeSignedUrl;
   const photoUrl = useMealPhotoUrl(entry.photo_path);
   const imageUrl = photoUrl ?? signedUrl;
   const kcal = entryKcal(entry);

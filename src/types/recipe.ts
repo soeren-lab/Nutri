@@ -1,4 +1,4 @@
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/db/types";
 
 export type Recipe = Tables<"recipes">;
 export type Ingredient = Tables<"ingredients">;

@@ -61,6 +61,6 @@ export function useUserAvatar() {
 }
 
 async function removeAvatarFile(path: string) {
-  const { supabase } = await import("@/integrations/supabase/client");
-  await supabase.storage.from("avatars").remove([path]);
+  const { db } = await import("@/integrations/db/client");
+  await db.storage.from("avatars").remove([path]);
 }

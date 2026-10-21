@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { db } from "@/integrations/db/client";
+import type { Tables } from "@/integrations/db/types";
 
 export type BodyMeasurement = Tables<"body_measurements">;
 
@@ -12,7 +12,7 @@ export type BodyMeasurementInput = {
 };
 
 export async function fetchBodyMeasurements(): Promise<BodyMeasurement[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("body_measurements")
     .select("*")
     .order("date", { ascending: true });
@@ -32,7 +32,7 @@ export async function saveBodyMeasurement(
   userId: string,
   input: BodyMeasurementInput,
 ): Promise<void> {
-  const { error } = await supabase.from("body_measurements").upsert(
+  const { error } = await db.from("body_measurements").upsert(
     {
       user_id: userId,
       date: input.date,
@@ -46,7 +46,7 @@ export async function saveBodyMeasurement(
 }
 
 export async function deleteBodyMeasurement(id: string): Promise<void> {
-  const { error } = await supabase.from("body_measurements").delete().eq("id", id);
+  const { error } = await db.from("body_measurements").delete().eq("id", id);
   if (error) throw error;
 }
 

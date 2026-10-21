@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { getAvatarSignedUrls } from "@/lib/avatar";
 import { fetchRecipesByIds } from "@/lib/recipes";
 import { fetchAuthorProfiles } from "@/lib/community";
@@ -67,7 +67,7 @@ function toFriendUser(row: RawProfileRow, avatars: Map<string, string>): FriendU
 
 /** Freundesliste des eingeloggten Users. */
 export async function fetchMyFriends(): Promise<FriendUser[]> {
-  const { data, error } = await supabase.rpc("get_my_friends");
+  const { data, error } = await db.rpc("get_my_friends");
   if (error) throw error;
   const rows = (data ?? []) as unknown as RawProfileRow[];
   const avatars = await withAvatars(rows);
@@ -80,7 +80,7 @@ export const myFriendsQuery = () =>
 async function fetchRequests(
   direction: "incoming" | "outgoing",
 ): Promise<FriendRequestItem[]> {
-  const { data, error } = await supabase.rpc("get_friend_requests", {
+  const { data, error } = await db.rpc("get_friend_requests", {
     _direction: direction,
   });
   if (error) throw error;
@@ -114,7 +114,7 @@ export async function searchUsers(query: string): Promise<SearchResult[]> {
   if (q.length < 2) return [];
 
   const [{ data, error }, friends, incoming, outgoing] = await Promise.all([
-    supabase.rpc("search_users", { _query: q }),
+    db.rpc("search_users", { _query: q }),
     fetchMyFriends(),
     fetchRequests("incoming"),
     fetchRequests("outgoing"),
@@ -149,12 +149,12 @@ export const userSearchQuery = (query: string) =>
 
 /** Anfrage senden (bzw. eine früher abgelehnte erneut öffnen). */
 export async function sendFriendRequest(receiverId: string) {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const senderId = userRes.user?.id;
   if (!senderId) throw new Error("Nicht angemeldet");
   if (senderId === receiverId) throw new Error("Das bist du selbst");
 
-  const { error } = await supabase.from("friend_requests").upsert(
+  const { error } = await db.from("friend_requests").upsert(
     {
       sender_id: senderId,
       receiver_id: receiverId,
@@ -167,14 +167,14 @@ export async function sendFriendRequest(receiverId: string) {
 }
 
 export async function acceptFriendRequest(requestId: string) {
-  const { error } = await supabase.rpc("accept_friend_request", {
+  const { error } = await db.rpc("accept_friend_request", {
     _request_id: requestId,
   });
   if (error) throw error;
 }
 
 export async function declineFriendRequest(requestId: string) {
-  const { error } = await supabase
+  const { error } = await db
     .from("friend_requests")
     .update({ status: "declined", responded_at: new Date().toISOString() })
     .eq("id", requestId);
@@ -183,12 +183,12 @@ export async function declineFriendRequest(requestId: string) {
 
 /** Eigene, noch offene Anfrage zurückziehen. */
 export async function withdrawFriendRequest(requestId: string) {
-  const { error } = await supabase.from("friend_requests").delete().eq("id", requestId);
+  const { error } = await db.from("friend_requests").delete().eq("id", requestId);
   if (error) throw error;
 }
 
 export async function endFriendship(otherUserId: string) {
-  const { error } = await supabase.rpc("end_friendship", {
+  const { error } = await db.rpc("end_friendship", {
     _other_user_id: otherUserId,
   });
   if (error) throw error;
@@ -208,7 +208,7 @@ export async function fetchSharesForContent(
   contentType: FriendContentType,
   contentId: string,
 ): Promise<ShareRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("shared_with_friends")
     .select("id, friend_user_id, content_type, content_id")
     .eq("content_type", contentType)
@@ -237,7 +237,7 @@ export async function setShares(
   contentId: string,
   friendUserIds: string[],
 ) {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const ownerId = userRes.user?.id;
   if (!ownerId) throw new Error("Nicht angemeldet");
 
@@ -248,7 +248,7 @@ export async function setShares(
   const toAdd = friendUserIds.filter((id) => !existingIds.has(id));
 
   if (toRemove.length > 0) {
-    const { error } = await supabase
+    const { error } = await db
       .from("shared_with_friends")
       .delete()
       .in(
@@ -258,7 +258,7 @@ export async function setShares(
     if (error) throw error;
   }
   if (toAdd.length > 0) {
-    const { error } = await supabase.from("shared_with_friends").insert(
+    const { error } = await db.from("shared_with_friends").insert(
       toAdd.map((friendId) => ({
         owner_user_id: ownerId,
         friend_user_id: friendId,
@@ -271,7 +271,7 @@ export async function setShares(
 }
 
 export async function removeShare(shareId: string) {
-  const { error } = await supabase.from("shared_with_friends").delete().eq("id", shareId);
+  const { error } = await db.from("shared_with_friends").delete().eq("id", shareId);
   if (error) throw error;
 }
 
@@ -280,11 +280,11 @@ export async function fetchSharedWithMe(ownerUserId: string): Promise<{
   recipes: RecipeListItem[];
   ingredients: CommunityIngredient[];
 }> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const me = userRes.user?.id;
   if (!me) return { recipes: [], ingredients: [] };
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("shared_with_friends")
     .select("content_type, content_id")
     .eq("owner_user_id", ownerUserId)
@@ -306,7 +306,7 @@ export async function fetchSharedWithMe(ownerUserId: string): Promise<{
 
 async function fetchIngredientsByIds(ids: string[]): Promise<CommunityIngredient[]> {
   if (ids.length === 0) return [];
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients_master")
     .select("*, brand:brands(*)")
     .in("id", ids)
@@ -337,11 +337,11 @@ export type AcceptedNotification = {
  * (Bestätigungsmeldung für den Absender).
  */
 export async function fetchAcceptedNotifications(): Promise<AcceptedNotification[]> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const me = userRes.user?.id;
   if (!me) return [];
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("friend_requests")
     .select("id, receiver_id, responded_at")
     .eq("sender_id", me)
@@ -372,7 +372,7 @@ export const acceptedNotificationsQuery = () =>
 
 /** Markiert die Annahme-Meldung als gesehen. */
 export async function markAcceptedSeen(requestId: string) {
-  const { error } = await supabase
+  const { error } = await db
     .from("friend_requests")
     .update({ sender_seen_at: new Date().toISOString() })
     .eq("id", requestId);

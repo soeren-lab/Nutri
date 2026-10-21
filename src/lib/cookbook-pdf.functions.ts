@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireAuth } from "@/integrations/db/auth-middleware";
 import { nutritionPerServing } from "@/lib/componentNutrition";
 
 
@@ -14,13 +14,13 @@ const RULE = { r: 0.78, g: 0.72, b: 0.6 };
 
 
 async function fetchImageBytes(
-  supabase: any,
+  db: any,
   bucket: string,
   path: string | null | undefined,
 ): Promise<{ bytes: Uint8Array; kind: "jpg" | "png" } | null> {
   if (!path) return null;
   try {
-    const { data, error } = await supabase.storage.from(bucket).download(path);
+    const { data, error } = await db.storage.from(bucket).download(path);
     if (error || !data) return null;
     const buf = new Uint8Array(await data.arrayBuffer());
     if (buf.length < 4) return null;
@@ -71,14 +71,14 @@ function slugify(s: string): string {
 }
 
 export const generateCookbookPdf = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAuth])
   .inputValidator((d) => z.object({ cookbookId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { db } = context;
     const { PDFDocument, StandardFonts, rgb, PageSizes: _s } = await import("pdf-lib");
     void _s;
 
-    const { data: cookbook, error: cbErr } = await supabase
+    const { data: cookbook, error: cbErr } = await db
       .from("cookbooks")
       .select("*")
       .eq("id", data.cookbookId)
@@ -89,7 +89,7 @@ export const generateCookbookPdf = createServerFn({ method: "POST" })
     const RECIPE_SELECT =
       "*, ingredients(*, master:ingredients_master(*)), steps(*), components:recipe_components!recipe_components_recipe_id_fkey(*)";
 
-    const { data: cRecipes, error: crErr } = await supabase
+    const { data: cRecipes, error: crErr } = await db
       .from("cookbook_recipes")
       .select(`sort_order, recipe:recipes(${RECIPE_SELECT})`)
       .eq("cookbook_id", data.cookbookId)
@@ -128,7 +128,7 @@ export const generateCookbookPdf = createServerFn({ method: "POST" })
     ];
     const linkedById = new Map<string, any>();
     if (linkedIds.length > 0) {
-      const { data: linked } = await supabase
+      const { data: linked } = await db
         .from("recipes")
         .select(RECIPE_SELECT)
         .in("id", linkedIds);
@@ -158,7 +158,7 @@ export const generateCookbookPdf = createServerFn({ method: "POST" })
     const cover = pdf.addPage([PAGE_W, PAGE_H]);
     cover.drawRectangle({ x: 0, y: 0, width: PAGE_W, height: PAGE_H, color: paper });
 
-    const coverImg = await fetchImageBytes(supabase, "cookbook-covers", cookbook.cover_image_url);
+    const coverImg = await fetchImageBytes(db, "cookbook-covers", cookbook.cover_image_url);
     if (coverImg) {
       try {
         const embedded =
@@ -235,7 +235,7 @@ export const generateCookbookPdf = createServerFn({ method: "POST" })
       let y = PAGE_H - MARGIN - 20;
 
       // Load & embed recipe image; decide layout by orientation
-      const recipeImg = await fetchImageBytes(supabase, "recipe-images", recipe.image_url);
+      const recipeImg = await fetchImageBytes(db, "recipe-images", recipe.image_url);
       let embeddedImg: any = null;
       let isPortrait = false;
       if (recipeImg) {

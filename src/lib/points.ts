@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { db } from "@/integrations/db/client";
+import type { Tables } from "@/integrations/db/types";
 import { computeTargets, fetchUserProfile, type NutritionTargets } from "@/lib/nutritionTargets";
 import {
   asTargetsResolver,
@@ -375,7 +375,7 @@ export function computePointsSeries(
 /* ------------------------------------------------------------- Datenzugriff */
 
 export async function fetchUserPoints(): Promise<UserPointsRow | null> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("user_points")
     .select("*")
     .maybeSingle();
@@ -391,7 +391,7 @@ export const userPointsQuery = () =>
   });
 
 export async function fetchPointsLog(from: string, to: string): Promise<PointsLogRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("points_log")
     .select("*")
     .gte("date", from)
@@ -424,7 +424,7 @@ export async function syncPoints(
 ): Promise<{ inserted: number; totalPoints: number }> {
   const completed = series.filter((d) => d.points > 0);
   if (completed.length > 0) {
-    const { error } = await supabase.from("points_log").upsert(
+    const { error } = await db.from("points_log").upsert(
       completed.map((d) => ({
         user_id: userId,
         season_id: seasonId ?? null,
@@ -456,7 +456,7 @@ export async function syncPoints(
   const zeroDates = series.filter((d) => d.points <= 0).map((d) => d.date);
   for (let i = 0; i < zeroDates.length; i += 50) {
     const chunk = zeroDates.slice(i, i + 50);
-    const { error: delErr } = await supabase
+    const { error: delErr } = await db
       .from("points_log")
       .delete()
       .eq("user_id", userId)
@@ -471,7 +471,7 @@ export async function syncPoints(
   // Die Tracking-Streak richtet sich nach dem letzten betrachteten Tag,
   // nicht nach dem letzten Tag mit Punkten.
   const streakDays = series[series.length - 1]?.streakDays ?? 0;
-  const { error: upErr } = await supabase.from("user_points").upsert(
+  const { error: upErr } = await db.from("user_points").upsert(
     {
       user_id: userId,
       total_points: totalPoints,
@@ -494,7 +494,7 @@ export type ActiveSeason = { id: string; start_date: string; end_date: string };
  * Lokal definiert, um einen Import-Zyklus mit `@/lib/seasons` zu vermeiden.
  */
 export async function fetchActiveSeason(): Promise<ActiveSeason | null> {
-  const { data, error } = await supabase.rpc("ensure_current_season");
+  const { data, error } = await db.rpc("ensure_current_season");
   if (error) throw error;
   const row = (data ?? [])[0];
   return row ? { id: row.id, start_date: row.start_date, end_date: row.end_date } : null;

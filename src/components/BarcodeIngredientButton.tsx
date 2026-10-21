@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { IngredientMasterFormDialog } from "@/components/IngredientMasterFormDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { canScanBarcode, scanBarcode } from "@/lib/barcode-scan";
 import { cleanBarcode, isValidBarcode } from "@/lib/barcode";
 import type { IngredientMaster, IngredientPrefill } from "@/lib/ingredients-master";
@@ -34,11 +34,11 @@ export function BarcodeIngredientButton({
   async function handleCode(code: string) {
     setBusy(true);
     try {
-      const { data: userRes } = await supabase.auth.getUser();
+      const { data: userRes } = await db.auth.getUser();
       const uid = userRes.user?.id;
       if (!uid) throw new Error("Nicht angemeldet");
 
-      const { data: own } = await supabase
+      const { data: own } = await db
         .from("ingredients_master")
         .select("*")
         .eq("user_id", uid)
@@ -47,7 +47,7 @@ export function BarcodeIngredientButton({
         .maybeSingle();
       if (own) {
         if (own.archived) {
-          const { error } = await supabase
+          const { error } = await db
             .from("ingredients_master")
             .update({ archived: false })
             .eq("id", own.id);

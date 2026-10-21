@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { useAuth } from "@/hooks/use-auth";
 import { convert, normalizeUnit } from "@/lib/unitConversion";
 
@@ -10,7 +10,7 @@ export type TypicalAmounts = Map<string, number>;
  * Stammzutat umgerechnet) über alle eigenen Rezepte.
  */
 export async function fetchTypicalAmounts(): Promise<TypicalAmounts> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients")
     .select(
       "amount, unit, ingredient_master_id, master:ingredients_master!inner(unit, density_g_per_ml), recipes!inner(user_id)",

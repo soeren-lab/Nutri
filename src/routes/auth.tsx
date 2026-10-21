@@ -9,7 +9,7 @@ import {
   MailCheck,
   X,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/auth")({
   }),
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
-    const { data } = await supabase.auth.getSession();
+    const { data } = await db.auth.getSession();
     if (data.session) throw redirect({ to: "/recipes" });
   },
   component: AuthPage,
@@ -201,7 +201,7 @@ function SignInForm({ onForgot }: { onForgot: () => void }) {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await db.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -340,7 +340,7 @@ function SignUpForm() {
         setErrors({ username: "Bereits vergeben" });
         return;
       }
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await db.auth.signUp({
         email: email.trim(),
         password,
         options: { emailRedirectTo: window.location.origin },
@@ -533,7 +533,7 @@ function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
     setError(null);
     setLoading(true);
     try {
-      await supabase.auth.resetPasswordForEmail(email.trim(), {
+      await db.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       setDone(true);

@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { db } from "@/integrations/db/client";
+import type { Tables } from "@/integrations/db/types";
 import { queryOptions } from "@tanstack/react-query";
 
 export type IngredientMaster = Tables<"ingredients_master">;
@@ -11,10 +11,10 @@ export async function fetchIngredientsMaster(includeArchived = false): Promise<I
   // getSession() liest die lokale Session ohne Netzwerk-Request – wichtig,
   // damit ein Offline-Fehlschlag hier nicht fälschlich als "kein Nutzer"
   // interpretiert wird und den Cache mit einer leeren Liste überschreibt.
-  const { data: sessionRes } = await supabase.auth.getSession();
+  const { data: sessionRes } = await db.auth.getSession();
   const uid = sessionRes.session?.user?.id;
   if (!uid) return [];
-  let q = supabase
+  let q = db
     .from("ingredients_master")
     .select("*")
     .eq("user_id", uid)
@@ -32,7 +32,7 @@ export const ingredientsMasterQuery = (includeArchived = false) =>
   });
 
 export async function countIngredientMasterUsage(id: string): Promise<number> {
-  const { count, error } = await supabase
+  const { count, error } = await db
     .from("ingredients")
     .select("id", { count: "exact", head: true })
     .eq("ingredient_master_id", id);
@@ -41,7 +41,7 @@ export async function countIngredientMasterUsage(id: string): Promise<number> {
 }
 
 export async function archiveIngredientMaster(id: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("ingredients_master")
     .update({ archived: true })
     .eq("id", id);
@@ -49,7 +49,7 @@ export async function archiveIngredientMaster(id: string): Promise<void> {
 }
 
 export async function unarchiveIngredientMaster(id: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("ingredients_master")
     .update({ archived: false })
     .eq("id", id);
@@ -104,10 +104,10 @@ export async function createIngredientMaster(
   input: IngredientMasterInput,
   id: string = crypto.randomUUID(),
 ): Promise<IngredientMaster> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const uid = userRes.user?.id;
   if (!uid) throw new Error("Nicht angemeldet");
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients_master")
     .insert({ id, ...input, user_id: uid })
     .select("*")
@@ -120,7 +120,7 @@ export async function updateIngredientMaster(
   id: string,
   input: IngredientMasterInput,
 ): Promise<IngredientMaster> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients_master")
     .update(input)
     .eq("id", id)
@@ -131,7 +131,7 @@ export async function updateIngredientMaster(
 }
 
 export async function deleteIngredientMaster(id: string): Promise<void> {
-  const { error } = await supabase.from("ingredients_master").delete().eq("id", id);
+  const { error } = await db.from("ingredients_master").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -144,7 +144,7 @@ export async function deleteIngredientMaster(id: string): Promise<void> {
 export async function hardDeleteIngredientMasterWithSnapshot(id: string): Promise<void> {
   const { computeNutritionFromMaster } = await import("@/lib/unitConversion");
 
-  const { data: master, error: mErr } = await supabase
+  const { data: master, error: mErr } = await db
     .from("ingredients_master")
     .select("*")
     .eq("id", id)
@@ -152,7 +152,7 @@ export async function hardDeleteIngredientMasterWithSnapshot(id: string): Promis
   if (mErr) throw mErr;
   if (!master) throw new Error("Zutat nicht gefunden");
 
-  const { data: rows, error: rErr } = await supabase
+  const { data: rows, error: rErr } = await db
     .from("ingredients")
     .select("id, amount, unit")
     .eq("ingredient_master_id", id);
@@ -160,7 +160,7 @@ export async function hardDeleteIngredientMasterWithSnapshot(id: string): Promis
 
   for (const row of rows ?? []) {
     const n = computeNutritionFromMaster(master, row.amount, row.unit);
-    const { error: uErr } = await supabase
+    const { error: uErr } = await db
       .from("ingredients")
       .update({
         name: master.name,
@@ -176,7 +176,7 @@ export async function hardDeleteIngredientMasterWithSnapshot(id: string): Promis
     if (uErr) throw uErr;
   }
 
-  const { error: dErr } = await supabase
+  const { error: dErr } = await db
     .from("ingredients_master")
     .delete()
     .eq("id", id);
@@ -196,7 +196,7 @@ export async function uploadIngredientImage(userId: string, file: File): Promise
   }
   const ext = (nameLower.split(".").pop() || "jpg").replace(/[^a-z0-9]/g, "") || "jpg";
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("ingredient-images").upload(path, file, {
+  const { error } = await db.storage.from("ingredient-images").upload(path, file, {
     cacheControl: "3600",
     upsert: false,
     contentType: type || undefined,
@@ -207,7 +207,7 @@ export async function uploadIngredientImage(userId: string, file: File): Promise
 
 export async function getIngredientSignedUrl(path: string): Promise<string | null> {
   if (!path) return null;
-  const { data, error } = await supabase.storage
+  const { data, error } = await db.storage
     .from("ingredient-images")
     .createSignedUrl(path, 60 * 60 * 24 * 7);
   // Werfen statt null: siehe getSignedImageUrl in recipes.ts.

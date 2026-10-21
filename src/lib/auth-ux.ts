@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 /** Passwort-Regeln, live in der Checkliste angezeigt. */
 export const PASSWORD_RULES = [
@@ -22,7 +22,7 @@ export function isStrongPassword(value: string) {
 
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
 
-/** Übersetzt Supabase-Fehler in freundliche deutsche Meldungen. */
+/** Übersetzt Fehler der Anmeldung in freundliche deutsche Meldungen. */
 export function friendlyAuthError(raw: unknown): string {
   const msg = (raw instanceof Error ? raw.message : String(raw ?? "")).toLowerCase();
   if (msg.includes("already registered") || msg.includes("already been registered"))
@@ -108,6 +108,6 @@ export async function enforceSessionPersistence() {
   if (remember !== "0") return;
   if (window.sessionStorage.getItem(TAB_MARKER) === "1") return;
   window.localStorage.removeItem(REMEMBER_KEY);
-  const { data } = await supabase.auth.getSession();
-  if (data.session) await supabase.auth.signOut();
+  const { data } = await db.auth.getSession();
+  if (data.session) await db.auth.signOut();
 }

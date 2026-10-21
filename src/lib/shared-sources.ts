@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 /**
  * IDs der Rezepte/Zutaten, die Freunde privat mit mir geteilt haben.
@@ -9,11 +9,11 @@ export async function fetchSharedSourceIds(): Promise<{
   ingredients: Set<string>;
 }> {
   const empty = { recipes: new Set<string>(), ingredients: new Set<string>() };
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const me = userRes.user?.id;
   if (!me) return empty;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("shared_with_friends")
     .select("content_type, content_id")
     .eq("friend_user_id", me);

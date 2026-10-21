@@ -34,7 +34,7 @@ import { useUserAvatar } from "@/hooks/use-user-avatar";
 import { GLASS_VARIANT_LABELS } from "@/lib/theme";
 import { recipesQuery } from "@/lib/recipes";
 import { findSideDishCandidates } from "@/lib/sideDishMigration";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 /** Verwaltung als Einstellungs-Liste mit Unterseiten. */
 export function SettingsListTab() {
@@ -175,7 +175,7 @@ function SignOutRow() {
     try {
       await qc.cancelQueries();
       qc.clear();
-      await supabase.auth.signOut();
+      await db.auth.signOut();
       void navigate({ to: "/auth", replace: true });
     } finally {
       setBusy(false);

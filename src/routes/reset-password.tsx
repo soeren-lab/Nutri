@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, Eye, EyeOff, Loader2, ShieldCheck, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -38,10 +38,10 @@ function ResetPasswordPage() {
 
   useEffect(() => {
     // Recovery-Link liefert die Session per Hash bzw. über den Auth-Listener.
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: sub } = db.auth.onAuthStateChange((event, session) => {
       if (session || event === "PASSWORD_RECOVERY") setReady(true);
     });
-    supabase.auth.getSession().then(({ data }) => {
+    db.auth.getSession().then(({ data }) => {
       if (data.session) setReady(true);
     });
     return () => sub.subscription.unsubscribe();
@@ -59,7 +59,7 @@ function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await db.auth.updateUser({ password });
       if (error) throw error;
       navigate({ to: "/recipes" });
     } catch (err) {

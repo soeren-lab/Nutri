@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 function Panel({ children }: { children?: React.ReactNode }) {
   return (
@@ -33,7 +33,7 @@ export function EmailPanel() {
       return;
     }
     setPending(true);
-    const { error } = await supabase.auth.updateUser({ email: email.trim() });
+    const { error } = await db.auth.updateUser({ email: email.trim() });
     setPending(false);
     if (error) {
       toast.error(error.message);
@@ -95,7 +95,7 @@ export function PasswordPanel() {
       return;
     }
     setPending(true);
-    const { error } = await supabase.auth.updateUser({ password: pw });
+    const { error } = await db.auth.updateUser({ password: pw });
     setPending(false);
     if (error) {
       toast.error(error.message);

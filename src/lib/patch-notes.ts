@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 export type PatchNoteSection = {
   id: string;
@@ -25,7 +25,7 @@ export function isAdminQuery(userId: string | undefined) {
     queryKey: ["is-admin", userId ?? "anon"],
     enabled: !!userId,
     queryFn: async (): Promise<boolean> => {
-      const { data, error } = await supabase.rpc("has_role", {
+      const { data, error } = await db.rpc("has_role", {
         _user_id: userId!,
         _role: "admin",
       });
@@ -36,7 +36,7 @@ export function isAdminQuery(userId: string | undefined) {
 }
 
 async function fetchNotes(): Promise<PatchNote[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("patch_notes")
     .select("id, title, created_at, patch_note_sections(id, subtitle, content, sort_order)")
     .order("created_at", { ascending: false });
@@ -63,7 +63,7 @@ export function unseenPatchNotesQuery(userId: string | undefined) {
     queryFn: async (): Promise<PatchNote[]> => {
       const [notes, seen] = await Promise.all([
         fetchNotes(),
-        supabase
+        db
           .from("user_seen_patch_notes")
           .select("patch_note_id")
           .eq("user_id", userId!),
@@ -80,7 +80,7 @@ export function unseenPatchNotesQuery(userId: string | undefined) {
 export async function createPatchNote(userId: string, draft: PatchNoteDraft) {
   const title = draft.title.trim();
   if (!title) throw new Error("Überschrift fehlt");
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("patch_notes")
     .insert({ title, published_by: userId })
     .select("id")
@@ -97,19 +97,19 @@ export async function createPatchNote(userId: string, draft: PatchNoteDraft) {
     .filter((s) => s.subtitle || s.content);
 
   if (sections.length > 0) {
-    const res = await supabase.from("patch_note_sections").insert(sections);
+    const res = await db.from("patch_note_sections").insert(sections);
     if (res.error) throw res.error;
   }
   return data.id;
 }
 
 export async function deletePatchNote(id: string) {
-  const { error } = await supabase.from("patch_notes").delete().eq("id", id);
+  const { error } = await db.from("patch_notes").delete().eq("id", id);
   if (error) throw error;
 }
 
 export async function markPatchNoteSeen(userId: string, patchNoteId: string) {
-  const { error } = await supabase
+  const { error } = await db
     .from("user_seen_patch_notes")
     .upsert({ user_id: userId, patch_note_id: patchNoteId });
   if (error) throw error;

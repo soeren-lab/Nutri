@@ -43,7 +43,7 @@ import {
   type NutritionMode,
   type RecipeWithRelations,
 } from "@/types/recipe";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { makeUid } from "@/lib/uid";
 import { uploadRecipeImage, recipesQuery, linkCreatesCycle } from "@/lib/recipes";
 import { useSignedImage } from "@/hooks/use-signed-image";
@@ -699,7 +699,7 @@ export function RecipeForm({
         }
       }
 
-      const { data: userRes } = await supabase.auth.getUser();
+      const { data: userRes } = await db.auth.getUser();
       const uid = userRes.user?.id;
       if (!uid) throw new Error("Nicht angemeldet");
 
@@ -738,20 +738,20 @@ export function RecipeForm({
 
       const recipeId = ids.recipeId;
       if (existing) {
-        const { error } = await supabase.from("recipes").update(payload).eq("id", existing.id);
+        const { error } = await db.from("recipes").update(payload).eq("id", existing.id);
         if (error) throw error;
-        await supabase.from("ingredients").delete().eq("recipe_id", recipeId);
-        await supabase.from("steps").delete().eq("recipe_id", recipeId);
-        await supabase.from("recipe_components").delete().eq("recipe_id", recipeId);
+        await db.from("ingredients").delete().eq("recipe_id", recipeId);
+        await db.from("steps").delete().eq("recipe_id", recipeId);
+        await db.from("recipe_components").delete().eq("recipe_id", recipeId);
       } else {
-        const { error } = await supabase.from("recipes").insert({ id: recipeId, ...payload });
+        const { error } = await db.from("recipes").insert({ id: recipeId, ...payload });
         if (error) throw error;
       }
 
       // Komponenten neu anlegen – IDs wurden bereits vorab erzeugt (offline-fähig).
       const componentIds = ids.componentIds;
       if (parsedComponents.length > 0) {
-        const { error: compErr } = await supabase.from("recipe_components").insert(
+        const { error: compErr } = await db.from("recipe_components").insert(
           parsedComponents.map((c, idx) => ({
             id: componentIds[idx],
             recipe_id: recipeId,
@@ -782,7 +782,7 @@ export function RecipeForm({
           : [],
       );
       if (variantRows.length > 0) {
-        const { error: varErr } = await supabase
+        const { error: varErr } = await db
           .from("component_variants")
           .insert(variantRows.map((row) => ({ ...row, component_id: row.component_id as string })));
         if (varErr) throw varErr;
@@ -817,9 +817,9 @@ export function RecipeForm({
       }));
       const [ingRes, stepRes] = await Promise.all([
         ingRows.length > 0
-          ? supabase.from("ingredients").insert(ingRows)
+          ? db.from("ingredients").insert(ingRows)
           : Promise.resolve({ error: null }),
-        supabase.from("steps").insert(stepRows),
+        db.from("steps").insert(stepRows),
       ]);
       if (ingRes.error) throw ingRes.error;
       if (stepRes.error) throw stepRes.error;
@@ -926,13 +926,13 @@ export function RecipeForm({
       const source = effectiveDraftIngredients(c);
       const enriched = nutritionMode === "advanced" ? enrichList(source).list : source;
       const parsedIng = parseIngredients(enriched);
-      const { data: userRes } = await supabase.auth.getUser();
+      const { data: userRes } = await db.auth.getUser();
       const uid = userRes.user?.id;
       if (!uid) throw new Error("Nicht angemeldet");
       const compServings =
         c.servings === "" || Number(c.servings) <= 0 ? 1 : Math.round(Number(c.servings));
       const compTotals = sumNutrition(enriched.map(nutritionForDraft));
-      const { data: newRecipe, error } = await supabase
+      const { data: newRecipe, error } = await db
         .from("recipes")
         .insert({
           user_id: uid,
@@ -952,12 +952,12 @@ export function RecipeForm({
         .single();
       if (error) throw error;
       if (parsedIng.length > 0) {
-        const { error: ingErr } = await supabase
+        const { error: ingErr } = await db
           .from("ingredients")
           .insert(parsedIng.map((i, idx) => ingredientRow(i, newRecipe.id, idx, null)));
         if (ingErr) throw ingErr;
       }
-      const { error: stepErr } = await supabase.from("steps").insert({
+      const { error: stepErr } = await db.from("steps").insert({
         recipe_id: newRecipe.id,
         step_number: 1,
         instruction: `Zutaten für ${c.name.trim()} zubereiten.`,

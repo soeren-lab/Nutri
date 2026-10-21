@@ -51,7 +51,7 @@ const SERVER_FN_PREFIX = "/_serverFn/";
  * Server-Function-Pfade, die die native App auch per POST cross-origin
  * erreichen darf (Pfade sind build-generierte Hashes, deshalb zur Laufzeit
  * aus den echten Function-Objekten gelesen statt von Hand eingetragen).
- * Alle bleiben durch requireSupabaseAuth abgesichert, broadcastAppUpdate
+ * Alle bleiben durch requireAuth abgesichert, broadcastAppUpdate
  * zusätzlich durch einen serverseitigen has_role-Check – CORS ist hier nur
  * Erreichbarkeit, nicht die Sicherheitsgrenze. (Der Foto-Scan läuft inzwischen
  * über die NAS-API, siehe nas-api/src/photoScan.js.)
@@ -67,7 +67,7 @@ const NATIVE_CORS_POST_PATHS = new Set(
  * Antwort lesen darf, brauchen diese Aufrufe CORS-Header.
  *
  * Standardmäßig nur GET freigegeben: die meisten mutierenden Server-Functions
- * in diesem Projekt sind POST + per requireSupabaseAuth serverseitig
+ * in diesem Projekt sind POST + per requireAuth serverseitig
  * abgesichert (Konto löschen, PDF-Export, Kochbuch beitreten) und bleiben
  * von dieser Freigabe unberührt – nur die unauthentifizierten GET-Functions
  * (OFF-Suche, Kochbuch-Freigabelink) sowie die zwei in
@@ -86,10 +86,10 @@ function corsHeaders(request: Request, pathname: string): Headers {
     "Access-Control-Allow-Methods",
     NATIVE_CORS_POST_PATHS.has(pathname) ? "GET, POST" : "GET",
   );
-  // "authorization" ist nötig, weil attachSupabaseAuth (src/start.ts) den
+  // "authorization" ist nötig, weil attachAuth (src/start.ts) den
   // Bearer-Token global an JEDE Server-Function anhängt, auch an diese
   // unauthentifizierten GET-Functions – der Header wird hier nur durchgelassen,
-  // nicht ausgewertet (kein requireSupabaseAuth-Middleware auf diesen Routen).
+  // nicht ausgewertet (kein requireAuth-Middleware auf diesen Routen).
   headers.set(
     "Access-Control-Allow-Headers",
     "x-tsr-serverFn, accept, content-type, authorization",

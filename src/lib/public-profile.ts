@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { getAvatarSignedUrl } from "@/lib/avatar";
 import { fetchPublishedRecipesByUser } from "@/lib/recipes";
 import type { CommunityIngredient } from "@/lib/community";
@@ -20,7 +20,7 @@ export type PublicProfile = {
 export async function fetchPublicProfile(
   username: string,
 ): Promise<PublicProfile | null> {
-  const { data, error } = await supabase.rpc("get_public_profile", {
+  const { data, error } = await db.rpc("get_public_profile", {
     _username: username,
   });
   if (error) throw error;
@@ -53,7 +53,7 @@ export const publicProfileQuery = (username: string) =>
 export async function fetchPublishedIngredientsByUser(
   userId: string,
 ): Promise<CommunityIngredient[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients_master")
     .select("*, brand:brands(*)")
     .eq("is_published", true)

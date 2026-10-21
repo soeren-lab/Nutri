@@ -1,6 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
-import type { Json, Tables } from "@/integrations/supabase/types";
+import type { Json, Tables } from "@/integrations/db/types";
 import { freeIngredients, nutritionPerServing } from "@/lib/componentNutrition";
 import { fetchRecipe, fetchRecipes } from "@/lib/recipes";
 import { computeNutritionFromMaster } from "@/lib/unitConversion";
@@ -331,7 +331,7 @@ export async function fetchMealPlan(from: string, to: string): Promise<MealPlanE
   const pageSize = 500;
   const entries: MealPlanEntryFull[] = [];
   for (let start = 0; ; start += pageSize) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("meal_plan_entries")
       .select(ENTRY_SELECT)
       .gte("date", from)
@@ -562,7 +562,7 @@ export async function fetchMastersByIds(
     .filter((m): m is IngredientMasterRow => !!m);
   if (fromCache.length === unique.length) return fromCache;
   try {
-    const { data, error } = await supabase.from("ingredients_master").select("*").in("id", unique);
+    const { data, error } = await db.from("ingredients_master").select("*").in("id", unique);
     if (error) throw error;
     return (data ?? []) as IngredientMasterRow[];
   } catch (err) {
@@ -581,7 +581,7 @@ export async function foodSnapshot(
   const cached = cachedMaster(qc, ingredientMasterId);
   const { data, error } = cached
     ? { data: cached, error: null }
-    : await supabase
+    : await db
         .from("ingredients_master")
         .select("*")
         .eq("id", ingredientMasterId)
@@ -617,7 +617,7 @@ export async function addRecipeEntry(input: {
     input.group_choices ?? null,
     input.qc,
   );
-  const { error } = await supabase.from("meal_plan_entries").insert({
+  const { error } = await db.from("meal_plan_entries").insert({
     id: crypto.randomUUID(),
     created_at: new Date().toISOString(),
     user_id: input.userId,
@@ -655,7 +655,7 @@ export async function addFoodEntry(input: {
     input.unit,
     input.qc,
   );
-  const { error } = await supabase.from("meal_plan_entries").insert({
+  const { error } = await db.from("meal_plan_entries").insert({
     id: crypto.randomUUID(),
     created_at: new Date().toISOString(),
     user_id: input.userId,
@@ -684,7 +684,7 @@ export async function addQuickEntry(input: {
   sugar_g?: number | null;
   sort_order?: number;
 }) {
-  const { error } = await supabase.from("meal_plan_entries").insert({
+  const { error } = await db.from("meal_plan_entries").insert({
     id: crypto.randomUUID(),
     created_at: new Date().toISOString(),
     user_id: input.userId,
@@ -714,13 +714,13 @@ export const MEAL_PHOTO_BUCKET = "meal-photos";
 
 /** Entfernt ein Essensfoto aus dem privaten Storage (Fehler sind nicht kritisch). */
 export async function removeMealPhoto(path: string): Promise<void> {
-  const { error } = await supabase.storage.from(MEAL_PHOTO_BUCKET).remove([path]);
+  const { error } = await db.storage.from(MEAL_PHOTO_BUCKET).remove([path]);
   if (error) throw error;
 }
 
 /** Zeitlich begrenzte URL zum Anzeigen eines privaten Essensfotos. */
 export async function mealPhotoSignedUrl(path: string): Promise<string> {
-  const { data, error } = await supabase.storage
+  const { data, error } = await db.storage
     .from(MEAL_PHOTO_BUCKET)
     .createSignedUrl(path, 60 * 60);
   if (error) throw error;
@@ -750,12 +750,12 @@ export async function addPhotoScanEntry(input: {
   let photoPath: string | null = null;
   if (input.photo) {
     photoPath = `${input.userId}/${id}.jpg`;
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await db.storage
       .from(MEAL_PHOTO_BUCKET)
       .upload(photoPath, input.photo, { contentType: "image/jpeg", upsert: false });
     if (uploadError) throw uploadError;
   }
-  const { error } = await supabase.from("meal_plan_entries").insert({
+  const { error } = await db.from("meal_plan_entries").insert({
     id,
     created_at: new Date().toISOString(),
     user_id: input.userId,
@@ -930,11 +930,11 @@ export async function snapshotForPatch(
 }
 
 export async function updateMealPlanEntry(id: string, patch: MealPlanEntryPatch) {
-  const { error } = await supabase.from("meal_plan_entries").update(patch).eq("id", id);
+  const { error } = await db.from("meal_plan_entries").update(patch).eq("id", id);
   if (error) throw error;
 }
 
 export async function deleteMealPlanEntry(id: string) {
-  const { error } = await supabase.from("meal_plan_entries").delete().eq("id", id);
+  const { error } = await db.from("meal_plan_entries").delete().eq("id", id);
   if (error) throw error;
 }

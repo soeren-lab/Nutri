@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 const BUCKET = "avatars";
 const SUPPORTED_IMAGE_TYPES = [
@@ -33,7 +33,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   }
   const ext = (nameLower.split(".").pop() || "jpg").replace(/[^a-z0-9]/g, "") || "jpg";
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+  const { error } = await db.storage.from(BUCKET).upload(path, file, {
     cacheControl: "3600",
     upsert: false,
     contentType: type || undefined,
@@ -45,7 +45,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
 /** Signierte URL für einen Avatar-Pfad (7 Tage). */
 export async function getAvatarSignedUrl(path: string | null): Promise<string | null> {
   if (!path) return null;
-  const { data, error } = await supabase.storage
+  const { data, error } = await db.storage
     .from(BUCKET)
     .createSignedUrl(path, 60 * 60 * 24 * 7);
   if (error) return null;
@@ -59,7 +59,7 @@ export async function getAvatarSignedUrls(
   const map = new Map<string, string>();
   const unique = Array.from(new Set(paths.filter(Boolean)));
   if (unique.length === 0) return map;
-  const { data, error } = await supabase.storage
+  const { data, error } = await db.storage
     .from(BUCKET)
     .createSignedUrls(unique, 60 * 60 * 24 * 7);
   if (error || !data) return map;
@@ -75,7 +75,7 @@ export function avatarQuery(userId: string | undefined) {
     queryKey: ["user-avatar", userId ?? "anon"],
     enabled: !!userId,
     queryFn: async (): Promise<string | null> => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("user_profile")
         .select("avatar_url")
         .eq("user_id", userId!)
@@ -88,7 +88,7 @@ export function avatarQuery(userId: string | undefined) {
 
 /** Speichert (oder löscht) den Avatar-Pfad im Profil. */
 export async function saveAvatarPath(userId: string, path: string | null) {
-  const { error } = await supabase
+  const { error } = await db
     .from("user_profile")
     .upsert({ user_id: userId, avatar_url: path }, { onConflict: "user_id" });
   if (error) throw error;
@@ -97,7 +97,7 @@ export async function saveAvatarPath(userId: string, path: string | null) {
 /** Entfernt das Profilbild inkl. Storage-Datei. */
 export async function removeAvatar(userId: string, path: string | null) {
   if (path) {
-    await supabase.storage.from(BUCKET).remove([path]);
+    await db.storage.from(BUCKET).remove([path]);
   }
   await saveAvatarPath(userId, null);
 }

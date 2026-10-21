@@ -13,8 +13,8 @@ const rows = Array.from({ length: 502 }, (_, index) => ({
 
 const requestedRanges: Array<[number, number]> = [];
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
+vi.mock("@/integrations/db/client", () => ({
+  db: {
     from: vi.fn(() => {
       const builder = {
         select: vi.fn(() => builder),

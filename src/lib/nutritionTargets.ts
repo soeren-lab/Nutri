@@ -1,6 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { queryOptions } from "@tanstack/react-query";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/db/types";
 
 export type UserProfile = Tables<"user_profile">;
 
@@ -187,7 +187,7 @@ export function targetCloseness(value: number, target: number): number {
 }
 
 export async function fetchUserProfile(): Promise<UserProfile | null> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("user_profile")
     .select("*")
     .maybeSingle();
@@ -202,7 +202,7 @@ export async function saveUserProfile(
   userId: string,
   values: Partial<Omit<UserProfile, "user_id" | "created_at" | "updated_at">>,
 ) {
-  const { error } = await supabase
+  const { error } = await db
     .from("user_profile")
     .upsert({ user_id: userId, ...values }, { onConflict: "user_id" });
   if (error) throw error;

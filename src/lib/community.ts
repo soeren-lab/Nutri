@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { queryOptions } from "@tanstack/react-query";
 import type { IngredientMaster } from "@/lib/ingredients-master";
 import type { Brand } from "@/lib/brands";
@@ -20,7 +20,7 @@ export type AuthorProfile = { username: string; avatarUrl: string | null };
 export async function fetchAuthorProfiles(userIds: string[]): Promise<Map<string, AuthorProfile>> {
   const map = new Map<string, AuthorProfile>();
   if (userIds.length === 0) return map;
-  const { data, error } = await supabase.rpc("get_user_avatars", {
+  const { data, error } = await db.rpc("get_user_avatars", {
     _user_ids: userIds,
   });
   if (error) throw error;
@@ -48,7 +48,7 @@ export async function fetchUsernames(userIds: string[]): Promise<Map<string, str
 }
 
 async function requireUid(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
+  const { data } = await db.auth.getUser();
   const uid = data.user?.id;
   if (!uid) throw new Error("Nicht angemeldet");
   return uid;
@@ -56,11 +56,11 @@ async function requireUid(): Promise<string> {
 
 /** Alle veröffentlichten Zutaten anderer Nutzer (dedupliziert nach Name+Marke). */
 export async function fetchCommunityIngredients(): Promise<CommunityIngredient[]> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const uid = userRes.user?.id;
   if (!uid) throw new Error("Nicht angemeldet");
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients_master")
     .select("*, brand:brands(*)")
     .eq("is_published", true)
@@ -140,7 +140,7 @@ export async function findSimilarPublished(
   name: string,
   excludeId?: string,
 ): Promise<{ id: string; name: string; score: number } | null> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients_master")
     .select("id, name")
     .eq("is_published", true);
@@ -158,7 +158,7 @@ export async function findSimilarPublished(
 
 /** Veröffentlichen bzw. neue Version veröffentlichen (published_version + 1). */
 export async function publishIngredient(id: string): Promise<IngredientMaster> {
-  const { data: current, error: cErr } = await supabase
+  const { data: current, error: cErr } = await db
     .from("ingredients_master")
     .select("published_version, brand_id")
     .eq("id", id)
@@ -166,14 +166,14 @@ export async function publishIngredient(id: string): Promise<IngredientMaster> {
   if (cErr) throw cErr;
 
   if (current.brand_id) {
-    const { error: bErr } = await supabase
+    const { error: bErr } = await db
       .from("brands")
       .update({ is_published: true })
       .eq("id", current.brand_id);
     if (bErr) throw bErr;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients_master")
     .update({
       is_published: true,
@@ -188,7 +188,7 @@ export async function publishIngredient(id: string): Promise<IngredientMaster> {
 }
 
 export async function unpublishIngredient(id: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("ingredients_master")
     .update({ is_published: false })
     .eq("id", id);
@@ -198,11 +198,11 @@ export async function unpublishIngredient(id: string): Promise<void> {
 /** Eigene Marke für eine veröffentlichte Fremd-Marke finden oder anlegen. */
 async function resolveOwnBrand(uid: string, sourceBrand: Brand | null): Promise<string | null> {
   if (!sourceBrand) return null;
-  const { data: own, error } = await supabase.from("brands").select("*").eq("user_id", uid);
+  const { data: own, error } = await db.from("brands").select("*").eq("user_id", uid);
   if (error) throw error;
   const match = (own ?? []).find((b) => normalizeName(b.name) === normalizeName(sourceBrand.name));
   if (match) return match.id;
-  const { data: created, error: cErr } = await supabase
+  const { data: created, error: cErr } = await db
     .from("brands")
     .insert({ name: sourceBrand.name, user_id: uid })
     .select("*")
@@ -217,7 +217,7 @@ export async function importCommunityIngredient(
 ): Promise<IngredientMaster> {
   const uid = await requireUid();
 
-  const { data: dupe } = await supabase
+  const { data: dupe } = await db
     .from("ingredients_master")
     .select("*")
     .eq("user_id", uid)
@@ -229,7 +229,7 @@ export async function importCommunityIngredient(
     // War bereits importiert, aber zwischenzeitlich gelöscht (archiviert) –
     // stattdessen wiederherstellen statt einen Duplikat-Fehler zu werfen,
     // sonst könnte man eine gelöschte Community-Zutat nie wieder importieren.
-    const { data: restored, error: restoreErr } = await supabase
+    const { data: restored, error: restoreErr } = await db
       .from("ingredients_master")
       .update({ archived: false })
       .eq("id", dupe.id)
@@ -241,7 +241,7 @@ export async function importCommunityIngredient(
 
   const brandId = await resolveOwnBrand(uid, source.brand ?? null);
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients_master")
     .insert({
       user_id: uid,
@@ -280,7 +280,7 @@ export type IngredientUpdate = {
 /** Eigene importierte Zutaten, bei denen das Original eine neuere Version hat. */
 export async function fetchIngredientUpdates(): Promise<IngredientUpdate[]> {
   const uid = await requireUid();
-  const { data: copies, error } = await supabase
+  const { data: copies, error } = await db
     .from("ingredients_master")
     .select("*")
     .eq("user_id", uid)
@@ -290,7 +290,7 @@ export async function fetchIngredientUpdates(): Promise<IngredientUpdate[]> {
   if (!copies || copies.length === 0) return [];
 
   const ids = Array.from(new Set(copies.map((c) => c.source_ingredient_id!)));
-  const { data: sources, error: sErr } = await supabase
+  const { data: sources, error: sErr } = await db
     .from("ingredients_master")
     .select("*")
     .in("id", ids);
@@ -329,7 +329,7 @@ export const ingredientUpdatesQuery = () =>
 
 export async function applyIngredientUpdate(update: IngredientUpdate): Promise<void> {
   const { copy, source } = update;
-  const { error } = await supabase
+  const { error } = await db
     .from("ingredients_master")
     .update({
       name: source.name,
@@ -353,7 +353,7 @@ export async function applyIngredientUpdate(update: IngredientUpdate): Promise<v
 }
 
 export async function dismissIngredientUpdate(update: IngredientUpdate): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("ingredients_master")
     .update({
       dismissed_version: update.source.published_version ?? 0,

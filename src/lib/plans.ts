@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 /** Abo-Stufen der App. */
 export type PlanId = "free" | "pro" | "max";
@@ -30,7 +30,7 @@ export function planQuery(userId: string | undefined) {
     queryKey: ["user-plan", userId ?? "anon"],
     enabled: !!userId,
     queryFn: async (): Promise<PlanId> => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("user_plans")
         .select("plan")
         .eq("user_id", userId!)

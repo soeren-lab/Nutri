@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { getAvatarSignedUrls } from "@/lib/avatar";
 
 /** Vergleichswerte eines Nutzers (ich oder Freund) für die Leaderboards. */
@@ -16,7 +16,7 @@ export type ComparisonEntry = {
 };
 
 export async function fetchFriendComparison(): Promise<ComparisonEntry[]> {
-  const { data, error } = await supabase.rpc("get_friend_comparison");
+  const { data, error } = await db.rpc("get_friend_comparison");
   if (error) throw error;
   const rows = data ?? [];
   const avatars = await getAvatarSignedUrls(

@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { addDays, MEAL_SLOTS, toISODate } from "@/lib/meal-plan";
 import { todayDate } from "@/lib/progress";
 
@@ -69,28 +69,28 @@ export async function fetchAchievementStats(
 
   const [own, published, imports, friends, plan, breakfasts, points] =
     await Promise.all([
-      supabase
+      db
         .from("recipes")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId),
-      supabase
+      db
         .from("recipes")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("is_published", true),
-      supabase.rpc("get_my_recipe_import_count"),
-      supabase.from("friendships").select("id", { count: "exact", head: true }),
-      supabase
+      db.rpc("get_my_recipe_import_count"),
+      db.from("friendships").select("id", { count: "exact", head: true }),
+      db
         .from("meal_plan_entries")
         .select("date, meal_slot")
         .gte("date", planFrom)
         .lte("date", planTo),
-      supabase
+      db
         .from("meal_plan_entries")
         .select("date, created_at")
         .eq("meal_slot", MEAL_SLOTS[0])
         .gte("date", breakfastFrom),
-      supabase
+      db
         .from("user_points")
         .select("total_points, bonus_points")
         .maybeSingle(),

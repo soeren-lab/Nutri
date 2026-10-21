@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { db } from "@/integrations/db/client";
+import type { Tables } from "@/integrations/db/types";
 
 export type QuickEntryTemplate = Tables<"quick_entry_templates">;
 
@@ -59,7 +59,7 @@ export const quickEntryTemplatesQuery = () =>
   });
 
 export async function fetchQuickEntryTemplates(): Promise<QuickEntryTemplate[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("quick_entry_templates")
     .select("*")
     .order("use_count", { ascending: false })
@@ -73,7 +73,7 @@ export async function upsertQuickEntryTemplate(
   userId: string,
   values: QuickEntryValues,
 ): Promise<void> {
-  const { data: existing, error: findError } = await supabase
+  const { data: existing, error: findError } = await db
     .from("quick_entry_templates")
     .select("id, use_count")
     .eq("user_id", userId)
@@ -82,7 +82,7 @@ export async function upsertQuickEntryTemplate(
   if (findError) throw findError;
 
   if (existing) {
-    const { error } = await supabase
+    const { error } = await db
       .from("quick_entry_templates")
       .update({ ...values, name: values.name.trim(), use_count: existing.use_count + 1 })
       .eq("id", existing.id);
@@ -90,14 +90,14 @@ export async function upsertQuickEntryTemplate(
     return;
   }
 
-  const { error } = await supabase
+  const { error } = await db
     .from("quick_entry_templates")
     .insert({ ...values, name: values.name.trim(), user_id: userId });
   if (error) throw error;
 }
 
 export async function bumpTemplateUseCount(id: string, current: number): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("quick_entry_templates")
     .update({ use_count: current + 1 })
     .eq("id", id);
@@ -108,7 +108,7 @@ export async function updateQuickEntryTemplate(
   id: string,
   values: QuickEntryValues,
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("quick_entry_templates")
     .update({ ...values, name: values.name.trim() })
     .eq("id", id);
@@ -116,6 +116,6 @@ export async function updateQuickEntryTemplate(
 }
 
 export async function deleteQuickEntryTemplate(id: string): Promise<void> {
-  const { error } = await supabase.from("quick_entry_templates").delete().eq("id", id);
+  const { error } = await db.from("quick_entry_templates").delete().eq("id", id);
   if (error) throw error;
 }

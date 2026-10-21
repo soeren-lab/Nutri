@@ -6,8 +6,8 @@
 // Damit die Capacitor-App komplett offline STARTEN kann (ohne Live-Request
 // beim App-Start), holen wir das gerenderte Root-HTML einmal vom deployten
 // Worker und speichern es als statische index.html dazu. Alle Asset-Pfade
-// darin sind relativ (/assets/...), Supabase-Aufrufe laufen ohnehin über eine
-// feste absolute URL – die meisten POST-Server-Functions (Konto löschen,
+// darin sind relativ (/assets/...), Daten-Aufrufe gehen ohnehin gegen die feste
+// absolute NAS-API-Adresse (VITE_API_URL) – die meisten POST-Server-Functions (Konto löschen,
 // PDF-Export, Kochbuch beitreten) bleiben bewusst "nicht verfügbar" in der
 // App (siehe isNativeApp()-Guards); die unauthentifizierten GET-Functions
 // (OFF-Suche, Kochbuch-Freigabelink) sowie zwei gezielt freigeschaltete
@@ -22,6 +22,7 @@
 //   4. npx cap sync android && (Android Studio / gradlew assembleDebug)
 
 import { cpSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { setTimeout as sleep } from "node:timers/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -35,12 +36,33 @@ if (!existsSync(OUTPUT_PUBLIC)) {
   process.exit(1);
 }
 
-const res = await fetch(WORKER_URL + "/");
-if (!res.ok) {
-  console.error(`Konnte ${WORKER_URL} nicht laden (Status ${res.status}). Ist der Worker deployt?`);
+/** Alle /assets/…-Dateien, auf die die Startseite verweist, müssen im neuen Build existieren. */
+function missingAssets(html) {
+  const refs = [...new Set(html.match(/\/assets\/[A-Za-z0-9_.-]+\.(?:js|css)/g) ?? [])];
+  return refs.filter((ref) => !existsSync(join(OUTPUT_PUBLIC, ref)));
+}
+
+// Direkt nach einem Deploy liefert Cloudflare kurz noch die alte Startseite aus. Deren Datei-Namen
+// passen dann nicht zum neuen Build (weißer Bildschirm / "Etwas ist schiefgelaufen"). Deshalb
+// wiederholen wir den Abruf, bis die Startseite zum Build passt.
+let html = "";
+let missing = [];
+for (let attempt = 1; attempt <= 12; attempt++) {
+  const res = await fetch(`${WORKER_URL}/?nocache=${Date.now()}`, { headers: { "cache-control": "no-cache" } });
+  if (!res.ok) {
+    console.error(`Konnte ${WORKER_URL} nicht laden (Status ${res.status}). Ist der Worker deployt?`);
+    process.exit(1);
+  }
+  html = await res.text();
+  missing = missingAssets(html);
+  if (missing.length === 0) break;
+  console.log(`Startseite verweist noch auf alte Dateien (${missing.length}), neuer Versuch ${attempt}/12 …`);
+  await sleep(5000);
+}
+if (missing.length > 0) {
+  console.error(`Abbruch: Die Startseite vom Worker passt nicht zum Build. Fehlende Dateien: ${missing.join(", ")}`);
   process.exit(1);
 }
-const html = await res.text();
 
 rmSync(WWW, { recursive: true, force: true });
 cpSync(OUTPUT_PUBLIC, WWW, { recursive: true });

@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { db } from "@/integrations/db/client";
+import type { Tables } from "@/integrations/db/types";
 
 /** Aufschlag auf die reinen Token-Kosten (Speicher, Hosting, Fehlversuche). */
 export const CREDIT_MARKUP = 1.2;
@@ -56,7 +56,7 @@ export const creditBalanceQuery = (userId: string | undefined) =>
     queryKey: ["credits-balance", userId ?? "anon"],
     enabled: !!userId,
     queryFn: async (): Promise<number> => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("user_credits")
         .select("balance_usd")
         .eq("user_id", userId!)
@@ -72,7 +72,7 @@ export const creditLedgerQuery = (userId: string | undefined, limit = 100) =>
     queryKey: ["credit-ledger", userId ?? "anon", limit],
     enabled: !!userId,
     queryFn: async (): Promise<CreditLedgerRow[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("credit_ledger")
         .select("*")
         .eq("user_id", userId!)
@@ -87,7 +87,7 @@ export const creditOverviewQuery = () =>
   queryOptions({
     queryKey: ["credit-overview"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("admin_credit_overview");
+      const { data, error } = await db.rpc("admin_credit_overview");
       if (error) throw error;
       return data ?? [];
     },
@@ -99,7 +99,7 @@ export async function adminTopup(input: {
   note?: string;
   kind?: "topup" | "adjustment";
 }): Promise<number> {
-  const { data, error } = await supabase.rpc("admin_credit_topup", {
+  const { data, error } = await db.rpc("admin_credit_topup", {
     _user_id: input.userId,
     _amount_usd: input.amountUsd,
     _note: input.note,

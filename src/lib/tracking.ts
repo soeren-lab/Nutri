@@ -1,4 +1,4 @@
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/db/types";
 
 /** Nährwerte, die einzeln an-/abgeschaltet werden können. */
 export type TrackableMacroKey = "protein_g" | "carbs_g" | "fat_g" | "fiber_g";

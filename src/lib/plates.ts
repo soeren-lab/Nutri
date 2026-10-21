@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { db } from "@/integrations/db/client";
+import type { Tables } from "@/integrations/db/types";
 import { MEAL_PHOTO_BUCKET, removeMealPhoto } from "@/lib/meal-plan";
 
 export type Plate = Tables<"user_plates">;
@@ -59,7 +59,7 @@ export function describePlate(p: PlateInfo): string {
 }
 
 export async function fetchPlates(): Promise<Plate[]> {
-  const { data, error } = await supabase.from("user_plates").select("*").order("name");
+  const { data, error } = await db.from("user_plates").select("*").order("name");
   if (error) throw error;
   return data ?? [];
 }
@@ -88,7 +88,7 @@ export async function savePlate(input: {
   let photoPath = input.existing?.photo_path ?? null;
   if (input.photo) {
     photoPath = `${input.userId}/plate-${id}.jpg`;
-    const { error } = await supabase.storage
+    const { error } = await db.storage
       .from(MEAL_PHOTO_BUCKET)
       .upload(photoPath, input.photo, { contentType: "image/jpeg", upsert: true });
     if (error) throw error;
@@ -96,7 +96,7 @@ export async function savePlate(input: {
     await removeMealPhoto(photoPath).catch(() => {});
     photoPath = null;
   }
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("user_plates")
     .upsert({ id, user_id: input.userId, ...input.values, photo_path: photoPath })
     .select("*")
@@ -106,7 +106,7 @@ export async function savePlate(input: {
 }
 
 export async function deletePlate(plate: Plate): Promise<void> {
-  const { error } = await supabase.from("user_plates").delete().eq("id", plate.id);
+  const { error } = await db.from("user_plates").delete().eq("id", plate.id);
   if (error) throw error;
   if (plate.photo_path) await removeMealPhoto(plate.photo_path).catch(() => {});
 }

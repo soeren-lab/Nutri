@@ -5,7 +5,7 @@ import {
   useLocation,
   useNavigate,
 } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { cn } from "@/lib/utils";
 import { AchievementWatcher } from "@/components/AchievementWatcher";
 import { PushNotificationRegistrar } from "@/components/PushNotificationRegistrar";
@@ -70,7 +70,7 @@ export const Route = createFileRoute("/_authenticated")({
     // wichtig für Offline-Nutzung. getUser() würde bei jedem Routenwechsel einen
     // Server-Request auslösen, der offline fehlschlägt und den Router in eine
     // Neulade-Schleife treibt.
-    const { data, error } = await supabase.auth.getSession();
+    const { data, error } = await db.auth.getSession();
     if (error || !data.session?.user) throw redirect({ to: "/auth" });
     return { user: data.session.user };
   },

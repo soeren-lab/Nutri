@@ -1,6 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { queryOptions } from "@tanstack/react-query";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/db/types";
 import type { DiffField } from "@/lib/community";
 import { normalizeName, publishIngredient, similarity } from "@/lib/community";
 import { fetchSharedSourceIds, sharedSourceHasUpdate } from "@/lib/shared-sources";
@@ -26,7 +26,7 @@ export type RecipeBundle = {
 };
 
 async function requireUid(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
+  const { data } = await db.auth.getUser();
   const uid = data.user?.id;
   if (!uid) throw new Error("Nicht angemeldet");
   return uid;
@@ -34,7 +34,7 @@ async function requireUid(): Promise<string> {
 
 /** Lädt alle Rohdaten eines Rezepts (ohne Auflösung verlinkter Rezepte). */
 export async function fetchRecipeBundle(id: string): Promise<RecipeBundle | null> {
-  const { data: recipe, error } = await supabase
+  const { data: recipe, error } = await db
     .from("recipes")
     .select("*")
     .eq("id", id)
@@ -43,9 +43,9 @@ export async function fetchRecipeBundle(id: string): Promise<RecipeBundle | null
   if (!recipe) return null;
 
   const [steps, components, ingredients] = await Promise.all([
-    supabase.from("steps").select("*").eq("recipe_id", id),
-    supabase.from("recipe_components").select("*").eq("recipe_id", id),
-    supabase
+    db.from("steps").select("*").eq("recipe_id", id),
+    db.from("recipe_components").select("*").eq("recipe_id", id),
+    db
       .from("ingredients")
       .select("*, master:ingredients_master(*, brand:brands(*))")
       .eq("recipe_id", id),
@@ -57,7 +57,7 @@ export async function fetchRecipeBundle(id: string): Promise<RecipeBundle | null
   const componentIds = (components.data ?? []).map((c) => c.id);
   let variants: ComponentVariant[] = [];
   if (componentIds.length > 0) {
-    const { data, error: vErr } = await supabase
+    const { data, error: vErr } = await db
       .from("component_variants")
       .select("*")
       .in("component_id", componentIds);
@@ -83,7 +83,7 @@ async function linkedRecipeIds(rootId: string): Promise<string[]> {
   const visited = new Set<string>([rootId]);
   while (queue.length > 0) {
     const current = queue.shift()!;
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("recipe_components")
       .select("linked_recipe_id")
       .eq("recipe_id", current)
@@ -106,7 +106,7 @@ export async function unpublishedLinkedRecipes(
 ): Promise<Array<{ id: string; title: string }>> {
   const ids = await linkedRecipeIds(recipeId);
   if (ids.length === 0) return [];
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("recipes")
     .select("id, title, is_published")
     .in("id", ids);
@@ -119,7 +119,7 @@ export async function findSimilarPublishedRecipe(
   title: string,
   excludeId?: string,
 ): Promise<{ id: string; title: string; score: number } | null> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("recipes")
     .select("id, title")
     .eq("is_published", true);
@@ -136,7 +136,7 @@ export async function findSimilarPublishedRecipe(
 }
 
 async function publishSingleRecipe(id: string, bumpVersion: boolean): Promise<Recipe> {
-  const { data: current, error: cErr } = await supabase
+  const { data: current, error: cErr } = await db
     .from("recipes")
     .select("published_version, is_published")
     .eq("id", id)
@@ -147,7 +147,7 @@ async function publishSingleRecipe(id: string, bumpVersion: boolean): Promise<Re
     ? (current.published_version ?? 0) + 1
     : Math.max(1, current.published_version ?? 0);
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("recipes")
     .update({ is_published: true, published_version: version })
     .eq("id", id)
@@ -159,7 +159,7 @@ async function publishSingleRecipe(id: string, bumpVersion: boolean): Promise<Re
 
 /** Alle im Rezept verwendeten eigenen Stammzutaten mitveröffentlichen. */
 async function publishUsedMasters(recipeIds: string[], uid: string): Promise<void> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("ingredients")
     .select("ingredient_master_id")
     .in("recipe_id", recipeIds)
@@ -167,7 +167,7 @@ async function publishUsedMasters(recipeIds: string[], uid: string): Promise<voi
   if (error) throw error;
   const ids = Array.from(new Set((data ?? []).map((r) => r.ingredient_master_id!)));
   if (ids.length === 0) return;
-  const { data: masters, error: mErr } = await supabase
+  const { data: masters, error: mErr } = await db
     .from("ingredients_master")
     .select("id, is_published, user_id")
     .in("id", ids);
@@ -187,7 +187,7 @@ export async function publishRecipe(id: string): Promise<Recipe> {
   const linked = await linkedRecipeIds(id);
   await publishUsedMasters([id, ...linked], uid);
   for (const linkedId of linked) {
-    const { data } = await supabase
+    const { data } = await db
       .from("recipes")
       .select("user_id, is_published")
       .eq("id", linkedId)
@@ -200,7 +200,7 @@ export async function publishRecipe(id: string): Promise<Recipe> {
 }
 
 export async function unpublishRecipe(id: string): Promise<void> {
-  const { error } = await supabase.from("recipes").update({ is_published: false }).eq("id", id);
+  const { error } = await db.from("recipes").update({ is_published: false }).eq("id", id);
   if (error) throw error;
 }
 
@@ -208,11 +208,11 @@ export async function unpublishRecipe(id: string): Promise<void> {
 
 async function resolveOwnBrandId(uid: string, brand: BrandRow | null): Promise<string | null> {
   if (!brand) return null;
-  const { data, error } = await supabase.from("brands").select("*").eq("user_id", uid);
+  const { data, error } = await db.from("brands").select("*").eq("user_id", uid);
   if (error) throw error;
   const match = (data ?? []).find((b) => normalizeName(b.name) === normalizeName(brand.name));
   if (match) return match.id;
-  const { data: created, error: cErr } = await supabase
+  const { data: created, error: cErr } = await db
     .from("brands")
     .insert({ name: brand.name, user_id: uid })
     .select("id")
@@ -230,7 +230,7 @@ async function resolveOwnMaster(
   const cached = cache.get(source.id);
   if (cached) return cached;
 
-  const { data: own, error } = await supabase
+  const { data: own, error } = await db
     .from("ingredients_master")
     .select("id, name, brand_id, source_ingredient_id, brand:brands(name)")
     .eq("user_id", uid);
@@ -256,7 +256,7 @@ async function resolveOwnMaster(
   }
 
   const brandId = await resolveOwnBrandId(uid, source.brand ?? null);
-  const { data: created, error: cErr } = await supabase
+  const { data: created, error: cErr } = await db
     .from("ingredients_master")
     .insert({
       user_id: uid,
@@ -302,7 +302,7 @@ async function writeBundleInto(
     if (c.linked_recipe_id && depth < 4) {
       linkedId = await copyRecipeDeep(c.linked_recipe_id, uid, masterCache, recipeCache, depth + 1);
     }
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("recipe_components")
       .insert({
         recipe_id: targetRecipeId,
@@ -321,7 +321,7 @@ async function writeBundleInto(
   for (const v of bundle.variants) {
     const componentId = componentIdMap.get(v.component_id);
     if (!componentId) continue;
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("component_variants")
       .insert({
         component_id: componentId,
@@ -357,12 +357,12 @@ async function writeBundleInto(
     });
   }
   if (ingredientRows.length > 0) {
-    const { error } = await supabase.from("ingredients").insert(ingredientRows);
+    const { error } = await db.from("ingredients").insert(ingredientRows);
     if (error) throw error;
   }
 
   if (bundle.steps.length > 0) {
-    const { error } = await supabase.from("steps").insert(
+    const { error } = await db.from("steps").insert(
       bundle.steps.map((s) => ({
         recipe_id: targetRecipeId,
         step_number: s.step_number,
@@ -382,7 +382,7 @@ export async function generateUniqueRecipeName(
   baseTitle: string,
 ): Promise<string> {
   const base = baseTitle.replace(/\s*\((\d+)\)\s*$/, "").trim() || baseTitle.trim();
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("recipes")
     .select("title")
     .eq("user_id", userId);
@@ -410,7 +410,7 @@ async function copyRecipeDeep(
   const s = bundle.recipe;
   const title = await generateUniqueRecipeName(uid, s.title);
 
-  const { data: created, error } = await supabase
+  const { data: created, error } = await db
     .from("recipes")
     .insert({
       user_id: uid,
@@ -466,7 +466,7 @@ export type RecipeUpdate = {
 
 export async function fetchRecipeUpdates(): Promise<RecipeUpdate[]> {
   const uid = await requireUid();
-  const { data: copies, error } = await supabase
+  const { data: copies, error } = await db
     .from("recipes")
     .select("*")
     .eq("user_id", uid)
@@ -475,7 +475,7 @@ export async function fetchRecipeUpdates(): Promise<RecipeUpdate[]> {
   if (!copies || copies.length === 0) return [];
 
   const ids = Array.from(new Set(copies.map((c) => c.source_recipe_id!)));
-  const { data: sources, error: sErr } = await supabase
+  const { data: sources, error: sErr } = await db
     .from("recipes")
     .select("*")
     .in("id", ids);
@@ -520,17 +520,17 @@ export async function applyRecipeUpdate(update: RecipeUpdate): Promise<void> {
   const targetId = update.copy.id;
 
   const del = await Promise.all([
-    supabase.from("ingredients").delete().eq("recipe_id", targetId),
-    supabase.from("steps").delete().eq("recipe_id", targetId),
+    db.from("ingredients").delete().eq("recipe_id", targetId),
+    db.from("steps").delete().eq("recipe_id", targetId),
   ]);
   for (const r of del) if (r.error) throw r.error;
-  const { error: cErr } = await supabase
+  const { error: cErr } = await db
     .from("recipe_components")
     .delete()
     .eq("recipe_id", targetId);
   if (cErr) throw cErr;
 
-  const { error: uErr } = await supabase
+  const { error: uErr } = await db
     .from("recipes")
     .update({
       title: s.title,
@@ -562,7 +562,7 @@ export async function applyRecipeUpdate(update: RecipeUpdate): Promise<void> {
 }
 
 export async function dismissRecipeUpdate(update: RecipeUpdate): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("recipes")
     .update({
       dismissed_version: update.source.published_version ?? 0,

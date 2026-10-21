@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { Json } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/db/types";
 import { useAuth } from "@/hooks/use-auth";
 import { cleanupBatchGroup } from "@/lib/batch";
 import { lateNoticeFor, recalculatePointsForDate } from "@/lib/points";

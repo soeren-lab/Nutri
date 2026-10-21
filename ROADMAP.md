@@ -43,6 +43,30 @@ KI-Mahlzeiten-Vorschläge (`aiSuggestions.functions.ts`), das aktuell bewusst
 per Feature-Flag deaktiviert ist, weil kein Server-/Gateway-Anschluss mehr
 existiert. Das ist eine naheliegende Vorarbeit für Ausbaustufe 2.
 
+## Verbesserungsliste (nächste Arbeiten)
+
+Bekannte Schwachstellen, die wir bewusst später angehen:
+
+- **PDF-Export (Kochbuch):** funktioniert noch nicht richtig. Lief früher über den Cloudflare-Worker
+  (`cookbook-pdf.functions.ts`) und muss in die NAS-API verlegt und inhaltlich überarbeitet werden.
+- **Essens-Foto-Scan (Planer):** bisher nur suboptimal. Mengenschätzung und Zuordnung zu den
+  Bibliotheks-Zutaten verbessern (z. B. Teller-Maßstab, Rückfragen, Modellwahl, Prompt), danach mit
+  gewogenen Mahlzeiten gegenprüfen. Läuft seit dem Umzug in `nas-api/src/photoScan.js`.
+
+## Nacharbeit nach dem NAS-Umzug
+
+Diese Funktionen liefen früher über den Cloudflare-Worker mit Admin-Zugriff und sind noch nicht
+auf die NAS-API migriert:
+
+- **Konto löschen:** in den Einstellungen vorerst nur ein Platzhalter-Hinweis.
+- **Kochbuch-Freigabe per Link** (`cookbooks-shared.functions.ts`): zeigt eine Hinweismeldung.
+- **Push-Nachrichten** (Registrierung, Update-Hinweis an alle): benötigt Anbindung an die NAS-API.
+- **Barcode-Abfrage** (OpenFoodFacts) läuft weiter über den Worker (ohne Login, daher unkritisch).
+- **Zugriff von außen:** nur im Heimnetz erreichbar. Unterwegs bräuchte es HTTPS (DDNS/Tunnel).
+- **Backups:** regelmäßige Sicherung der NAS (Datenbank und Foto-Speicher) einrichten.
+- **Passwort-Reset per E-Mail:** gibt es nicht; Admin setzt Passwörter mit `nas-api/tools/set-password.js`.
+- **Typ-Hilfe** `@supabase/supabase-js` (nur Typen, Dev-Abhängigkeit) durch eigene Typen ersetzen.
+
 ## Ausbaustufe 1 — Bestehendes vervollständigen
 
 Ziel: Lücken in den drei Kernbereichen schließen, die mit der jetzigen
@@ -67,8 +91,6 @@ Automatisierung abnehmen.
 - **Rezepte:** KI-Mahlzeiten-Vorschläge reaktivieren und an einen echten
   Server-Gateway anbinden (Typen sind bereits vorbereitet); Ersatz-Vorschläge
   bei fehlenden Zutaten
-- **Nährwerte:** Foto-basierte Kalorienschätzung einer Mahlzeit (Kamera →
-  geschätzte Makros) als schnelle Alternative zur manuellen Zutatenerfassung
 - **Meal Prep:** Kalorienbudget-Ausgleich über die Woche (Tage mit Über-/
   Unterschuss automatisch gegenrechnen); Einkaufsliste nach Supermarkt-
   Kategorien sortieren/optimieren

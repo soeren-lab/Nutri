@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { db } from "@/integrations/db/client";
+import type { Tables } from "@/integrations/db/types";
 import {
   computeTargets,
   fetchUserProfile,
@@ -48,7 +48,7 @@ function rowToTargets(row: TargetHistoryRow): NutritionTargets | null {
 
 /** Komplette Ziel-Historie (aufsteigend nach valid_from). */
 export async function fetchTargetHistory(): Promise<TargetHistoryRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("target_history")
     .select("*")
     .order("valid_from", { ascending: true });
@@ -100,7 +100,7 @@ export async function getTargetsForDate(
   date: Date | string,
 ): Promise<NutritionTargets | null> {
   const iso = isoOf(date);
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("target_history")
     .select("*")
     .eq("user_id", userId)
@@ -150,13 +150,13 @@ export async function seedTargetHistory(
   };
   const earliest = [...rows].sort((a, b) => a.valid_from.localeCompare(b.valid_from))[0];
   if (earliest) {
-    const { error } = await supabase
+    const { error } = await db
       .from("target_history")
       .update(values)
       .eq("id", earliest.id);
     if (error) throw error;
   } else {
-    const { error } = await supabase.from("target_history").insert({
+    const { error } = await db.from("target_history").insert({
       user_id: userId,
       ...values,
       valid_from: toISODateLocal(new Date()),
@@ -177,7 +177,7 @@ export async function recordTargetsForToday(
 ): Promise<void> {
   if (!targets) return;
   const today = toISODateLocal(new Date());
-  const { data: latest, error } = await supabase
+  const { data: latest, error } = await db
     .from("target_history")
     .select("*")
     .eq("user_id", userId)
@@ -187,7 +187,7 @@ export async function recordTargetsForToday(
   if (error) throw error;
   if (latest && latest.valid_from <= today && sameTargets(latest, targets)) return;
 
-  const { error: upErr } = await supabase.from("target_history").upsert(
+  const { error: upErr } = await db.from("target_history").upsert(
     {
       user_id: userId,
       target_calories: targets.calories,

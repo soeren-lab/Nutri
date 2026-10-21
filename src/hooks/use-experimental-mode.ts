@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { userProfileQuery } from "@/lib/nutritionTargets";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import { useAuth } from "@/hooks/use-auth";
 import { applyGlassMode, isGlassVariant, type GlassVariant } from "@/lib/theme";
 
@@ -47,7 +47,7 @@ export function useExperimentalMode() {
   const enabledMutation = useMutation({
     mutationFn: async (value: boolean) => {
       if (!user) throw new Error("Nicht angemeldet");
-      const { error } = await supabase
+      const { error } = await db
         .from("user_profile")
         .update({ experimental_glass_ui: value })
         .eq("user_id", user.id);
@@ -62,7 +62,7 @@ export function useExperimentalMode() {
   const variantMutation = useMutation({
     mutationFn: async (value: GlassVariant) => {
       if (!user) throw new Error("Nicht angemeldet");
-      const { error } = await supabase
+      const { error } = await db
         .from("user_profile")
         .update({ experimental_glass_variant: value })
         .eq("user_id", user.id);

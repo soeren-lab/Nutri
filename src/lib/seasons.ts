@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 /** Dauer einer Season in Tagen. */
 export const SEASON_LENGTH_DAYS = 70;
@@ -29,7 +29,7 @@ export type SeasonHistoryRow = {
  * (inkl. Historien-Einträgen für die abgelaufene Season).
  */
 export async function ensureCurrentSeason(): Promise<Season | null> {
-  const { data, error } = await supabase.rpc("ensure_current_season");
+  const { data, error } = await db.rpc("ensure_current_season");
   if (error) throw error;
   const row = (data ?? [])[0];
   return row ? (row as Season) : null;
@@ -45,7 +45,7 @@ export const currentSeasonQuery = () =>
 export type SeasonLogRow = { date: string; points_earned: number };
 
 export async function fetchSeasonLog(seasonId: string): Promise<SeasonLogRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("points_log")
     .select("date, points_earned")
     .eq("season_id", seasonId)
@@ -63,7 +63,7 @@ export const seasonLogQuery = (seasonId: string | undefined) =>
   });
 
 export async function fetchSeasonHistory(): Promise<SeasonHistoryRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("season_history")
     .select(
       "id, season_id, final_points, final_rank, final_placement_among_friends, season:seasons(id, name, start_date, end_date, season_number)",
@@ -83,7 +83,7 @@ export const seasonHistoryQuery = () =>
 /* ---------------------------------------------------------- Start-Screen */
 
 export async function fetchSeasonSeen(seasonId: string): Promise<boolean> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("user_seen_seasons")
     .select("season_id")
     .eq("season_id", seasonId)
@@ -101,7 +101,7 @@ export const seasonSeenQuery = (seasonId: string | undefined) =>
   });
 
 export async function markSeasonSeen(userId: string, seasonId: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from("user_seen_seasons")
     .upsert({ user_id: userId, season_id: seasonId }, { onConflict: "user_id,season_id" });
   if (error) throw error;
@@ -122,7 +122,7 @@ export type SeasonComparisonEntry = {
 export async function fetchSeasonComparison(
   seasonId: string,
 ): Promise<SeasonComparisonEntry[]> {
-  const { data, error } = await supabase.rpc("get_friend_season_comparison", {
+  const { data, error } = await db.rpc("get_friend_season_comparison", {
     _season_id: seasonId,
   });
   if (error) throw error;
@@ -147,7 +147,7 @@ export const seasonComparisonQuery = (seasonId: string | undefined) =>
 export async function fetchSeasonHistoryComparison(
   seasonId: string,
 ): Promise<SeasonComparisonEntry[]> {
-  const { data, error } = await supabase.rpc("get_friend_season_history", {
+  const { data, error } = await db.rpc("get_friend_season_history", {
     _season_id: seasonId,
   });
   if (error) throw error;

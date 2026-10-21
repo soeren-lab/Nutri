@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import { db } from "@/integrations/db/client";
+import type { Tables } from "@/integrations/db/types";
 import { queryOptions } from "@tanstack/react-query";
 import type { RecipeListItem } from "@/types/recipe";
 
@@ -16,9 +16,9 @@ export type CookbookWithCount = Cookbook & {
 };
 
 export async function fetchCookbooks(): Promise<CookbookWithCount[]> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const uid = userRes.user?.id ?? null;
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("cookbooks")
     .select("*, cookbook_recipes(count)")
     .order("created_at", { ascending: false });
@@ -30,7 +30,7 @@ export async function fetchCookbooks(): Promise<CookbookWithCount[]> {
   );
   const usernames = new Map<string, string | null>();
   if (foreignOwnerIds.length > 0) {
-    const { data: names } = await supabase.rpc("get_usernames", { _user_ids: foreignOwnerIds });
+    const { data: names } = await db.rpc("get_usernames", { _user_ids: foreignOwnerIds });
     for (const n of names ?? []) usernames.set(n.user_id, n.username);
   }
 
@@ -44,10 +44,10 @@ export async function fetchCookbooks(): Promise<CookbookWithCount[]> {
 
 /** Eigenes Mitgliedschafts-Eintrag entfernen (Kochbuch verlassen) */
 export async function leaveCookbook(cookbookId: string): Promise<void> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const uid = userRes.user?.id;
   if (!uid) throw new Error("Nicht angemeldet");
-  const { error } = await supabase
+  const { error } = await db
     .from("cookbook_members")
     .delete()
     .eq("cookbook_id", cookbookId)
@@ -56,7 +56,7 @@ export async function leaveCookbook(cookbookId: string): Promise<void> {
 }
 
 export async function fetchCookbook(id: string): Promise<Cookbook> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("cookbooks")
     .select("*")
     .eq("id", id)
@@ -67,7 +67,7 @@ export async function fetchCookbook(id: string): Promise<Cookbook> {
 }
 
 export async function fetchCookbookRecipes(cookbookId: string): Promise<RecipeListItem[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("cookbook_recipes")
     .select("sort_order, recipe:recipes(*, ingredients(*, master:ingredients_master(*)))")
     .eq("cookbook_id", cookbookId)
@@ -97,10 +97,10 @@ export type CookbookInput = {
 };
 
 export async function createCookbook(input: CookbookInput): Promise<Cookbook> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const uid = userRes.user?.id;
   if (!uid) throw new Error("Nicht angemeldet");
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("cookbooks")
     .insert({ ...input, user_id: uid })
     .select("*")
@@ -110,7 +110,7 @@ export async function createCookbook(input: CookbookInput): Promise<Cookbook> {
 }
 
 export async function updateCookbook(id: string, input: CookbookInput): Promise<Cookbook> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("cookbooks")
     .update(input)
     .eq("id", id)
@@ -121,13 +121,13 @@ export async function updateCookbook(id: string, input: CookbookInput): Promise<
 }
 
 export async function deleteCookbook(id: string): Promise<void> {
-  const { error } = await supabase.from("cookbooks").delete().eq("id", id);
+  const { error } = await db.from("cookbooks").delete().eq("id", id);
   if (error) throw error;
 }
 
 export async function addRecipesToCookbook(cookbookId: string, recipeIds: string[]) {
   if (recipeIds.length === 0) return;
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("cookbook_recipes")
     .select("recipe_id, sort_order")
     .eq("cookbook_id", cookbookId);
@@ -137,12 +137,12 @@ export async function addRecipesToCookbook(cookbookId: string, recipeIds: string
     .filter((rid) => !existingIds.has(rid))
     .map((rid, i) => ({ cookbook_id: cookbookId, recipe_id: rid, sort_order: maxSort + 1 + i }));
   if (rows.length === 0) return;
-  const { error } = await supabase.from("cookbook_recipes").insert(rows);
+  const { error } = await db.from("cookbook_recipes").insert(rows);
   if (error) throw error;
 }
 
 export async function removeRecipeFromCookbook(cookbookId: string, recipeId: string) {
-  const { error } = await supabase
+  const { error } = await db
     .from("cookbook_recipes")
     .delete()
     .eq("cookbook_id", cookbookId)
@@ -163,7 +163,7 @@ export async function uploadCookbookCover(userId: string, file: File): Promise<s
   }
   const ext = (nameLower.split(".").pop() || "jpg").replace(/[^a-z0-9]/g, "") || "jpg";
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("cookbook-covers").upload(path, file, {
+  const { error } = await db.storage.from("cookbook-covers").upload(path, file, {
     cacheControl: "3600",
     upsert: false,
     contentType: type || undefined,
@@ -174,7 +174,7 @@ export async function uploadCookbookCover(userId: string, file: File): Promise<s
 
 export async function getCookbookCoverSignedUrl(path: string): Promise<string | null> {
   if (!path) return null;
-  const { data, error } = await supabase.storage
+  const { data, error } = await db.storage
     .from("cookbook-covers")
     .createSignedUrl(path, 60 * 60 * 24 * 7);
   if (error) return null;
@@ -182,7 +182,7 @@ export async function getCookbookCoverSignedUrl(path: string): Promise<string | 
 }
 
 export async function joinCookbookByToken(token: string): Promise<string> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const uid = userRes.user?.id;
   if (!uid) throw new Error("Nicht angemeldet");
   // Use server function for token-based lookup (bypass RLS)
@@ -197,7 +197,7 @@ export async function joinCookbookByToken(token: string): Promise<string> {
 
 /** User-IDs der Mitglieder (Viewer) eines eigenen Kochbuchs. */
 export async function fetchCookbookMemberIds(cookbookId: string): Promise<string[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("cookbook_members")
     .select("user_id")
     .eq("cookbook_id", cookbookId);
@@ -220,7 +220,7 @@ export async function setCookbookMembers(cookbookId: string, friendUserIds: stri
   const toAdd = friendUserIds.filter((id) => !existingSet.has(id));
 
   if (toRemove.length > 0) {
-    const { error } = await supabase
+    const { error } = await db
       .from("cookbook_members")
       .delete()
       .eq("cookbook_id", cookbookId)
@@ -228,7 +228,7 @@ export async function setCookbookMembers(cookbookId: string, friendUserIds: stri
     if (error) throw error;
   }
   if (toAdd.length > 0) {
-    const { error } = await supabase.from("cookbook_members").insert(
+    const { error } = await db.from("cookbook_members").insert(
       toAdd.map((userId) => ({ cookbook_id: cookbookId, user_id: userId, role: "viewer" })),
     );
     if (error) throw error;
@@ -241,7 +241,7 @@ export async function setCookbookMembers(cookbookId: string, friendUserIds: stri
  */
 export async function fetchFriendCookbooks(ownerUserId: string): Promise<CookbookWithCount[]> {
   if (!ownerUserId) return [];
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("cookbooks")
     .select("*, cookbook_recipes(count)")
     .eq("user_id", ownerUserId)

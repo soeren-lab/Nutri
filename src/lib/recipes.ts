@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 import type {
   ComponentVariant,
   RecipeComponentWithRelations,
@@ -17,10 +17,10 @@ export async function fetchRecipes(): Promise<RecipeListItem[]> {
   // getSession() liest die lokale Session ohne Netzwerk-Request – wichtig,
   // damit ein Offline-Fehlschlag hier nicht fälschlich als "kein Nutzer"
   // interpretiert wird und den Cache mit einer leeren Liste überschreibt.
-  const { data: sessionRes } = await supabase.auth.getSession();
+  const { data: sessionRes } = await db.auth.getSession();
   const uid = sessionRes.session?.user?.id;
   if (!uid) return [];
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("recipes")
     .select(NODE_SELECT)
     .eq("user_id", uid)
@@ -31,9 +31,9 @@ export async function fetchRecipes(): Promise<RecipeListItem[]> {
 
 /** Veröffentlichte Rezepte aller Nutzer inkl. eigener (Community-Hub). */
 export async function fetchCommunityRecipes(): Promise<RecipeListItem[]> {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await db.auth.getUser();
   const uid = userRes.user?.id ?? "";
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("recipes")
     .select(NODE_SELECT)
     .eq("is_published", true)
@@ -59,7 +59,7 @@ export async function fetchCommunityRecipes(): Promise<RecipeListItem[]> {
 export async function fetchPublishedRecipesByUser(
   userId: string,
 ): Promise<RecipeListItem[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("recipes")
     .select(NODE_SELECT)
     .eq("is_published", true)
@@ -74,7 +74,7 @@ export async function fetchPublishedRecipesByUser(
 /** Rezepte zu bestimmten IDs (z. B. privat mit mir geteilte Rezepte). */
 export async function fetchRecipesByIds(ids: string[]): Promise<RecipeListItem[]> {
   if (ids.length === 0) return [];
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("recipes")
     .select(NODE_SELECT)
     .in("id", ids)
@@ -148,7 +148,7 @@ function withComponentIngredients(d: RawNode) {
  * werden rekursiv aufgelöst (mit Tiefenbegrenzung als Sicherheitsnetz).
  */
 async function fetchRecipeNode(id: string, depth: number): Promise<RecipeNode | null> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("recipes")
     .select(NODE_SELECT)
     .eq("id", id)
@@ -195,7 +195,7 @@ export async function fetchRecipeNodesByIds(
 }
 
 export async function fetchRecipe(id: string): Promise<RecipeWithRelations> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("recipes")
     .select(`${NODE_SELECT}, steps(*)`)
     .eq("id", id)
@@ -222,7 +222,7 @@ export async function linkCreatesCycle(
 ): Promise<boolean> {
   if (!parentRecipeId) return false;
   if (parentRecipeId === targetRecipeId) return true;
-  const { data, error } = await supabase.rpc("recipe_link_creates_cycle", {
+  const { data, error } = await db.rpc("recipe_link_creates_cycle", {
     _parent_recipe_id: parentRecipeId,
     _target_recipe_id: targetRecipeId,
   });
@@ -233,7 +233,7 @@ export async function linkCreatesCycle(
 
 
 export async function fetchFavorites(userId: string): Promise<string[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("favorites")
     .select("recipe_id")
     .eq("user_id", userId);
@@ -259,14 +259,14 @@ export const favoritesQuery = (userId: string) =>
 
 export async function toggleFavorite(userId: string, recipeId: string, isFav: boolean) {
   if (isFav) {
-    const { error } = await supabase
+    const { error } = await db
       .from("favorites")
       .delete()
       .eq("user_id", userId)
       .eq("recipe_id", recipeId);
     if (error) throw error;
   } else {
-    const { error } = await supabase.from("favorites").insert({ user_id: userId, recipe_id: recipeId });
+    const { error } = await db.from("favorites").insert({ user_id: userId, recipe_id: recipeId });
     if (error) throw error;
   }
 }
@@ -276,7 +276,7 @@ export async function toggleFavorite(userId: string, recipeId: string, isFav: bo
  * Wirkt dauerhaft – beim nächsten Öffnen ist sie vorausgewählt.
  */
 export async function setIngredientMaster(ingredientId: string, masterId: string) {
-  const { error } = await supabase
+  const { error } = await db
     .from("ingredients")
     .update({ ingredient_master_id: masterId })
     .eq("id", ingredientId);
@@ -284,7 +284,7 @@ export async function setIngredientMaster(ingredientId: string, masterId: string
 }
 
 export async function deleteRecipe(id: string) {
-  const { error } = await supabase.from("recipes").delete().eq("id", id);
+  const { error } = await db.from("recipes").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -301,7 +301,7 @@ export async function uploadRecipeImage(userId: string, file: File): Promise<str
   }
   const ext = (nameLower.split(".").pop() || "jpg").replace(/[^a-z0-9]/g, "") || "jpg";
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("recipe-images").upload(path, file, {
+  const { error } = await db.storage.from("recipe-images").upload(path, file, {
     cacheControl: "3600",
     upsert: false,
     contentType: type || undefined,
@@ -313,7 +313,7 @@ export async function uploadRecipeImage(userId: string, file: File): Promise<str
 
 export async function getSignedImageUrl(path: string): Promise<string | null> {
   if (!path) return null;
-  const { data, error } = await supabase.storage
+  const { data, error } = await db.storage
     .from("recipe-images")
     .createSignedUrl(path, 60 * 60 * 24 * 7);
   // Werfen statt null zurückzugeben: TanStack Query behält bei einem

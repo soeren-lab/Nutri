@@ -6,7 +6,7 @@
 // WICHTIG: Das Datum muss >= 2025-04-01 sein - ab diesem compatibility_date
 // befüllt Cloudflare bei aktiviertem "nodejs_compat"-Flag `process.env`
 // automatisch aus den Worker-Vars/-Secrets. Mit einem älteren Datum bleibt
-// `process.env.SUPABASE_URL` etc. im Worker leer, obwohl die Secrets korrekt
+// `process.env.JWT_SECRET` etc. im Worker leer, obwohl die Secrets korrekt
 // gesetzt sind (beobachtet: "wrangler secret list"/"versions view" zeigen die
 // Secrets an, `process.env` liefert sie zur Laufzeit trotzdem nicht).
 //

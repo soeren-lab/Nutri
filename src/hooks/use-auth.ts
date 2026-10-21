@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/db/client";
 
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data: sub } = db.auth.onAuthStateChange((_e, s) => {
       setSession(s);
     });
-    supabase.auth.getSession().then(({ data }) => {
+    db.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);
     });
