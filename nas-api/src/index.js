@@ -25,6 +25,7 @@ import {
 } from "./query.js";
 import { callRpc } from "./rpc.js";
 import { analyzeMealPhoto, getAnthropicKey } from "./photoScan.js";
+import { renderCookbookPdf } from "./cookbookPdf.js";
 import { canRead, putObject, getObject, removeObjects, listObjects, removeUserFiles } from "./storage.js";
 
 const app = express();
@@ -130,6 +131,13 @@ app.post("/rest/rpc/:name", requireAuth, wrap(async (req, res) => {
 // ------------------------------------------------------------------ KI
 app.post("/ai/photo-scan", requireAuth, wrap(async (req, res) =>
   res.json({ data: await analyzeMealPhoto(req.uid, req.body), error: null })));
+
+// ------------------------------------------------------------------ PDF
+// Antwort bei Erfolg: das PDF selbst (application/pdf), bei Fehlern wie üblich { data, error }.
+app.post("/pdf/cookbook", requireAuth, wrap(async (req, res) => {
+  const pdf = await renderCookbookPdf(req.uid, req.body?.html);
+  res.set("Content-Type", "application/pdf").set("Cache-Control", "no-store").send(pdf);
+}));
 
 // ------------------------------------------------------------------ Dateien
 const raw = express.raw({ type: () => true, limit: "30mb" });

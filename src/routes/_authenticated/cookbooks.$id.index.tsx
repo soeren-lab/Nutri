@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useSuspenseQuery, useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Pencil, Trash2, Share2, Plus, X, ArrowLeft, BookOpen, Copy, Check, Download, Loader2, LogOut, Users } from "lucide-react";
 import { usePdfExport } from "@/hooks/use-pdf-export";
-import { isNativeApp } from "@/lib/platform";
 import {
   cookbookQuery,
   cookbookRecipesQuery,
@@ -171,11 +170,7 @@ function CookbookDetailPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                isNativeApp()
-                  ? toast.info("PDF-Export ist in der App-Version aktuell nicht verfügbar.")
-                  : pdfExport.mutate(id)
-              }
+              onClick={() => pdfExport.mutate(id)}
               disabled={pdfExport.isPending || recipes.length === 0}
               className="gap-1.5"
             >

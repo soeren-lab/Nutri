@@ -1,26 +1,20 @@
 import { useMutation } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { generateCookbookPdf } from "@/lib/cookbook-pdf.functions";
+import { apiPostPdf } from "@/lib/db-client";
+import { loadCookbookDoc } from "@/lib/cookbook-doc";
+import { renderCookbookHtml } from "@/lib/cookbook-html";
+import { saveFile } from "@/lib/save-file";
 
+/** Kochbuch als PDF: Vorlage (HTML) im Browser bauen, die NAS druckt sie mit Chromium zum PDF. */
 export function usePdfExport() {
-  const gen = useServerFn(generateCookbookPdf);
   return useMutation({
     mutationFn: async (cookbookId: string) => {
-      const res = await gen({ data: { cookbookId } });
-      const binary = atob(res.base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const blob = new Blob([bytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = res.filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      return res.filename;
+      const { doc, filename } = await loadCookbookDoc(cookbookId);
+      const res = await apiPostPdf("/pdf/cookbook", { html: renderCookbookHtml(doc) });
+      if (res.error || !res.data)
+        throw new Error(res.error?.message ?? "PDF-Export fehlgeschlagen");
+      await saveFile(res.data, filename, doc.title);
+      return filename;
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "PDF-Export fehlgeschlagen"),
   });

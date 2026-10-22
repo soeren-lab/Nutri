@@ -634,6 +634,24 @@ export async function apiPost<T>(path: string, body: unknown): Promise<Result<T>
   return postJson<T>(path, body);
 }
 
+/** Kochbuch-PDF von der NAS holen: bei Erfolg das PDF, sonst ein Fehler mit Klartext. */
+export async function apiPostPdf(path: string, body: unknown): Promise<Result<Blob>> {
+  const res = await authed(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res) return { data: null, error: { message: UNREACHABLE_MESSAGE, code: "network" } };
+  if ((res.headers.get("content-type") ?? "").includes("application/pdf")) {
+    return { data: await res.blob(), error: null };
+  }
+  const json = await res.json().catch(() => null);
+  return {
+    data: null,
+    error: json?.error ?? { message: `Serverfehler (${res.status})`, code: String(res.status) },
+  };
+}
+
 /**
  * Server-seitiger Client (Worker/SSR): ruft die API mit einem festen Bearer-Token auf.
  * `baseUrl` ist die von dort erreichbare API-Adresse.
