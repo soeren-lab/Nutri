@@ -44,6 +44,8 @@ services:
       # Der Programmcode wird direkt aus dem Projektordner gelesen: Dateien ersetzen,
       # Projekt stoppen und starten genügt, ein Neu-Bauen ist nicht nötig.
       - ./src:/app/src:ro
+      # Tabellen-Beschreibung (Spalten, Relationen) ebenfalls direkt aus dem Projektordner.
+      - ./db/schema.json:/app/db/schema.json:ro
 
   # Datenbank im Browser ansehen: http://<NAS-IP>:8081 (Anmeldung: Benutzer nutri + DB_PASSWORD).
   phpmyadmin:
