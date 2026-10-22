@@ -47,24 +47,10 @@ existiert. Das ist eine naheliegende Vorarbeit für Ausbaustufe 2.
 
 Bekannte Schwachstellen, die wir bewusst später angehen:
 
-- **PDF-Export (Kochbuch) feinschleifen:** läuft jetzt über die NAS (Vorlage `src/lib/cookbook-html.ts`,
-  Chromium in `nas-api/src/cookbookPdf.js`). Offen: Seitenzahlen im Inhaltsverzeichnis (zweiter
-  Durchlauf nötig), Kapitel nach Kategorien, Feinschliff am Design (alles im Block `DESIGN`).
-
-- **Foto-Scan darf nicht verloren gehen:** Das Fenster (`PhotoScanSheet.tsx`) lässt sich heute auch
-  während der Auswertung und in der Überprüfung schließen (Wischen, Tippen daneben, Zurück-Taste);
-  das Ergebnis ist dann weg, die Anfrage aber schon bezahlt. Geplant: Schließen während der
-  Auswertung sperren, in der Überprüfung vor dem Verwerfen nachfragen, Ergebnis (ohne Foto) lokal
-  zwischenspeichern und beim nächsten Öffnen „Letzten Scan fortsetzen?" anbieten. Größere Lösung
-  bei abgerissener Verbindung: NAS speichert das Ergebnis zwischen, App holt es ab.
-- **Foto-Scan günstiger machen** (aktuell ca. 4 Cent pro Scan, bei 3 Scans pro Tag ca. 44 €/Jahr):
-  1. Modell testen: `PHOTO_SCAN_MODEL=claude-haiku-5-5` in der `.env` der NAS (ca. 20-mal billiger).
-     Qualität prüfen mit ca. 10 gewogenen Mahlzeiten, Sonnet gegen Haiku, Abweichung vergleichen.
-  2. Bibliothek verkleinern: nur Namen mit kurzer Nummer senden, nur zuletzt benutzte Zutaten,
-     keine archivierten.
-  3. Optional zweistufig: Haiku zerlegt, Sonnet prüft nur bei niedriger Sicherheit oder Rückfrage.
-  Prompt-Caching lohnt sich bei wenigen Scans pro Tag nicht (Cache hält nur 5 Minuten bis 1 Stunde).
-  Der 20-%-Aufschlag (`CREDIT_MARKUP`) steckt vermutlich schon in den 4 Cent.
+- **PDF-Export (Kochbuch) feinschleifen:** läuft über die NAS (Vorlage `src/lib/cookbook-html.ts`,
+  Chromium in `nas-api/src/htmlToPdf.js`) im Doppelseiten-Layout mit automatischem Umbruch. Offen:
+  Seitenzahlen im Inhaltsverzeichnis (zweiter Durchlauf nötig), Kapitel nach Kategorien,
+  Feinschliff am Design (alles im Block `DESIGN`).
 
 ## Nacharbeit nach dem NAS-Umzug
 
@@ -74,8 +60,6 @@ auf die NAS-API migriert:
 - **Konto löschen:** in den Einstellungen vorerst nur ein Platzhalter-Hinweis.
 - **Kochbuch-Freigabe per Link** (`cookbooks-shared.functions.ts`): zeigt eine Hinweismeldung.
 - **Push-Nachrichten** (Registrierung, Update-Hinweis an alle): benötigt Anbindung an die NAS-API.
-- **Barcode-Abfrage** (OpenFoodFacts) läuft weiter über den Worker (ohne Login, daher unkritisch).
-- **Zugriff von außen:** nur im Heimnetz erreichbar. Unterwegs bräuchte es HTTPS (DDNS/Tunnel).
 - **Backups:** regelmäßige Sicherung der NAS (Datenbank und Foto-Speicher) einrichten.
 - **Passwort-Reset per E-Mail:** gibt es nicht; Admin setzt Passwörter mit `nas-api/tools/set-password.js`.
 - **Typ-Hilfe** `@supabase/supabase-js` (nur Typen, Dev-Abhängigkeit) durch eigene Typen ersetzen.
