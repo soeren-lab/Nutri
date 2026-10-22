@@ -1,4 +1,3 @@
-import { ApiStatusBanner } from "@/components/ApiStatusBanner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -153,7 +152,6 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeSync />
       <InstallBanner />
-      <ApiStatusBanner />
       <Outlet />
       <Toaster richColors position="top-center" />
     </QueryClientProvider>

@@ -294,6 +294,7 @@ export const batchCookWeekQuery = (weekStart: Date) => {
   return queryOptions({
     queryKey: ["batch-cook-week", from],
     queryFn: () => fetchBatchCookEntries(from, to),
+    refetchOnReconnect: false,
   });
 };
 

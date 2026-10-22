@@ -17,6 +17,11 @@ export function useHasPendingSync(): boolean {
   return useIsMutating() > 0;
 }
 
+/** Anzahl der Änderungen, die noch auf die NAS warten (offline vorgemerkt oder gerade gesendet). */
+export function usePendingSyncCount(): number {
+  return useIsMutating();
+}
+
 /**
  * True, wenn eine wiederhergestellte (nach App-Neustart resumte) Mutation
  * fehlgeschlagen ist. Nur diese haben kein eigenes onError mehr (siehe

@@ -73,7 +73,11 @@ export async function fetchShoppingList(): Promise<ShoppingListItem[]> {
 }
 
 export const shoppingListQuery = () =>
-  queryOptions({ queryKey: ["shopping-list"], queryFn: fetchShoppingList });
+  queryOptions({
+    queryKey: ["shopping-list"],
+    queryFn: fetchShoppingList,
+    refetchOnReconnect: false,
+  });
 
 type Aggregated = {
   key: string;

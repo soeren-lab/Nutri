@@ -8,8 +8,26 @@ import {
   isExternalImagePath,
 } from "@/hooks/use-signed-image";
 import { mapWithConcurrency } from "@/lib/concurrency";
+import { addDays, mealPlanQuery, startOfWeek } from "@/lib/meal-plan";
+import { batchCookWeekQuery } from "@/lib/batch";
+import { shoppingListQuery } from "@/lib/shopping-list";
+import { userProfileQuery } from "@/lib/nutritionTargets";
+import { targetHistoryQuery } from "@/lib/targetHistory";
+import { platesQuery } from "@/lib/plates";
+import { quickEntryTemplatesQuery } from "@/lib/quick-entries";
+import { bodyMeasurementsQuery } from "@/lib/bodyMeasurements";
+import { userPointsQuery } from "@/lib/points";
+import { achievementsQuery } from "@/lib/achievements";
+import { creditBalanceQuery } from "@/lib/credits";
+import { planQuery } from "@/lib/plans";
+import { avatarQuery } from "@/lib/avatar";
+import { usernameQuery } from "@/lib/username";
 
 const CONCURRENCY = 6;
+// Planer-Verlauf offline: so viele Wochen zurück und voraus werden vorgeladen.
+const WEEKS_BACK = 8;
+const WEEKS_AHEAD = 2;
+const OLD_WEEK_STALE_MS = 6 * 60 * 60 * 1000;
 
 /** Wechselt sich zwischen zwei Aufgabenlisten ab, statt sie hintereinanderzuhängen. */
 function interleave<T>(a: readonly T[], b: readonly T[]): T[] {
@@ -82,6 +100,35 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
   // Eigene Favoriten – kostet wenig, wird aber von der Rezept-Detailseite
   // per useSuspenseQuery zwingend gebraucht (siehe recipes.$id.index.tsx).
   await queryClient.fetchQuery(favoritesQuery(userId)).catch(() => {});
+
+  // Zuerst das, was der Alltag braucht: Planer-Verlauf und alles rund ums Profil. Fehler einzelner
+  // Abfragen stoppen den Rest nicht.
+  const baseWeek = startOfWeek(new Date());
+  const planTasks: Array<() => Promise<unknown>> = [];
+  for (let k = -WEEKS_BACK; k <= WEEKS_AHEAD; k++) {
+    const week = addDays(baseWeek, 7 * k);
+    // Lange vergangene Wochen ändern sich nicht mehr: nur alle paar Stunden neu laden.
+    const staleTime = k < -1 ? OLD_WEEK_STALE_MS : 0;
+    planTasks.push(() => queryClient.fetchQuery({ ...mealPlanQuery(week), staleTime }));
+    planTasks.push(() => queryClient.fetchQuery({ ...batchCookWeekQuery(week), staleTime }));
+  }
+  const profileTasks: Array<() => Promise<unknown>> = [
+    () => queryClient.fetchQuery(userProfileQuery()),
+    () => queryClient.fetchQuery(targetHistoryQuery()),
+    () => queryClient.fetchQuery(platesQuery()),
+    () => queryClient.fetchQuery(quickEntryTemplatesQuery()),
+    () => queryClient.fetchQuery(shoppingListQuery()),
+    () => queryClient.fetchQuery(bodyMeasurementsQuery()),
+    () => queryClient.fetchQuery(userPointsQuery()),
+    () => queryClient.fetchQuery(achievementsQuery()),
+    () => queryClient.fetchQuery(creditBalanceQuery(userId)),
+    () => queryClient.fetchQuery(planQuery(userId)),
+    () => queryClient.fetchQuery(avatarQuery(userId)),
+    () => queryClient.fetchQuery(usernameQuery(userId)),
+  ];
+  await mapWithConcurrency([...profileTasks, ...planTasks], 3, async (task) => {
+    await task();
+  });
 
   const recipeImageTasks: Array<() => Promise<void>> = [];
   const ingredientImageTasks: Array<() => Promise<void>> = [];

@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { currentUserId } from "@/lib/auth-session";
+import { isNetworkError } from "@/lib/db-client";
 import { cleanupBatchGroup } from "@/lib/batch";
 import {
   addFoodEntry,
@@ -70,7 +71,16 @@ function findEntryInCache(qc: QueryClient, id: string): MealPlanEntryFull | null
  * sofortiger Resume-Versuch beim Boot nie auf einen unregistrierten Key trifft.
  */
 export function registerOfflineMutationDefaults(qc: QueryClient) {
+  // Scheitert eine Änderung nur daran, dass die NAS nicht erreichbar ist, wird sie nicht verworfen:
+  // Der onlineManager ist dann offline (siehe api-reachability.ts), die Änderung gilt als pausiert,
+  // überlebt einen App-Neustart und wird gesendet, sobald die NAS wieder antwortet.
+  const keepOnNetworkError = {
+    retry: (_count: number, error: unknown) => isNetworkError(error),
+    retryDelay: 2000,
+  };
+
   qc.setMutationDefaults(MUTATION_KEYS.planRecipe, {
+    ...keepOnNetworkError,
     mutationFn: async (v: {
       date: Date | string;
       slot: MealSlot;
@@ -99,6 +109,7 @@ export function registerOfflineMutationDefaults(qc: QueryClient) {
   });
 
   qc.setMutationDefaults(MUTATION_KEYS.planFood, {
+    ...keepOnNetworkError,
     mutationFn: async (v: {
       date: Date | string;
       slot: MealSlot;
@@ -121,6 +132,7 @@ export function registerOfflineMutationDefaults(qc: QueryClient) {
   });
 
   qc.setMutationDefaults(MUTATION_KEYS.planQuick, {
+    ...keepOnNetworkError,
     mutationFn: async (v: {
       date: Date | string;
       slot: MealSlot;
@@ -150,6 +162,7 @@ export function registerOfflineMutationDefaults(qc: QueryClient) {
   });
 
   qc.setMutationDefaults(MUTATION_KEYS.updateMealPlanEntry, {
+    ...keepOnNetworkError,
     mutationFn: async (v: { id: string } & MealPlanEntryPatch) => {
       const { id, ...patch } = v;
       const entry = findEntryInCache(qc, id);
@@ -170,6 +183,7 @@ export function registerOfflineMutationDefaults(qc: QueryClient) {
   });
 
   qc.setMutationDefaults(MUTATION_KEYS.removeMealPlanEntry, {
+    ...keepOnNetworkError,
     mutationFn: async (id: string) => {
       const entry = findEntryInCache(qc, id);
       await deleteMealPlanEntry(id);
@@ -178,6 +192,7 @@ export function registerOfflineMutationDefaults(qc: QueryClient) {
   });
 
   qc.setMutationDefaults(MUTATION_KEYS.toggleShoppingItem, {
+    ...keepOnNetworkError,
     mutationFn: (v: { id: string; checked: boolean }) => setItemChecked(v.id, v.checked),
   });
 }

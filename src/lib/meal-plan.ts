@@ -366,6 +366,9 @@ export const mealPlanQuery = (weekStart: Date) => {
   return queryOptions({
     queryKey: ["meal-plan", from],
     queryFn: () => fetchMealPlan(from, to),
+    // Nach dem Wiedererreichen der NAS erst die vorgemerkten Änderungen senden, dann neu laden
+    // (macht offline-persistence.ts) – sonst überschreibt der Server vorläufige Einträge.
+    refetchOnReconnect: false,
   });
 };
 

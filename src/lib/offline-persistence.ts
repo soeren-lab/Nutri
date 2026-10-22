@@ -2,34 +2,47 @@ import { get, set, del } from "idb-keyval";
 import { persistQueryClient } from "@tanstack/query-persist-client-core";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { onlineManager, type Query, type QueryClient, type QueryKey } from "@tanstack/react-query";
+import { markApiUp } from "@/lib/api-reachability";
+import { probeApi } from "@/lib/db-client";
 import { warmOfflineCache } from "@/lib/offline-sync";
 
 /**
- * Diese Bereiche werden lokal (IndexedDB) gecacht/wiederhergestellt und
- * offline geschrieben – Rezepte, Zutaten, Planer, Einkaufsliste sowie die
- * signierten Bild-URLs dazu (siehe getSignedImageUrl/getIngredientSignedUrl:
- * ohne Persistenz verschwinden Rezept-/Zutatenbilder nach einem Neustart
- * offline komplett, auch wenn sie vorher schon geladen waren). `favorites`
- * und `brands` sind mit dabei, weil Rezept-Detail- bzw. Zutaten-Seiten sie
- * über useSuspenseQuery zwingend brauchen – ohne Persistenz hängt die ganze
- * Seite offline unauflösbar fest, sobald sie diese Session noch nicht
- * geladen wurden. Alles andere (Freunde, Punkte, Community, ...) bleibt
- * bewusst rein im Speicher/online-only.
+ * Lokal (IndexedDB) gesichert wird ALLES, was die App geladen hat – Rezepte, Zutaten, Planer
+ * (inkl. früherer Wochen), Einkaufsliste, Profil, Ziele, Fortschritt, Gewicht, Teller usw. –, damit
+ * die App ohne Verbindung zur NAS vollständig nutzbar bleibt und nach einem Neustart sofort den
+ * letzten bekannten Stand zeigt. Ausgenommen sind nur Dinge, die ohne Verbindung keinen Sinn haben
+ * oder sich ständig ändern (Suche in Open Food Facts, Community-Inhalte).
+ * Auch Seiten mit useSuspenseQuery (z. B. Rezept-Detail) brauchen die Daten lokal, sonst hängen sie
+ * offline unauflösbar fest.
  */
-const OFFLINE_QUERY_PREFIXES: QueryKey[] = [
-  ["recipes"],
-  ["ingredients_master"],
-  ["meal-plan"],
-  ["shopping-list"],
-  ["signed-image"],
-  ["signed-ingredient-image"],
-  ["favorites"],
-  ["brands"],
+const OFFLINE_EXCLUDED_PREFIXES: QueryKey[] = [
+  ["off-search"],
+  ["community-recipes"],
+  ["community-ingredients"],
+  ["user-search"],
 ];
 
 function isOfflineScoped(queryKey: QueryKey): boolean {
-  return OFFLINE_QUERY_PREFIXES.some((prefix) => prefix.every((part, i) => queryKey[i] === part));
+  return !OFFLINE_EXCLUDED_PREFIXES.some((prefix) =>
+    prefix.every((part, i) => queryKey[i] === part),
+  );
 }
+
+/** Nach dem Wiedererreichen der NAS neu laden, was offline gesichert wurde (nicht Community & Co.). */
+const SYNC_AFTER_RECONNECT_PREFIXES: QueryKey[] = [
+  ["recipes"],
+  ["ingredients_master"],
+  ["meal-plan"],
+  ["batch-cook-week"],
+  ["shopping-list"],
+  ["user-profile"],
+  ["target-history"],
+  ["user-plates"],
+  ["quick-entry-templates"],
+  ["body-measurements"],
+  ["user-points"],
+  ["credits-balance"],
+];
 
 /**
  * Richtet Offline-Persistenz für die oben gelisteten Bereiche ein:
@@ -74,7 +87,7 @@ export function setupOfflinePersistence(queryClient: QueryClient): Promise<void>
   });
 
   function syncOfflineDomain() {
-    for (const prefix of OFFLINE_QUERY_PREFIXES) {
+    for (const prefix of SYNC_AFTER_RECONNECT_PREFIXES) {
       void queryClient.invalidateQueries({ queryKey: prefix });
     }
   }
@@ -96,7 +109,10 @@ export function setupOfflinePersistence(queryClient: QueryClient): Promise<void>
     });
   }
 
-  void restored.then(() => {
+  void restored.then(async () => {
+    // Beim Start prüfen, ob die NAS überhaupt antwortet – sonst würden Abfragen und Änderungen erst
+    // nach dem ersten Fehlschlag pausiert.
+    if (onlineManager.isOnline() && !(await probeApi())) markApiUp(false);
     if (onlineManager.isOnline()) {
       void queryClient.resumePausedMutations().then(syncOfflineDomain);
       warmCache();

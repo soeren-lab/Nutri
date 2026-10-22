@@ -1,31 +1,25 @@
-import { onlineManager } from "@tanstack/react-query";
 import { Network } from "@capacitor/network";
 import { isNativeApp } from "@/lib/platform";
+import { setOsOnline, takeOverOnlineManager } from "@/lib/api-reachability";
 
 /**
- * `navigator.onLine`/die window-online-offline-Events, auf die TanStack
- * Querys onlineManager standardmäßig hört, sind in der Android-WebView
- * unzuverlässig – sie melden teils "online", obwohl gar keine echte
- * Internetverbindung besteht (nur ein Netzwerk-Interface ist aktiv). Dadurch
- * wird ein Fetch bei `networkMode: "online"` nicht sauber pausiert, sondern
- * tatsächlich versucht, schlägt mit einem echten Netzwerkfehler fehl und
- * lässt z. B. `useSuspenseQuery` (Rezept-Detailseite) mit einem harten Fehler
- * abstürzen statt auf bereits vorhandene Daten zurückzufallen.
+ * Liefert den Netzwerkstatus des Betriebssystems an api-reachability.ts (dort wird er mit der
+ * Erreichbarkeit der NAS zum "online"-Status der App kombiniert).
  *
- * Nativ (Capacitor) ersetzen wir die Quelle daher durch das Network-Plugin,
- * das den echten Verbindungsstatus des Betriebssystems liefert.
+ * `navigator.onLine` und die window-Events sind in der Android-WebView unzuverlässig; nativ
+ * kommt der Status deshalb aus dem Network-Plugin.
  */
 export async function setupNativeNetworkDetection(): Promise<void> {
-  if (!isNativeApp()) return;
+  takeOverOnlineManager();
 
-  const initial = await Network.getStatus();
-  onlineManager.setEventListener((setOnline) => {
-    setOnline(initial.connected);
-    const handle = Network.addListener("networkStatusChange", (status) => {
-      setOnline(status.connected);
-    });
-    return () => {
-      void handle.then((h) => h.remove());
-    };
-  });
+  if (isNativeApp()) {
+    const initial = await Network.getStatus();
+    setOsOnline(initial.connected);
+    void Network.addListener("networkStatusChange", (status) => setOsOnline(status.connected));
+    return;
+  }
+
+  setOsOnline(typeof navigator === "undefined" ? true : navigator.onLine);
+  window.addEventListener("online", () => setOsOnline(true));
+  window.addEventListener("offline", () => setOsOnline(false));
 }

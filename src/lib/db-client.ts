@@ -3,8 +3,9 @@
  *
  * Bietet die gleiche Aufrufsyntax wie zuvor (`from().select().eq()…`, `rpc()`, `auth.*`,
  * `storage.from()`), damit die Fachlogik in src/lib und src/components unverändert bleibt.
- * Alle Netzwerkfehler werden als `{ data: null, error }` zurückgegeben (nie als leerer Bildschirm);
- * zusätzlich feuert `window` das Ereignis "api-unreachable", worauf die App ein Banner zeigt.
+ * Alle Netzwerkfehler werden als `{ data: null, error }` mit `code: "network"` zurückgegeben (nie
+ * als leerer Bildschirm). Zusätzlich meldet jeder Aufruf an api-reachability.ts, ob die NAS
+ * antwortet; daraus entsteht der "online"-Status der App (Offline-Banner, Pausieren von Änderungen).
  */
 
 export type ApiError = { message: string; code?: string; details?: unknown; name?: string };
@@ -33,6 +34,8 @@ type AuthEvent =
   | "SIGNED_OUT"
   | "TOKEN_REFRESHED"
   | "USER_UPDATED";
+
+import { markApiUp, setApiProbe } from "@/lib/api-reachability";
 
 export const UNREACHABLE_MESSAGE =
   "Der Server ist nicht erreichbar. Bist du mit dem Heimnetz (WLAN) oder Tailscale verbunden?";
@@ -126,6 +129,36 @@ export function resolveApiBase(force = false): Promise<string> {
   return probing;
 }
 
+/** True bei Fehlern, die nur heißen "NAS gerade nicht erreichbar" (kein Grund, eine Änderung zu verwerfen). */
+export function isNetworkError(e: unknown): boolean {
+  if (!e || typeof e !== "object") return false;
+  const err = e as { code?: unknown; message?: unknown };
+  return err.code === "network" || err.message === UNREACHABLE_MESSAGE;
+}
+
+/** Antwortet die NAS gerade? (Prüft alle Adressen, merkt sich die erste erreichbare.) */
+export async function probeApi(): Promise<boolean> {
+  const bases = configuredBases();
+  if (!bases.length) return false;
+  const results = await Promise.all(
+    bases.map((b) =>
+      fetch(`${b}/health`, { signal: AbortSignal.timeout(2500) })
+        .then((r) => r.ok)
+        .catch(() => false),
+    ),
+  );
+  const idx = results.indexOf(true);
+  if (idx < 0) return false;
+  activeBase = bases[idx];
+  try {
+    localStorage.setItem(BASE_KEY, activeBase);
+  } catch {
+    /* Speicher gesperrt */
+  }
+  return true;
+}
+setApiProbe(probeApi);
+
 const STORAGE_KEY = "nutri.auth.v1";
 
 function readStored(): Session | null {
@@ -168,31 +201,48 @@ function setSession(s: Session | null, event: AuthEvent) {
 
 let refreshing: Promise<Session | null> | null = null;
 
+// Diese Anfragen dürfen lange dauern (KI-Auswertung, PDF, Datei-Upload) und haben kein Zeitlimit.
+const NO_TIMEOUT_PREFIXES = ["/ai/", "/pdf/", "/storage/"];
+const REQUEST_TIMEOUT_MS = 30000;
+
+/** Darf eine fehlgeschlagene Anfrage gefahrlos mit anderer Adresse wiederholt werden (nur Lesen)? */
+function isSafeToRepeat(path: string, init: RequestInit): boolean {
+  const method = (init.method ?? "GET").toUpperCase();
+  if (method === "GET" || method === "HEAD") return true;
+  return (
+    path === "/rest/query" && typeof init.body === "string" && init.body.includes('"op":"select"')
+  );
+}
+
 async function rawFetch(path: string, init: RequestInit = {}): Promise<Response | null> {
   const multi = configuredBases().length > 1;
+  const withTimeout = (): RequestInit =>
+    init.signal || NO_TIMEOUT_PREFIXES.some((p) => path.startsWith(p))
+      ? init
+      : { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) };
   try {
     if (multi && !baseVerified) await verifyBase();
-    return await fetch(`${apiBase()}${path}`, init);
+    const res = await fetch(`${apiBase()}${path}`, withTimeout());
+    markApiUp(true);
+    return res;
   } catch (e) {
     if (e instanceof Error && e.message.startsWith("VITE_API_URL")) throw e;
-    // Anfragen, die Geld kosten, werden nie automatisch wiederholt (sonst evtl. doppelt abgebucht).
-    if (multi && !path.startsWith("/ai/")) {
-      // Netzwechsel (WLAN <-> Mobilfunk/Tailscale): Adresse neu wählen, einmal wiederholen.
+    // Netzwechsel (WLAN <-> Mobilfunk/Tailscale): Adresse neu wählen und einmal wiederholen – aber
+    // nur Lese-Anfragen. Ein Schreibvorgang könnte die NAS schon erreicht haben (doppelt anlegen).
+    if (multi && isSafeToRepeat(path, init)) {
       const before = activeBase;
       await resolveApiBase(true);
       if (activeBase && activeBase !== before) {
         try {
-          return await fetch(`${apiBase()}${path}`, init);
+          const res = await fetch(`${apiBase()}${path}`, withTimeout());
+          markApiUp(true);
+          return res;
         } catch {
           /* weiter zur Fehlermeldung */
         }
       }
     }
-    try {
-      window.dispatchEvent(new CustomEvent("api-unreachable"));
-    } catch {
-      /* SSR */
-    }
+    markApiUp(false);
     return null;
   }
 }
