@@ -4,7 +4,7 @@ import {
   CalendarDays,
   Carrot,
   Compass,
-  ShoppingCart,
+  Refrigerator,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ export type TabItem = {
 
 /**
  * Reihenfolge von links nach rechts: erst die Bausteine zum Planen (Rezepte, Zutaten), in der
- * Mitte der Planer (Startseite), dann was daraus folgt (Einkauf), ganz rechts der Online-Teil
+ * Mitte der Planer (Startseite), dann was daraus folgt (Kühlschrank mit Einkauf als Unter-Tab), ganz rechts der Online-Teil
  * (Entdecken). Das Profil bleibt bewusst oben im Header. Die Wisch-Reihenfolge steht in
  * routes/_authenticated/route.tsx (SWIPE_TAB_ORDER) und muss dazu passen.
  */
@@ -27,7 +27,7 @@ export const TABS: TabItem[] = [
   { label: "Rezepte", icon: BookOpen, to: "/recipes" },
   { label: "Zutaten", icon: Carrot, to: "/ingredients" },
   { label: "Planer", icon: CalendarDays, to: "/planner", primary: true },
-  { label: "Einkauf", icon: ShoppingCart, to: "/shopping-list" },
+  { label: "Kühlschrank", icon: Refrigerator, to: "/fridge" },
   { label: "Entdecken", icon: Compass, to: "/discover" },
 ];
 

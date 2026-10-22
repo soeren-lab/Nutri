@@ -35,6 +35,7 @@ const SYNC_AFTER_RECONNECT_PREFIXES: QueryKey[] = [
   ["meal-plan"],
   ["batch-cook-week"],
   ["shopping-list"],
+  ["fridge"],
   ["user-profile"],
   ["target-history"],
   ["user-plates"],

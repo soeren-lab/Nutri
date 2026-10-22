@@ -855,6 +855,113 @@
    }
   ]
  },
+ "fridge_items": {
+  "cols": {
+   "id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": {
+     "k": "uuid"
+    }
+   },
+   "user_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "ingredient_master_id": {
+    "t": "uuid",
+    "my": "CHAR(36)",
+    "nn": true,
+    "d": null
+   },
+   "amount": {
+    "t": "num",
+    "my": "DOUBLE",
+    "nn": true,
+    "d": null
+   },
+   "unit": {
+    "t": "text",
+    "my": "VARCHAR(16)",
+    "nn": true,
+    "d": null
+   },
+   "location": {
+    "t": "text",
+    "my": "VARCHAR(16)",
+    "nn": true,
+    "d": {
+     "k": "lit",
+     "v": "fridge"
+    }
+   },
+   "expires_at": {
+    "t": "date",
+    "my": "DATE",
+    "nn": false,
+    "d": null
+   },
+   "created_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   },
+   "updated_at": {
+    "t": "ts",
+    "my": "DATETIME(3)",
+    "nn": true,
+    "d": {
+     "k": "now"
+    }
+   }
+  },
+  "order": [
+   "id",
+   "user_id",
+   "ingredient_master_id",
+   "amount",
+   "unit",
+   "location",
+   "expires_at",
+   "created_at",
+   "updated_at"
+  ],
+  "pk": [
+   "id"
+  ],
+  "unique": [],
+  "indexes": [
+   {
+    "name": "fridge_items_user_idx",
+    "cols": [
+     "user_id",
+     "location"
+    ]
+   }
+  ],
+  "fks": [
+   {
+    "name": "fridge_items_ingredient_master_id_fkey",
+    "col": "ingredient_master_id",
+    "ref": "ingredients_master",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   },
+   {
+    "name": "fridge_items_user_id_fkey",
+    "col": "user_id",
+    "ref": "users",
+    "refcol": "id",
+    "onDelete": "CASCADE"
+   }
+  ]
+ },
  "friend_requests": {
   "cols": {
    "id": {

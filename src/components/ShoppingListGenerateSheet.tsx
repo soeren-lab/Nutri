@@ -57,7 +57,7 @@ export function ShoppingListGenerateSheet({
       } else {
         toast.success(`${count} Zutaten übernommen`);
         onOpenChange(false);
-        void navigate({ to: "/shopping-list" });
+        void navigate({ to: "/fridge", search: { tab: "shopping" } });
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fehler beim Erstellen");

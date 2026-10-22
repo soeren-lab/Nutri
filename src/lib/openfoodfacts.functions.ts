@@ -21,6 +21,8 @@ export type OffProduct = {
   sugar_g: number | null;
   /** "g" oder "ml" – Basis der Nährwerte je 100 Einheiten. */
   unit: string;
+  /** Packungsgröße in g bzw. ml (aus "500 g", "1 l", "250 ml"), sonst null. */
+  packAmount: number | null;
 };
 
 const FIELDS = [
@@ -64,6 +66,7 @@ function normalize(raw: Record<string, unknown>): OffProduct | null {
 
   const quantity = typeof raw["quantity"] === "string" ? raw["quantity"] : "";
   const unit = /\bml\b|\bl\b/i.test(quantity) ? "ml" : "g";
+  const packAmount = parsePackAmount(quantity);
 
   return {
     id: code,
@@ -80,7 +83,22 @@ function normalize(raw: Record<string, unknown>): OffProduct | null {
     fiber_g: num(nutriments["fiber_100g"]),
     sugar_g: num(nutriments["sugars_100g"]),
     unit,
+    packAmount,
   };
+}
+
+/** "500 g" -> 500, "1,5 kg" -> 1500, "1 l" -> 1000, "33 cl" -> 330, "6 x 125 g" -> 750. */
+export function parsePackAmount(quantity: string): number | null {
+  const m = quantity
+    .toLowerCase()
+    .replace(",", ".")
+    .match(/(?:(\d+)\s*[x×]\s*)?(\d+(?:\.\d+)?)\s*(kg|g|ml|cl|l)\b/);
+  if (!m) return null;
+  const count = m[1] ? Number(m[1]) : 1;
+  const value = Number(m[2]);
+  const factor = { kg: 1000, g: 1, l: 1000, cl: 10, ml: 1 }[m[3] as "kg" | "g" | "l" | "cl" | "ml"];
+  const total = count * value * factor;
+  return Number.isFinite(total) && total > 0 ? Math.round(total) : null;
 }
 
 /** Einzelprodukt per Barcode aus Open Food Facts (auch ohne Nährwerte). */

@@ -436,6 +436,50 @@ export type Database = {
           },
         ];
       };
+      fridge_items: {
+        Row: {
+          amount: number;
+          created_at: string;
+          expires_at: string | null;
+          id: string;
+          ingredient_master_id: string;
+          location: string;
+          unit: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          ingredient_master_id: string;
+          location?: string;
+          unit: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          ingredient_master_id?: string;
+          location?: string;
+          unit?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fridge_items_ingredient_master_id_fkey";
+            columns: ["ingredient_master_id"];
+            isOneToOne: false;
+            referencedRelation: "ingredients_master";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ingredients_master: {
         Row: {
           archived: boolean;

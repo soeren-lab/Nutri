@@ -19,6 +19,7 @@ import { Route as LegalAgbRouteImport } from './routes/legal.agb'
 import { Route as AuthenticatedShoppingListRouteImport } from './routes/_authenticated/shopping-list'
 import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated/planner'
 import { Route as AuthenticatedIngredientsRouteImport } from './routes/_authenticated/ingredients'
+import { Route as AuthenticatedFridgeRouteImport } from './routes/_authenticated/fridge'
 import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticated/discover'
 import { Route as AuthenticatedRecipesIndexRouteImport } from './routes/_authenticated/recipes.index'
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile.index'
@@ -111,6 +112,11 @@ const AuthenticatedIngredientsRoute =
     path: '/ingredients',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFridgeRoute = AuthenticatedFridgeRouteImport.update({
+  id: '/fridge',
+  path: '/fridge',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDiscoverRoute = AuthenticatedDiscoverRouteImport.update({
   id: '/discover',
   path: '/discover',
@@ -353,6 +359,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/discover': typeof AuthenticatedDiscoverRoute
+  '/fridge': typeof AuthenticatedFridgeRoute
   '/ingredients': typeof AuthenticatedIngredientsRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/shopping-list': typeof AuthenticatedShoppingListRoute
@@ -404,6 +411,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/discover': typeof AuthenticatedDiscoverRoute
+  '/fridge': typeof AuthenticatedFridgeRoute
   '/ingredients': typeof AuthenticatedIngredientsRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/shopping-list': typeof AuthenticatedShoppingListRoute
@@ -457,6 +465,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/discover': typeof AuthenticatedDiscoverRoute
+  '/_authenticated/fridge': typeof AuthenticatedFridgeRoute
   '/_authenticated/ingredients': typeof AuthenticatedIngredientsRoute
   '/_authenticated/planner': typeof AuthenticatedPlannerRoute
   '/_authenticated/shopping-list': typeof AuthenticatedShoppingListRoute
@@ -510,6 +519,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/discover'
+    | '/fridge'
     | '/ingredients'
     | '/planner'
     | '/shopping-list'
@@ -561,6 +571,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/discover'
+    | '/fridge'
     | '/ingredients'
     | '/planner'
     | '/shopping-list'
@@ -613,6 +624,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/discover'
+    | '/_authenticated/fridge'
     | '/_authenticated/ingredients'
     | '/_authenticated/planner'
     | '/_authenticated/shopping-list'
@@ -741,6 +753,13 @@ declare module '@tanstack/react-router' {
       path: '/ingredients'
       fullPath: '/ingredients'
       preLoaderRoute: typeof AuthenticatedIngredientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/fridge': {
+      id: '/_authenticated/fridge'
+      path: '/fridge'
+      fullPath: '/fridge'
+      preLoaderRoute: typeof AuthenticatedFridgeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/discover': {
@@ -1028,6 +1047,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiscoverRoute: typeof AuthenticatedDiscoverRoute
+  AuthenticatedFridgeRoute: typeof AuthenticatedFridgeRoute
   AuthenticatedIngredientsRoute: typeof AuthenticatedIngredientsRoute
   AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
   AuthenticatedShoppingListRoute: typeof AuthenticatedShoppingListRoute
@@ -1073,6 +1093,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDiscoverRoute: AuthenticatedDiscoverRoute,
+  AuthenticatedFridgeRoute: AuthenticatedFridgeRoute,
   AuthenticatedIngredientsRoute: AuthenticatedIngredientsRoute,
   AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
   AuthenticatedShoppingListRoute: AuthenticatedShoppingListRoute,

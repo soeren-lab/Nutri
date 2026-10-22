@@ -70,6 +70,7 @@ const policies = {
   ai_suggestion_cache: own(),
   body_measurements: own(),
   favorites: own(),
+  fridge_items: own(),
   meal_plan_entries: own(),
   quick_entry_templates: own(),
   season_points: own(),

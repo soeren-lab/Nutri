@@ -30,7 +30,7 @@ const SWIPE_TAB_ORDER = [
   "/recipes",
   "/ingredients",
   "/planner",
-  "/shopping-list",
+  "/fridge",
   "/discover",
   "/profile",
 ];

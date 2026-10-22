@@ -11,6 +11,7 @@ import { mapWithConcurrency } from "@/lib/concurrency";
 import { addDays, mealPlanQuery, startOfWeek } from "@/lib/meal-plan";
 import { batchCookWeekQuery } from "@/lib/batch";
 import { shoppingListQuery } from "@/lib/shopping-list";
+import { fridgeQuery } from "@/lib/fridge";
 import { userProfileQuery } from "@/lib/nutritionTargets";
 import { targetHistoryQuery } from "@/lib/targetHistory";
 import { platesQuery } from "@/lib/plates";
@@ -118,6 +119,7 @@ export async function warmOfflineCache(queryClient: QueryClient): Promise<void> 
     () => queryClient.fetchQuery(platesQuery()),
     () => queryClient.fetchQuery(quickEntryTemplatesQuery()),
     () => queryClient.fetchQuery(shoppingListQuery()),
+    () => queryClient.fetchQuery(fridgeQuery()),
     () => queryClient.fetchQuery(bodyMeasurementsQuery()),
     () => queryClient.fetchQuery(userPointsQuery()),
     () => queryClient.fetchQuery(achievementsQuery()),

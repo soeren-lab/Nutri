@@ -52,6 +52,13 @@ Bekannte Schwachstellen, die wir bewusst später angehen:
   Seitenzahlen im Inhaltsverzeichnis (zweiter Durchlauf nötig), Kapitel nach Kategorien,
   Feinschliff am Design (alles im Block `DESIGN`).
 
+- **Digitaler Kühlschrank (in Arbeit):** erste Stufe = Bestand per Barcode/Schnellauswahl, unbekannte
+  Produkte müssen sofort als Zutat angelegt werden. Spätere Stufen, schrittweise:
+  Einkaufsliste zieht den Bestand ab (nur Fehlendes steht drauf), Planer/Rezepte verbrauchen Bestand
+  (Gramm-Abzug, angebrochene Packung), Ablauf-Warnungen/Push, Rezeptvorschläge aus dem Bestand,
+  Foto-Scan für Obst/Gemüse und Kühlschrankfoto, Dauer-Scanmodus beim Ausräumen,
+  Haushalt teilen (mehrere Nutzer, ein Kühlschrank).
+
 ## Nacharbeit nach dem NAS-Umzug
 
 Diese Funktionen liefen früher über den Cloudflare-Worker mit Admin-Zugriff und sind noch nicht
