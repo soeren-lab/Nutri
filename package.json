@@ -1,5 +1,6 @@
 {
   "name": "tanstack_start_ts",
+  "version": "1.1.0",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -13,7 +14,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "generate-icons": "node scripts/generate-app-icons.mjs",
-    "build-capacitor-shell": "node scripts/build-capacitor-shell.mjs"
+    "build-capacitor-shell": "node scripts/build-capacitor-shell.mjs",
+    "apk": "node scripts/build-apk.mjs"
   },
   "dependencies": {
     "@capacitor-community/speech-recognition": "^7.0.1",

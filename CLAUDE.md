@@ -20,6 +20,10 @@ A German-language recipe/meal-planning PWA ("Rezepte") built with TanStack Start
 
 Package manager is Bun (`bun.lock`, `bunfig.toml`). `bunfig.toml` enforces a 24h supply-chain guard (`minimumReleaseAge`) on new dependency versions — only a short allowlist of `@lovable.dev/*` packages bypasses it; adding to that list needs explicit user confirmation.
 
+## Versionierung und APK
+
+Die App-Version steht nur in `package.json` (`"version"`, Schema MAJOR.MINOR.PATCH). Claude ist für die Versionierung zuständig und erhöht sie vor jedem APK-Build: PATCH für Fehlerbehebungen und Kleinigkeiten, MINOR für neue Funktionen (1.1.0 = Kühlschrank), MAJOR nur bei großem Umbau. Die gewählte Version wird dem Nutzer genannt. `bun run apk` übernimmt sie nach `android/app/build.gradle` (versionName, versionCode = MAJOR*10000 + MINOR*100 + PATCH), baut die Debug-APK und legt eine Kopie `NUTRI-<version>.apk` in `Downloads\Nutri-Projekt`. Installiert wird danach mit `adb install -r` aus `android/app/build/outputs/apk/debug/app-debug.apk`.
+
 ## Architecture
 
 ### Stack
