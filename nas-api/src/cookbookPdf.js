@@ -7,36 +7,14 @@
  * Sicherheit: Das HTML stammt vom Client, daher läuft Chromium ohne JavaScript und ohne
  * Netzwerk (nur data:-URLs), und Bilder werden nur über storage://-Verweise mit canRead() geladen.
  */
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { ApiError } from "./query.js";
 import { BUCKETS, canRead, getObject } from "./storage.js";
+import { renderHtmlToPdf } from "./htmlToPdf.js";
 
-const FONT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "assets", "fonts");
 const MAX_HTML = 8_000_000;
 const MAX_IMAGE_PX = 1400; // A4 mit rund 170 dpi
 const JPEG_QUALITY = 78;
 const BLANK = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
-
-let fontCssCache = null;
-function fontCss() {
-  if (fontCssCache) return fontCssCache;
-  const face = (family, file, weight, style = "normal") => {
-    const b64 = readFileSync(join(FONT_DIR, file)).toString("base64");
-    return `@font-face{font-family:"${family}";src:url(data:font/woff2;base64,${b64}) format("woff2");font-weight:${weight};font-style:${style};}`;
-  };
-  fontCssCache = [
-    face("Cookbook Serif", "lora-latin-400-normal.woff2", 400),
-    face("Cookbook Serif", "lora-latin-400-italic.woff2", 400, "italic"),
-    face("Cookbook Serif", "lora-latin-700-normal.woff2", "600 700"),
-    face("Cookbook Serif", "lora-latin-700-italic.woff2", "600 700", "italic"),
-    face("Cookbook Sans", "sf-pro-display-regular.woff2", 400),
-    face("Cookbook Sans", "sf-pro-display-medium.woff2", 500),
-    face("Cookbook Sans", "sf-pro-display-bold.woff2", "600 700"),
-  ].join("");
-  return fontCssCache;
-}
 
 /** Findet alle storage://-Verweise und ersetzt sie durch verkleinerte data:-URIs. */
 export async function inlineImages(html, uid, loadImage = defaultLoadImage) {
@@ -73,49 +51,13 @@ async function defaultLoadImage(ref, uid) {
   return `data:image/jpeg;base64,${out.toString("base64")}`;
 }
 
-// Immer nur ein PDF gleichzeitig: Chromium braucht viel Arbeitsspeicher auf der NAS.
-let queue = Promise.resolve();
-function exclusive(fn) {
-  const run = queue.then(fn, fn);
-  queue = run.catch(() => {});
-  return run;
-}
-
-export function renderHtmlToPdf(html) {
-  return exclusive(async () => {
-    const { default: puppeteer } = await import("puppeteer-core");
-    const executablePath =
-      process.env.CHROME_PATH || process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium";
-    const browser = await puppeteer.launch({
-      executablePath,
-      headless: true,
-      args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--font-render-hinting=none"],
-    });
-    try {
-      const page = await browser.newPage();
-      await page.setJavaScriptEnabled(false);
-      await page.setRequestInterception(true);
-      page.on("request", (r) => {
-        const u = r.url();
-        if (u.startsWith("data:") || u === "about:blank") r.continue();
-        else r.abort();
-      });
-      await page.setContent(html, { waitUntil: "load", timeout: 120000 });
-      const pdf = await page.pdf({ preferCSSPageSize: true, printBackground: true, timeout: 120000 });
-      return Buffer.from(pdf);
-    } finally {
-      await browser.close().catch(() => {});
-    }
-  });
-}
-
 export async function renderCookbookPdf(uid, html) {
   if (typeof html !== "string" || html.length < 50) throw new ApiError("Kochbuch-Inhalt fehlt", "400");
   if (html.length > MAX_HTML) throw new ApiError("Das Kochbuch ist zu groß für den Export", "413");
   if (!html.includes("/*FONTS*/")) throw new ApiError("Ungültige Kochbuch-Vorlage", "400");
   const withImages = await inlineImages(html, uid);
   try {
-    return await renderHtmlToPdf(withImages.replace("/*FONTS*/", fontCss()));
+    return await renderHtmlToPdf(withImages);
   } catch (e) {
     console.error("[cookbook-pdf] Rendern fehlgeschlagen", e?.stack || e?.message);
     const detail = String(e?.message ?? "").replace(/\s+/g, " ").slice(0, 300);

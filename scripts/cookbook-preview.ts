@@ -1,17 +1,18 @@
 /**
- * Vorschau der Kochbuch-Vorlage: baut mit Beispieldaten ein HTML und lässt Chrome/Edge daraus
- * ein PDF drucken. Aufruf (im Projektordner):
+ * Vorschau der Kochbuch-Vorlage: baut mit Beispieldaten ein HTML und druckt es mit demselben
+ * Renderer wie die NAS (nas-api/src/htmlToPdf.js, inkl. Umbruch-Messung) zum PDF. Aufruf
+ * (im Projektordner, einmal vorher `npm install` in nas-api):
  *
  *   bun scripts/cookbook-preview.ts [Ausgabeordner] [Bild1.jpg Bild2.jpg …]
  *
  * Ohne Bilder zeigt die Vorschau die Seiten ohne Fotos. Chrome wird automatisch gesucht
  * (oder per CHROME_PATH angeben).
  */
-import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import { renderCookbookHtml, type CookbookDoc } from "../src/lib/cookbook-html";
+// @ts-expect-error reine JS-Datei der NAS-API
+import { renderHtmlToPdf } from "../nas-api/src/htmlToPdf.js";
 
 const out = resolve(process.argv[2] ?? "scratchpad/cookbook-preview");
 const images = process.argv.slice(3).map((f) => {
@@ -82,6 +83,78 @@ const doc: CookbookDoc = {
       nutrition: { kcal: 310, fat_g: 3.2, carbs_g: 38, fiber_g: 5.5, protein_g: 31 },
     },
     {
+      title: "Waffeln",
+      description: null,
+      image: img(1),
+      categories: ["Dessert"],
+      totalMinutes: 18,
+      servings: 4,
+      sections: [
+        {
+          title: "Grundzutaten",
+          ingredients: [
+            ["2 g", "Backpulver"],
+            ["100 ml", "Halbfette fettarme Milch"],
+            ["20 g", "Erythrit"],
+            ["100 g", "Multikorn Flocken Zart"],
+            ["1 Stück", "Ei"],
+            ["9 g", "Chunky Flavour Vanilla"],
+            ["1 ml", "Rapsöl"],
+            ["1 Prise", "Jod Salz"],
+          ].map(([amount, name]) => ({ amount, name })),
+        },
+        {
+          title: "Basis",
+          ingredients: [
+            ["200 g", "Skyr Natur"],
+            ["200 g", "Speisequark Magerstufe"],
+          ].map(([amount, name]) => ({ amount, name })),
+        },
+        {
+          title: "Topping",
+          ingredients: [
+            ["5 g", "Puderzucker"],
+            ["6 g", "Puderzucker"],
+          ].map(([amount, name]) => ({ amount, name })),
+        },
+      ],
+      steps: ["Flocken zu mehl mixen"],
+      nutrition: { kcal: 130, fat_g: 3.3, carbs_g: 16.8, fiber_g: 4.4, protein_g: 5.3 },
+    },
+    {
+      title: "Riesen-Eintopf für die ganze Familie",
+      description: "Stress-Test: sehr viele Zutaten und sehr ausführliche Schritte.",
+      image: img(2),
+      categories: ["Hauptgericht"],
+      totalMinutes: 180,
+      servings: 12,
+      sections: [
+        {
+          title: "Brühe",
+          ingredients: Array.from({ length: 14 }, (_, i) => ({
+            amount: `${(i + 1) * 10} g`,
+            name: `Brühezutat Nummer ${i + 1} mit etwas längerem Namen`,
+          })),
+        },
+        {
+          title: "Einlage",
+          ingredients: Array.from({ length: 22 }, (_, i) => ({
+            amount: `${i + 1} Stück`,
+            name: `Einlage ${i + 1}`,
+          })),
+        },
+      ],
+      steps: Array.from(
+        { length: 14 },
+        (_, i) =>
+          `Schritt ${i + 1}: ` +
+          "Ein sehr ausführlicher Beschreibungstext, der über viele Zeilen läuft und zeigt, dass lange Zubereitungen sauber zwischen den Zeilen umbrechen, ohne dass ein Schritt allein am Seitenende hängen bleibt. ".repeat(
+            3,
+          ),
+      ),
+      nutrition: { kcal: 610, fat_g: 22, carbs_g: 62, fiber_g: 11, protein_g: 40 },
+    },
+    {
       title:
         "Chili con Carne – das große Meal-Prep-Rezept für die ganze Woche mit extra viel Gemüse",
       description: "Würzig, sättigend und perfekt zum Vorkochen.",
@@ -122,22 +195,6 @@ const doc: CookbookDoc = {
 };
 
 mkdirSync(out, { recursive: true });
-const htmlFile = resolve(out, "kochbuch.html");
-const pdfFile = resolve(out, "kochbuch.pdf");
-const fontDir = resolve("nas-api/assets/fonts");
-const face = (family: string, file: string, weight: string, style = "normal") =>
-  `@font-face{font-family:"${family}";src:url(data:font/woff2;base64,${readFileSync(resolve(fontDir, file)).toString("base64")}) format("woff2");font-weight:${weight};font-style:${style};}`;
-const fontCss = [
-  face("Cookbook Serif", "lora-latin-400-normal.woff2", "400"),
-  face("Cookbook Serif", "lora-latin-400-italic.woff2", "400", "italic"),
-  face("Cookbook Serif", "lora-latin-700-normal.woff2", "600 700"),
-  face("Cookbook Serif", "lora-latin-700-italic.woff2", "600 700", "italic"),
-  face("Cookbook Sans", "sf-pro-display-regular.woff2", "400"),
-  face("Cookbook Sans", "sf-pro-display-medium.woff2", "500"),
-  face("Cookbook Sans", "sf-pro-display-bold.woff2", "600 700"),
-].join("");
-writeFileSync(htmlFile, renderCookbookHtml(doc, { fontCss }));
-
 const candidates = [
   process.env.CHROME_PATH,
   "C:/Program Files/Google/Chrome/Application/chrome.exe",
@@ -149,17 +206,12 @@ const candidates = [
 ].filter(Boolean) as string[];
 const chrome = candidates.find((c) => existsSync(c));
 if (!chrome) throw new Error("Kein Chrome/Edge gefunden. Pfad per CHROME_PATH angeben.");
+process.env.CHROME_PATH = chrome;
 
-execFileSync(
-  chrome,
-  [
-    "--headless=new",
-    "--disable-gpu",
-    "--no-pdf-header-footer",
-    `--user-data-dir=${resolve(out, ".chrome-profile")}`,
-    `--print-to-pdf=${pdfFile}`,
-    pathToFileURL(htmlFile).href,
-  ],
-  { stdio: "ignore", timeout: 60000 },
-);
-console.log(`PDF: ${pdfFile}`);
+for (const layout of ["seite", "doppelseite"] as const) {
+  const html = renderCookbookHtml(doc, { layout });
+  const name = layout === "seite" ? "kochbuch" : "kochbuch-doppelseite";
+  writeFileSync(resolve(out, `${name}.html`), html);
+  writeFileSync(resolve(out, `${name}.pdf`), await renderHtmlToPdf(html));
+  console.log(`PDF: ${resolve(out, `${name}.pdf`)}`);
+}

@@ -2,7 +2,8 @@
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import sharp from "sharp";
-import { inlineImages, renderHtmlToPdf } from "../src/cookbookPdf.js";
+import { inlineImages } from "../src/cookbookPdf.js";
+import { renderHtmlToPdf } from "../src/htmlToPdf.js";
 
 const img = await sharp({ create: { width: 3000, height: 2000, channels: 3, background: "#b4532a" } }).jpeg().toBuffer();
 const loadImage = async (ref) => {
@@ -20,6 +21,6 @@ const inlined = await inlineImages(html, "u", loadImage);
 assert.ok(!inlined.includes("storage://"));
 assert.ok(inlined.includes("data:image/jpeg;base64,"));
 
-const pdf = await renderHtmlToPdf(inlined.replace("/*FONTS*/", ""));
+const pdf = await renderHtmlToPdf(inlined);
 assert.equal(pdf.subarray(0, 5).toString(), "%PDF-");
 console.log(`ok – PDF ${Math.round(pdf.length / 1024)} KB`);
