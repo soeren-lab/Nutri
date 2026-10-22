@@ -1,5 +1,5 @@
 import { get, set, del } from "idb-keyval";
-import { persistQueryClient } from "@tanstack/query-persist-client-core";
+import { persistQueryClient, persistQueryClientSave } from "@tanstack/query-persist-client-core";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { onlineManager, type Query, type QueryClient, type QueryKey } from "@tanstack/react-query";
 import { markApiUp } from "@/lib/api-reachability";
@@ -52,10 +52,29 @@ const SYNC_AFTER_RECONNECT_PREFIXES: QueryKey[] = [
  *   App-Neustart und werden automatisch gesendet, sobald wieder online.
  */
 export function setupOfflinePersistence(queryClient: QueryClient): Promise<void> {
-  const persister = createAsyncStoragePersister({
+  const storage = { getItem: get, setItem: set, removeItem: del };
+  const persister = createAsyncStoragePersister({ key: "nutri-offline-cache", storage });
+  // Zweiter Persister auf demselben Schlüssel, aber ohne Drosselung: für sofortiges Sichern, wenn
+  // keine Zeit bleibt (siehe flushNow).
+  const flushPersister = createAsyncStoragePersister({
     key: "nutri-offline-cache",
-    storage: { getItem: get, setItem: set, removeItem: del },
+    storage,
+    throttleTime: 0,
   });
+
+  const dehydrateOptions = {
+    // Es zählt, ob überhaupt schon einmal gute Daten da waren – nicht, ob
+    // der ZULETZT versuchte Fetch erfolgreich war. Ein einzelner Fehlschlag
+    // (z. B. offline) darf einen vorher erfolgreich persistierten "letzten
+    // bekannten Stand" nicht aus IndexedDB löschen, sonst geht er beim
+    // nächsten Speicherzyklus (der den gesamten Cache neu schreibt) verloren.
+    shouldDehydrateQuery: (query: Query) =>
+      isOfflineScoped(query.queryKey) && query.state.data !== undefined,
+    // Standardverhalten beibehalten: pausierte (offline ausgelöste)
+    // Mutationen werden unabhängig vom Query-Key persistiert – es gibt
+    // ohnehin nur wenige Schreibvorgänge in der App, das lohnt keine
+    // eigene Filterung nach mutationKey.
+  };
 
   // persistQueryClient gibt [unsubscribe, restorePromise] zurück. Der Aufrufer
   // (getRouter in router.tsx) wartet auf das Promise, BEVOR die App rendert –
@@ -71,20 +90,32 @@ export function setupOfflinePersistence(queryClient: QueryClient): Promise<void>
     // abdecken soll. Der Server bleibt ohnehin die Quelle der Wahrheit und
     // synchronisiert automatisch, sobald wieder online (warmOfflineCache).
     maxAge: Infinity,
-    dehydrateOptions: {
-      // Es zählt, ob überhaupt schon einmal gute Daten da waren – nicht, ob
-      // der ZULETZT versuchte Fetch erfolgreich war. Ein einzelner Fehlschlag
-      // (z. B. offline) darf einen vorher erfolgreich persistierten "letzten
-      // bekannten Stand" nicht aus IndexedDB löschen, sonst geht er beim
-      // nächsten Speicherzyklus (der den gesamten Cache neu schreibt) verloren.
-      shouldDehydrateQuery: (query: Query) =>
-        isOfflineScoped(query.queryKey) && query.state.data !== undefined,
-      // Standardverhalten beibehalten: pausierte (offline ausgelöste)
-      // Mutationen werden unabhängig vom Query-Key persistiert – es gibt
-      // ohnehin nur wenige Schreibvorgänge in der App, das lohnt keine
-      // eigene Filterung nach mutationKey.
-    },
+    dehydrateOptions,
   });
+
+  // Der normale Persister schreibt gedrosselt (bis zu 1 s verzögert). Eine offline vorgemerkte
+  // Änderung darf nicht davon abhängen: Wird die App direkt danach geschlossen, gesperrt oder von
+  // Android im Hintergrund eingefroren/beendet, wäre sie sonst verloren. Deshalb sofort sichern,
+  // sobald eine Änderung pausiert wird, und wenn die App in den Hintergrund geht.
+  let restoredDone = false;
+  void restored.then(() => {
+    restoredDone = true;
+  });
+  function flushNow() {
+    if (!restoredDone) return; // nie vor der Wiederherstellung schreiben (sonst wäre der Cache leer)
+    void persistQueryClientSave({ queryClient, persister: flushPersister, dehydrateOptions }).catch(
+      (err) => console.warn("[Offline] Sofort-Sichern fehlgeschlagen", err),
+    );
+  }
+  queryClient.getMutationCache().subscribe((event) => {
+    if (event.type === "updated" && event.mutation.state.isPaused) flushNow();
+  });
+  if (typeof document !== "undefined") {
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flushNow();
+    });
+    window.addEventListener("pagehide", flushNow);
+  }
 
   function syncOfflineDomain() {
     for (const prefix of SYNC_AFTER_RECONNECT_PREFIXES) {
