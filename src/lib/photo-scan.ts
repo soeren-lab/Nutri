@@ -1,6 +1,7 @@
 import { apiPost } from "@/lib/db-client";
 import type { ScanItem, ScanMaster } from "@/lib/photoNutrition";
 import type { PlateInfo } from "@/lib/plates";
+import { getPhotoScanModel } from "@/lib/photo-scan-model";
 
 export type AnalyzeInput = {
   /** Base64-JPEG ohne data:-Präfix. */
@@ -26,6 +27,7 @@ export async function analyzeMeal(input: AnalyzeInput): Promise<AnalyzeResult> {
   const { masters, ...rest } = input;
   const res = await apiPost<AnalyzeResult>("/ai/photo-scan", {
     ...rest,
+    model: getPhotoScanModel(),
     candidates: masters.slice(0, 400).map((m) => ({
       id: m.id,
       name: m.name.slice(0, 80),

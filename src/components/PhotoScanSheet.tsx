@@ -15,6 +15,7 @@ import { creditBalanceQuery, formatUsd } from "@/lib/credits";
 import { getLastPlateId, plateToInfo, setLastPlateId } from "@/lib/plates";
 import { resizeImage, type ResizedImage } from "@/lib/image-resize";
 import { analyzeMeal } from "@/lib/photo-scan";
+import { photoScanModelLabel, usePhotoScanModel } from "@/lib/photo-scan-model";
 import {
   computeScanTotals,
   macrosForAmount,
@@ -293,6 +294,7 @@ export function PhotoScanSheet({
   const qc = useQueryClient();
   const { data: balance } = useQuery(creditBalanceQuery(user?.id));
   const noCredit = balance != null && balance <= 0;
+  const scanModel = usePhotoScanModel();
   const [lastCost, setLastCost] = useState<{ cost: number; balance: number | null } | null>(null);
   const [plateId, setPlateId] = useState<string | null>(null);
   const [plateFormOpen, setPlateFormOpen] = useState(false);
@@ -455,7 +457,7 @@ export function PhotoScanSheet({
               {noCredit
                 ? "Guthaben muss aufgeladen werden."
                 : balance != null
-                  ? `Guthaben: ${formatUsd(balance)}`
+                  ? `Guthaben: ${formatUsd(balance)} · Modell: ${photoScanModelLabel(scanModel)}`
                   : "Guthaben wird geladen…"}
             </p>
             <div className="space-y-1.5">

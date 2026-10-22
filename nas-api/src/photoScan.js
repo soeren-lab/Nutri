@@ -27,6 +27,8 @@ export function getAnthropicKey() {
 
 const DAILY_LIMIT = 40;
 const DEFAULT_MODEL = "claude-sonnet-5-5";
+// Modelle, die der Nutzer in den Einstellungen wählen darf (alles andere wird ignoriert).
+const ALLOWED_MODELS = new Set(["claude-haiku-5-5", "claude-sonnet-5-5"]);
 const MAX_IMAGE = 3_000_000;
 
 // Muss mit src/lib/credits.ts übereinstimmen.
@@ -143,6 +145,7 @@ function validateInput(b) {
       out[key] = b[key];
     }
   }
+  if (typeof b.model === "string" && ALLOWED_MODELS.has(b.model)) out.model = b.model;
   if (b.note != null) { if (!isStr(b.note, 0, 1000)) throw bad("Notiz zu lang"); out.note = b.note; }
   if (b.correction != null) { if (!isStr(b.correction, 0, 1000)) throw bad("Korrektur zu lang"); out.correction = b.correction; }
   if (b.previous != null) {
@@ -269,7 +272,7 @@ export async function analyzeMealPhoto(uid, body) {
   if (data.correction?.trim()) parts.push(`Korrektur des Nutzers: ${data.correction.trim()}`);
   content.push({ type: "text", text: parts.join("\n\n") });
 
-  const model = process.env.PHOTO_SCAN_MODEL || DEFAULT_MODEL;
+  const model = data.model || process.env.PHOTO_SCAN_MODEL || DEFAULT_MODEL;
   let json = await askModel(apiKey, model, content);
   const usage = { input_tokens: json.usage?.input_tokens ?? 0, output_tokens: json.usage?.output_tokens ?? 0 };
 

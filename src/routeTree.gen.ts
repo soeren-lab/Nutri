@@ -46,6 +46,7 @@ import { Route as AuthenticatedProfileSettingsSideDishesRouteImport } from './ro
 import { Route as AuthenticatedProfileSettingsQuickEntriesRouteImport } from './routes/_authenticated/profile.settings.quick-entries'
 import { Route as AuthenticatedProfileSettingsPlatesRouteImport } from './routes/_authenticated/profile.settings.plates'
 import { Route as AuthenticatedProfileSettingsPlanRouteImport } from './routes/_authenticated/profile.settings.plan'
+import { Route as AuthenticatedProfileSettingsPhotoScanRouteImport } from './routes/_authenticated/profile.settings.photo-scan'
 import { Route as AuthenticatedProfileSettingsPatchNotesRouteImport } from './routes/_authenticated/profile.settings.patch-notes'
 import { Route as AuthenticatedProfileSettingsPasswordRouteImport } from './routes/_authenticated/profile.settings.password'
 import { Route as AuthenticatedProfileSettingsExportRouteImport } from './routes/_authenticated/profile.settings.export'
@@ -268,6 +269,12 @@ const AuthenticatedProfileSettingsPlanRoute =
     path: '/profile/settings/plan',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProfileSettingsPhotoScanRoute =
+  AuthenticatedProfileSettingsPhotoScanRouteImport.update({
+    id: '/profile/settings/photo-scan',
+    path: '/profile/settings/photo-scan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfileSettingsPatchNotesRoute =
   AuthenticatedProfileSettingsPatchNotesRouteImport.update({
     id: '/profile/settings/patch-notes',
@@ -373,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/profile/settings/export': typeof AuthenticatedProfileSettingsExportRoute
   '/profile/settings/password': typeof AuthenticatedProfileSettingsPasswordRoute
   '/profile/settings/patch-notes': typeof AuthenticatedProfileSettingsPatchNotesRoute
+  '/profile/settings/photo-scan': typeof AuthenticatedProfileSettingsPhotoScanRoute
   '/profile/settings/plan': typeof AuthenticatedProfileSettingsPlanRoute
   '/profile/settings/plates': typeof AuthenticatedProfileSettingsPlatesRoute
   '/profile/settings/quick-entries': typeof AuthenticatedProfileSettingsQuickEntriesRoute
@@ -423,6 +431,7 @@ export interface FileRoutesByTo {
   '/profile/settings/export': typeof AuthenticatedProfileSettingsExportRoute
   '/profile/settings/password': typeof AuthenticatedProfileSettingsPasswordRoute
   '/profile/settings/patch-notes': typeof AuthenticatedProfileSettingsPatchNotesRoute
+  '/profile/settings/photo-scan': typeof AuthenticatedProfileSettingsPhotoScanRoute
   '/profile/settings/plan': typeof AuthenticatedProfileSettingsPlanRoute
   '/profile/settings/plates': typeof AuthenticatedProfileSettingsPlatesRoute
   '/profile/settings/quick-entries': typeof AuthenticatedProfileSettingsQuickEntriesRoute
@@ -475,6 +484,7 @@ export interface FileRoutesById {
   '/_authenticated/profile/settings/export': typeof AuthenticatedProfileSettingsExportRoute
   '/_authenticated/profile/settings/password': typeof AuthenticatedProfileSettingsPasswordRoute
   '/_authenticated/profile/settings/patch-notes': typeof AuthenticatedProfileSettingsPatchNotesRoute
+  '/_authenticated/profile/settings/photo-scan': typeof AuthenticatedProfileSettingsPhotoScanRoute
   '/_authenticated/profile/settings/plan': typeof AuthenticatedProfileSettingsPlanRoute
   '/_authenticated/profile/settings/plates': typeof AuthenticatedProfileSettingsPlatesRoute
   '/_authenticated/profile/settings/quick-entries': typeof AuthenticatedProfileSettingsQuickEntriesRoute
@@ -527,6 +537,7 @@ export interface FileRouteTypes {
     | '/profile/settings/export'
     | '/profile/settings/password'
     | '/profile/settings/patch-notes'
+    | '/profile/settings/photo-scan'
     | '/profile/settings/plan'
     | '/profile/settings/plates'
     | '/profile/settings/quick-entries'
@@ -577,6 +588,7 @@ export interface FileRouteTypes {
     | '/profile/settings/export'
     | '/profile/settings/password'
     | '/profile/settings/patch-notes'
+    | '/profile/settings/photo-scan'
     | '/profile/settings/plan'
     | '/profile/settings/plates'
     | '/profile/settings/quick-entries'
@@ -628,6 +640,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile/settings/export'
     | '/_authenticated/profile/settings/password'
     | '/_authenticated/profile/settings/patch-notes'
+    | '/_authenticated/profile/settings/photo-scan'
     | '/_authenticated/profile/settings/plan'
     | '/_authenticated/profile/settings/plates'
     | '/_authenticated/profile/settings/quick-entries'
@@ -919,6 +932,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileSettingsPlanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile/settings/photo-scan': {
+      id: '/_authenticated/profile/settings/photo-scan'
+      path: '/profile/settings/photo-scan'
+      fullPath: '/profile/settings/photo-scan'
+      preLoaderRoute: typeof AuthenticatedProfileSettingsPhotoScanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile/settings/patch-notes': {
       id: '/_authenticated/profile/settings/patch-notes'
       path: '/profile/settings/patch-notes'
@@ -1031,6 +1051,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileSettingsExportRoute: typeof AuthenticatedProfileSettingsExportRoute
   AuthenticatedProfileSettingsPasswordRoute: typeof AuthenticatedProfileSettingsPasswordRoute
   AuthenticatedProfileSettingsPatchNotesRoute: typeof AuthenticatedProfileSettingsPatchNotesRoute
+  AuthenticatedProfileSettingsPhotoScanRoute: typeof AuthenticatedProfileSettingsPhotoScanRoute
   AuthenticatedProfileSettingsPlanRoute: typeof AuthenticatedProfileSettingsPlanRoute
   AuthenticatedProfileSettingsPlatesRoute: typeof AuthenticatedProfileSettingsPlatesRoute
   AuthenticatedProfileSettingsQuickEntriesRoute: typeof AuthenticatedProfileSettingsQuickEntriesRoute
@@ -1085,6 +1106,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedProfileSettingsPasswordRoute,
   AuthenticatedProfileSettingsPatchNotesRoute:
     AuthenticatedProfileSettingsPatchNotesRoute,
+  AuthenticatedProfileSettingsPhotoScanRoute:
+    AuthenticatedProfileSettingsPhotoScanRoute,
   AuthenticatedProfileSettingsPlanRoute: AuthenticatedProfileSettingsPlanRoute,
   AuthenticatedProfileSettingsPlatesRoute:
     AuthenticatedProfileSettingsPlatesRoute,

@@ -14,6 +14,7 @@ import {
   Palette,
   Scale,
   ScrollText,
+  Sparkles,
   Trash2,
   Utensils,
   Wallet,
@@ -32,6 +33,7 @@ import { useExperimentalMode } from "@/hooks/use-experimental-mode";
 import { useQuickEntryTemplates } from "@/hooks/use-quick-entry-templates";
 import { useUserAvatar } from "@/hooks/use-user-avatar";
 import { GLASS_VARIANT_LABELS } from "@/lib/theme";
+import { photoScanModelLabel, usePhotoScanModel } from "@/lib/photo-scan-model";
 import { recipesQuery } from "@/lib/recipes";
 import { findSideDishCandidates } from "@/lib/sideDishMigration";
 import { db } from "@/integrations/db/client";
@@ -43,6 +45,7 @@ export function SettingsListTab() {
   const { avatarUrl } = useUserAvatar();
   const { isAdmin } = useIsAdmin();
   const { plan } = usePlan();
+  const scanModel = usePhotoScanModel();
   const { data: creditBalance } = useQuery(creditBalanceQuery(user?.id));
   const { templates } = useQuickEntryTemplates();
   const { data: recipes = [] } = useQuery(recipesQuery());
@@ -105,6 +108,12 @@ export function SettingsListTab() {
           icon={Circle}
           title="Meine Teller"
           subtitle="Maße für den Foto-Scan"
+        />
+        <SettingsRow
+          to="/profile/settings/photo-scan"
+          icon={Sparkles}
+          title="Foto-Scan-Modell"
+          subtitle={`${photoScanModelLabel(scanModel)} · Modell wählen`}
         />
         {sideDishCount > 0 && (
           <SettingsRow
