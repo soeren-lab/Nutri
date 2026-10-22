@@ -25,7 +25,15 @@ import {
   topSwipeHandlers,
 } from "@/hooks/use-swipe-priority";
 
-const SWIPE_TAB_ORDER = ["/recipes", "/discover", "/ingredients", "/planner", "/profile"];
+// Gleiche Reihenfolge wie die Leiste (TabBar.tsx); das Profil hängt als letzter Eintrag hinten an.
+const SWIPE_TAB_ORDER = [
+  "/recipes",
+  "/ingredients",
+  "/planner",
+  "/shopping-list",
+  "/discover",
+  "/profile",
+];
 const RECIPE_DETAIL_PATTERN = /^\/recipes\/[^/]+\/?$/;
 // Dieselben fünf Haupttab-Übersichten bekommen den Liquid-Glass-Look
 // (siehe styles.css ".liquid-glass"/".wash-boost") – Detail-/Bearbeiten-/

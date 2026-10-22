@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   Apple,
@@ -10,7 +10,6 @@ import {
   CookingPot,
   Info,
   Layers,
-  ListChecks,
   Minus,
   Plus,
   ShoppingCart,
@@ -583,11 +582,6 @@ function PlannerPage() {
             aria-label="Einkaufsliste erstellen"
           >
             <ShoppingCart className="mr-1 h-4 w-4" /> Einkaufsliste
-          </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="Einkaufsliste öffnen">
-            <Link to="/shopping-list">
-              <ListChecks className="h-4 w-4" />
-            </Link>
           </Button>
         </div>
       </header>

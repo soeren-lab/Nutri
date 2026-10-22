@@ -61,7 +61,7 @@ function ResetPasswordPage() {
     try {
       const { error } = await db.auth.updateUser({ password });
       if (error) throw error;
-      navigate({ to: "/recipes" });
+      navigate({ to: "/planner" });
     } catch (err) {
       setErrors({ form: friendlyAuthError(err) });
     } finally {

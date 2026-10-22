@@ -5,7 +5,7 @@ export const Route = createFileRoute("/")({
   beforeLoad: async () => {
     const { db } = await import("@/integrations/db/client");
     const { data } = await db.auth.getSession();
-    if (data.session) throw redirect({ to: "/recipes" });
+    if (data.session) throw redirect({ to: "/planner" });
     throw redirect({ to: "/auth" });
   },
   component: () => null,

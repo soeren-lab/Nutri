@@ -49,7 +49,7 @@ export function AppHeader() {
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4">
         <Link
-          to="/recipes"
+          to="/planner"
           className="group flex h-10 shrink-0 items-center"
           aria-label="NUTRI – Startseite"
         >

@@ -50,7 +50,7 @@ export const Route = createFileRoute("/auth")({
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
     const { data } = await db.auth.getSession();
-    if (data.session) throw redirect({ to: "/recipes" });
+    if (data.session) throw redirect({ to: "/planner" });
   },
   component: AuthPage,
 });
@@ -208,7 +208,7 @@ function SignInForm({ onForgot }: { onForgot: () => void }) {
       if (error) throw error;
       clearFailedLogins();
       setRememberMe(remember);
-      navigate({ to: "/recipes" });
+      navigate({ to: "/planner" });
     } catch (err) {
       const seconds = registerFailedLogin();
       if (seconds) setLock(seconds);
@@ -351,7 +351,7 @@ function SignUpForm() {
         await saveUsername(data.user.id, username);
         clearFailedLogins();
         setRememberMe(true);
-        navigate({ to: "/recipes" });
+        navigate({ to: "/planner" });
         return;
       }
       setSent(true);
