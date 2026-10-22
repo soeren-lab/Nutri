@@ -127,14 +127,34 @@ function cleanPer100(p) {
   return { calories: p.calories, protein_g: p.protein_g, carbs_g: p.carbs_g, fat_g: p.fat_g, fiber_g: opt(p.fiber_g), sugar_g: opt(p.sugar_g) };
 }
 
-/** Gültige Position oder null (gleiche Grenzen wie scanItemSchema in photoNutrition.ts). */
+const UNIT_ALIASES = { gramm: "g", gr: "g", milliliter: "ml", stk: "Stück", "stk.": "Stück", stück: "Stück", stueck: "Stück", piece: "Stück", pieces: "Stück" };
+
+/** Zahl auch aus Text ("120", "120,5") – kleinere Modelle liefern gern Strings. */
+function toNum(v) {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") return Number(v.trim().replace(",", "."));
+  return NaN;
+}
+
+/**
+ * Gültige Position oder null (gleiche Grenzen wie scanItemSchema in photoNutrition.ts).
+ * Tolerant gegenüber kleineren Modellen: fehlende master_id/low/high/confidence werden ergänzt.
+ */
 function cleanItem(e) {
   if (!e || typeof e !== "object") return null;
-  if (!isStr(e.name, 1, 80) || !isStr(e.unit, 1, 12)) return null;
-  if (!(e.master_id === null || typeof e.master_id === "string")) return null;
-  if (!num(e.amount, 0.0001, 5000) || !num(e.low, 0.0001, 5000) || !num(e.high, 0.0001, 5000)) return null;
-  if (!["high", "medium", "low"].includes(e.confidence)) return null;
-  return { name: e.name, master_id: e.master_id, amount: e.amount, unit: e.unit, low: e.low, high: e.high, confidence: e.confidence, per100: cleanPer100(e.per100) };
+  const name = typeof e.name === "string" ? e.name.trim().slice(0, 80) : "";
+  const rawUnit = typeof e.unit === "string" ? e.unit.trim() : "";
+  const unit = (UNIT_ALIASES[rawUnit.toLowerCase()] ?? rawUnit).slice(0, 12);
+  if (!name || !unit) return null;
+  const amount = toNum(e.amount);
+  if (!num(amount, 0.0001, 5000)) return null;
+  let low = toNum(e.low);
+  let high = toNum(e.high);
+  if (!num(low, 0.0001, 5000)) low = amount * 0.8;
+  if (!num(high, 0.0001, 5000)) high = amount * 1.2;
+  const master_id = typeof e.master_id === "string" && e.master_id && e.master_id !== "null" ? e.master_id : null;
+  const confidence = ["high", "medium", "low"].includes(e.confidence) ? e.confidence : "medium";
+  return { name, master_id, amount, unit, low, high, confidence, per100: cleanPer100(e.per100) };
 }
 
 function validateInput(b) {
@@ -214,7 +234,7 @@ async function askModel(apiKey, model, content) {
     response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model, max_tokens: 2000, system: SYSTEM_PROMPT, tools: [TOOL], messages: [{ role: "user", content }] }),
+      body: JSON.stringify({ model, max_tokens: 4000, system: SYSTEM_PROMPT, tools: [TOOL], tool_choice: { type: "tool", name: TOOL.name }, messages: [{ role: "user", content }] }),
       signal: AbortSignal.timeout(120000),
     });
   } catch (e) {
@@ -285,7 +305,7 @@ export async function analyzeMealPhoto(uid, body) {
       ]);
       usage.input_tokens += retry.usage?.input_tokens ?? 0;
       usage.output_tokens += retry.usage?.output_tokens ?? 0;
-      if (!needsDecomposition(toolInput(retry), data.candidates)) json = retry;
+      if ((toolInput(retry).items?.length ?? 0) > 1 && !needsDecomposition(toolInput(retry), data.candidates)) json = retry;
     } catch (e) {
       console.error("[photo-scan] Zweiter Versuch fehlgeschlagen", e?.message);
     }
@@ -312,7 +332,17 @@ export async function analyzeMealPhoto(uid, body) {
       low: Math.min(it.low, it.amount),
       high: Math.max(it.high, it.amount),
     }));
-  if (!items.length) throw new ApiError("Auf dem Foto wurde kein Essen erkannt. Bitte ein anderes Foto versuchen.", "422");
+  if (!items.length) {
+    const got = Array.isArray(raw.items) ? raw.items.length : null;
+    console.error(`[photo-scan] Keine Positionen. model=${model} stop_reason=${json.stop_reason} items_roh=${got} antwort=${JSON.stringify(json.content ?? null).slice(0, 1500)}`);
+    if (got) {
+      throw new ApiError(`Die Antwort der KI (${model}) konnte nicht gelesen werden. Versuche es noch einmal oder wähle in den Einstellungen ein anderes Modell.`, "422");
+    }
+    if (json.stop_reason === "max_tokens") {
+      throw new ApiError("Die KI-Antwort wurde abgeschnitten. Versuche es noch einmal oder wähle in den Einstellungen ein anderes Modell.", "422");
+    }
+    throw new ApiError("Auf dem Foto wurde kein Essen erkannt. Bitte ein anderes Foto versuchen.", "422");
+  }
 
   if (isNewScan) {
     await query(`INSERT INTO photo_scan_log (id, user_id, created_at) VALUES (${esc(randomUUID())}, ${esc(uid)}, ${esc(new Date().toISOString().replace("T", " ").replace("Z", ""))})`);
