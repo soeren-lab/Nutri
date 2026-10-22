@@ -175,7 +175,8 @@ async function rawFetch(path: string, init: RequestInit = {}): Promise<Response 
     return await fetch(`${apiBase()}${path}`, init);
   } catch (e) {
     if (e instanceof Error && e.message.startsWith("VITE_API_URL")) throw e;
-    if (multi) {
+    // Anfragen, die Geld kosten, werden nie automatisch wiederholt (sonst evtl. doppelt abgebucht).
+    if (multi && !path.startsWith("/ai/")) {
       // Netzwechsel (WLAN <-> Mobilfunk/Tailscale): Adresse neu wählen, einmal wiederholen.
       const before = activeBase;
       await resolveApiBase(true);

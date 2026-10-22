@@ -3,6 +3,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, ImagePlus, Info, Loader2, Mic, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { isNativeApp } from "@/lib/platform";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { FormSheet } from "@/components/FormSheet";
 import { Input } from "@/components/ui/input";
@@ -10,11 +20,13 @@ import { PlateFormSheet } from "@/components/PlateFormSheet";
 import { PlatePicker } from "@/components/PlatePicker";
 import { SearchSheet, SearchSheetRow } from "@/components/SearchSheet";
 import { useAuth } from "@/hooks/use-auth";
+import { useAndroidBackGuard } from "@/hooks/use-android-back-guard";
 import { usePlates } from "@/hooks/use-plates";
 import { creditBalanceQuery, formatUsd } from "@/lib/credits";
 import { getLastPlateId, plateToInfo, setLastPlateId } from "@/lib/plates";
 import { resizeImage, type ResizedImage } from "@/lib/image-resize";
 import { analyzeMeal } from "@/lib/photo-scan";
+import { clearPendingScan, readPendingScan, writePendingScan } from "@/lib/photo-scan-pending";
 import { photoScanModelLabel, usePhotoScanModel } from "@/lib/photo-scan-model";
 import {
   computeScanTotals,
@@ -289,6 +301,9 @@ export function PhotoScanSheet({
   const [correction, setCorrection] = useState("");
   const [busy, setBusy] = useState(false);
   const [picker, setPicker] = useState<Picker | null>(null);
+  // Schließen immer erst nach Rückfrage (Wischen ist in diesem Fenster abgeschaltet).
+  const [confirmClose, setConfirmClose] = useState(false);
+  const [pending, setPending] = useState(() => (initial ? null : readPendingScan()));
   const { plates } = usePlates();
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -307,6 +322,23 @@ export function PhotoScanSheet({
     if (last && plates.some((p) => p.id === last)) setPlateId(last);
   }, [plates]);
   const selectedPlate = plates.find((p) => p.id === plateId) ?? null;
+
+  // Android-Zurück: erst Unter-Fenster/Rückfrage schließen, sonst Rückfrage zum Verlassen zeigen.
+  const backState = useRef({ confirmClose, picker, plateFormOpen });
+  backState.current = { confirmClose, picker, plateFormOpen };
+  useAndroidBackGuard(true, () => {
+    const b = backState.current;
+    if (b.confirmClose) setConfirmClose(false);
+    else if (b.picker) setPicker(null);
+    else if (b.plateFormOpen) setPlateFormOpen(false);
+    else setConfirmClose(true);
+  });
+
+  // Ergebnis laufend lokal sichern (nur bei neuen Scans), bis es eingetragen wird.
+  useEffect(() => {
+    if (initial || step !== "review" || items.length === 0) return;
+    writePendingScan(name, items);
+  }, [initial, step, items, name]);
 
   // Vorschau-URLs beim Schließen freigeben.
   const previews = useRef<string[]>([]);
@@ -348,6 +380,9 @@ export function PhotoScanSheet({
         masters: scanMasters,
       });
       setLastPlateId(plateId);
+      // Sofort sichern: auch wenn das Fenster inzwischen geschlossen wurde, bleibt das bezahlte
+      // Ergebnis beim nächsten Scan als "Nicht abgeschlossener Scan" abrufbar.
+      writePendingScan(res.summary_name, res.items);
       setItems(res.items);
       setName(res.summary_name);
       setQuestion(res.question);
@@ -424,6 +459,7 @@ export function PhotoScanSheet({
 
   function submit() {
     if (!valid) return;
+    clearPendingScan();
     onSubmit({
       name: name.trim() || summaryNameFrom(items, masterMap),
       items,
@@ -445,9 +481,49 @@ export function PhotoScanSheet({
 
   return (
     <>
-      <FormSheet open onOpenChange={(v) => !v && onClose()} title={title} footer={footer}>
+      <FormSheet
+        open
+        onOpenChange={(v) => {
+          if (!v) setConfirmClose(true);
+        }}
+        swipeToClose={false}
+        title={title}
+        footer={footer}
+      >
         {step === "capture" && (
           <div className="space-y-3 p-4">
+            {pending && (
+              <div className="rounded-xl border border-primary/40 bg-primary/10 p-3">
+                <p className="text-sm font-medium">Nicht abgeschlossener Scan</p>
+                <p className="text-xs text-muted-foreground">
+                  {pending.name || "Foto-Mahlzeit"} · {pending.items.length}{" "}
+                  {pending.items.length === 1 ? "Position" : "Positionen"}
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setItems(pending.items);
+                      setName(pending.name);
+                      setPending(null);
+                      setStep("review");
+                    }}
+                  >
+                    Fortsetzen
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      clearPendingScan();
+                      setPending(null);
+                    }}
+                  >
+                    Verwerfen
+                  </Button>
+                </div>
+              </div>
+            )}
             <p
               className={cn(
                 "rounded-lg px-3 py-2 text-xs",
@@ -525,6 +601,9 @@ export function PhotoScanSheet({
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
             <p className="text-sm font-medium">Dein Essen wird ausgewertet…</p>
             <p className="text-xs text-muted-foreground">Das dauert ein paar Sekunden.</p>
+            <p className="text-xs font-medium text-muted-foreground">
+              Bitte das Fenster nicht schließen, die Auswertung wird bereits berechnet.
+            </p>
           </div>
         )}
 
@@ -687,6 +766,25 @@ export function PhotoScanSheet({
           </div>
         )}
       </FormSheet>
+
+      <AlertDialog open={confirmClose} onOpenChange={setConfirmClose}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Foto-Scan wirklich verlassen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {step === "analyzing"
+                ? "Die Auswertung läuft noch und wird bereits berechnet. Wenn du jetzt zurückgehst, siehst du das Ergebnis erst beim nächsten Scan unter „Nicht abgeschlossener Scan“."
+                : step === "review"
+                  ? "Deine Auswertung und alle Änderungen werden nicht eingetragen. Du kannst sie beim nächsten Scan unter „Nicht abgeschlossener Scan“ fortsetzen."
+                  : "Dein Foto und deine Angaben gehen verloren."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Weiter bearbeiten</AlertDialogCancel>
+            <AlertDialogAction onClick={onClose}>Verlassen</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {plateFormOpen && (
         <PlateFormSheet onClose={() => setPlateFormOpen(false)} onSaved={(p) => setPlateId(p.id)} />

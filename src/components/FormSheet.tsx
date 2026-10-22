@@ -20,6 +20,7 @@ export function FormSheet({
   children,
   footer,
   className,
+  swipeToClose = true,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,6 +28,8 @@ export function FormSheet({
   children: ReactNode;
   footer?: ReactNode;
   className?: string;
+  /** false: Wischen schließt das Fenster nicht (und blättert auch nicht in den Tabs darunter). */
+  swipeToClose?: boolean;
 }) {
   const viewportStyle = useVisualViewportHeight(open);
   useBodyScrollLock(open);
@@ -34,7 +37,9 @@ export function FormSheet({
   // Änderungen (Aufrufer-Verantwortung) – Swipe ruft immer denselben Setter.
   useSwipePriority(
     open
-      ? { onSwipeLeft: () => onOpenChange(false), onSwipeRight: () => onOpenChange(false) }
+      ? swipeToClose
+        ? { onSwipeLeft: () => onOpenChange(false), onSwipeRight: () => onOpenChange(false) }
+        : { onSwipeLeft: () => {}, onSwipeRight: () => {} }
       : null,
   );
 
