@@ -1,0 +1,26 @@
+diff --git a/android/src/main/java/com/getcapacitor/community/speechrecognition/SpeechRecognition.java b/android/src/main/java/com/getcapacitor/community/speechrecognition/SpeechRecognition.java
+index a99ea691f1aebdad34d91b0142f29121cd46483a..641add24b03c6fcbef089ad85d9d9a628028e99e 100644
+--- a/android/src/main/java/com/getcapacitor/community/speechrecognition/SpeechRecognition.java
++++ b/android/src/main/java/com/getcapacitor/community/speechrecognition/SpeechRecognition.java
+@@ -254,8 +254,20 @@ public class SpeechRecognition extends Plugin implements Constants {
+             }
+         }
+ 
++        // Lautstärke der Stimme für die Pegelanzeige in der App (Ereignis "volume", ca. 20 pro Sekunde).
++        private long lastVolumeEvent = 0;
++
+         @Override
+-        public void onRmsChanged(float rmsdB) {}
++        public void onRmsChanged(float rmsdB) {
++            long now = System.currentTimeMillis();
++            if (now - lastVolumeEvent < 50) {
++                return;
++            }
++            lastVolumeEvent = now;
++            JSObject ret = new JSObject();
++            ret.put("level", rmsdB);
++            SpeechRecognition.this.notifyListeners("volume", ret);
++        }
+ 
+         @Override
+         public void onBufferReceived(byte[] buffer) {}

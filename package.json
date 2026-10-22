@@ -107,5 +107,8 @@
     "vite": "^8.0.16",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.1.11"
+  },
+  "patchedDependencies": {
+    "@capacitor-community/speech-recognition@7.0.1": "patches/@capacitor-community%2Fspeech-recognition@7.0.1.patch"
   }
 }

@@ -72,21 +72,40 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+// Daueraufnahme (nur App): Die System-Spracherkennung beendet ein Segment nach kurzer Stille von
+// selbst. Wir starten dann neu und hängen jedes Segment an, bis der Nutzer erneut tippt.
+const SPEECH_POLL_MS = 300;
+const SPEECH_SETTLE_MS = 700; // so lange auf das Endergebnis warten, bevor neu gestartet wird
+const SPEECH_IDLE_STOP_MS = 20000; // ohne Sprache automatisch beenden
+const SPEECH_MAX_QUICK_FAILURES = 4;
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const LEVEL_BARS = 5;
+const NO_LEVELS = Array<number>(LEVEL_BARS).fill(0);
+
 /**
- * Mikrofon-Knopf: in der App über die native Spracherkennung (Capacitor-Plugin), im Browser über
- * die Web Speech API. Fehlt beides, hilft das Mikrofon der Tastatur.
+ * Mikrofon-Knopf: in der App über die native Spracherkennung (Capacitor-Plugin, Daueraufnahme ohne
+ * System-Dialog), im Browser über die Web Speech API. Fehlt beides, hilft das Mikrofon der Tastatur.
  */
 function MicButton({ onText }: { onText: (text: string) => void }) {
   const native = isNativeApp();
   const Recognition = useMemo(() => (native ? null : getSpeechRecognition()), [native]);
   const [listening, setListening] = useState(false);
+  const [levels, setLevels] = useState<number[]>(NO_LEVELS);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
+  const onTextRef = useRef(onText);
+  onTextRef.current = onText;
+  const stopNativeRef = useRef<(() => Promise<void>) | null>(null);
 
-  useEffect(() => () => recRef.current?.stop(), []);
+  useEffect(
+    () => () => {
+      recRef.current?.stop();
+      void stopNativeRef.current?.();
+    },
+    [],
+  );
   if (!native && !Recognition) return null;
 
-  async function listenNative() {
-    setListening(true);
+  async function startNative() {
     try {
       const { SpeechRecognition } = await import("@capacitor-community/speech-recognition");
       const { available } = await SpeechRecognition.available();
@@ -99,29 +118,134 @@ function MicButton({ onText }: { onText: (text: string) => void }) {
         toast.error("Mikrofon-Zugriff wurde nicht erlaubt.");
         return;
       }
-      const result = await SpeechRecognition.start({
-        language: "de-DE",
-        maxResults: 1,
-        prompt: "Jetzt sprechen",
-        partialResults: false,
-        popup: true,
+
+      let active = true;
+      let segText = "";
+      let segStartedAt = Date.now();
+      let lastPartialAt = Date.now();
+      let lastSpeechAt = Date.now();
+      let quickFailures = 0;
+      let busy = false;
+
+      const partial = await SpeechRecognition.addListener("partialResults", (d) => {
+        const t = d.matches?.[0]?.trim();
+        if (t) {
+          segText = t;
+          lastPartialAt = Date.now();
+          lastSpeechAt = Date.now();
+        }
       });
-      const text = result.matches?.[0]?.trim();
-      if (text) onText(text);
+
+      // Lautstärke (vom gepatchten Plugin, siehe patches/) für die Pegelanzeige im Knopf.
+      let pendingLevel = 0;
+      let lastPush = 0;
+      const volume = await (
+        SpeechRecognition as unknown as {
+          addListener: (
+            event: string,
+            cb: (d: { level: number }) => void,
+          ) => Promise<{ remove: () => Promise<void> }>;
+        }
+      ).addListener("volume", (d) => {
+        pendingLevel = Math.max(pendingLevel, Math.min(1, Math.max(0, (d.level + 2) / 12)));
+        const now = Date.now();
+        if (now - lastPush < 70) return;
+        lastPush = now;
+        const lv = pendingLevel;
+        pendingLevel = 0;
+        setLevels((prev) => [...prev.slice(1), lv]);
+      });
+
+      const begin = async () => {
+        segText = "";
+        segStartedAt = Date.now();
+        lastPartialAt = segStartedAt;
+        await SpeechRecognition.start({
+          language: "de-DE",
+          maxResults: 1,
+          partialResults: true,
+          popup: false,
+        });
+      };
+      const commit = () => {
+        const t = segText.trim();
+        segText = "";
+        if (t) {
+          quickFailures = 0;
+          onTextRef.current(t);
+        } else if (Date.now() - segStartedAt < 1500) {
+          quickFailures += 1;
+        }
+      };
+
+      let timer: ReturnType<typeof setInterval> | null = null;
+      const finish = async (message?: string) => {
+        if (!active) return;
+        active = false;
+        if (timer) clearInterval(timer);
+        stopNativeRef.current = null;
+        // Anzeige sofort umschalten; das Aufräumen läuft im Hintergrund weiter.
+        setListening(false);
+        if (message) toast.info(message);
+        // Achtung: stop() des Plugins meldet nie "fertig" zurück, darauf darf nicht gewartet werden.
+        void SpeechRecognition.stop().catch(() => {
+          /* war schon beendet */
+        });
+        await wait(SPEECH_SETTLE_MS + 200); // Endergebnis des letzten Satzes abwarten
+        commit();
+        void partial.remove().catch(() => {});
+        void volume.remove().catch(() => {});
+        setLevels(NO_LEVELS);
+      };
+      stopNativeRef.current = () => finish();
+
+      timer = setInterval(() => {
+        if (!active || busy) return;
+        busy = true;
+        void (async () => {
+          try {
+            const { listening: still } = await SpeechRecognition.isListening();
+            const now = Date.now();
+            if (!still && now - Math.max(lastPartialAt, segStartedAt) >= SPEECH_SETTLE_MS) {
+              // Segment ist zu Ende (Pause): Text übernehmen und gleich weiterhören.
+              commit();
+              if (quickFailures >= SPEECH_MAX_QUICK_FAILURES) {
+                await finish("Aufnahme beendet: es wurde nichts verstanden.");
+                return;
+              }
+              await begin();
+            } else if (now - lastSpeechAt > SPEECH_IDLE_STOP_MS) {
+              await finish("Aufnahme beendet (länger nichts gesagt).");
+            }
+          } catch {
+            await finish("Spracherkennung wurde unterbrochen.");
+          } finally {
+            busy = false;
+          }
+        })();
+      }, SPEECH_POLL_MS);
+
+      setListening(true);
+      toast.info("Sprich frei, auch mit Pausen. Tippe das Mikrofon erneut zum Beenden.");
+      busy = true; // der erste Start darf nicht vom Takt-Timer überholt werden
+      try {
+        await begin();
+      } finally {
+        busy = false;
+      }
     } catch (e) {
+      setListening(false);
       const message = e instanceof Error ? e.message : "";
-      // Abbruch durch den Nutzer ist kein Fehler.
       if (!/cancel|abbr|no match|nomatch/i.test(message)) {
         toast.error("Spracherkennung fehlgeschlagen. Nutze das Mikrofon der Tastatur.");
       }
-    } finally {
-      setListening(false);
     }
   }
 
   function toggle() {
     if (native) {
-      if (!listening) void listenNative();
+      if (listening) void stopNativeRef.current?.();
+      else void startNative();
       return;
     }
     if (listening) {
@@ -157,7 +281,19 @@ function MicButton({ onText }: { onText: (text: string) => void }) {
       onClick={toggle}
       aria-label={listening ? "Aufnahme beenden" : "Sprechen"}
     >
-      <Mic className="h-4 w-4" />
+      {listening ? (
+        <span className="flex h-5 items-center gap-[3px]" aria-hidden>
+          {levels.map((lv, i) => (
+            <span
+              key={i}
+              className="w-[3px] rounded-full bg-current transition-[height] duration-75"
+              style={{ height: `${20 + Math.pow(lv, 0.8) * 80}%` }}
+            />
+          ))}
+        </span>
+      ) : (
+        <Mic className="h-4 w-4" />
+      )}
     </Button>
   );
 }
