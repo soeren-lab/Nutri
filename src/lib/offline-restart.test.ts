@@ -106,6 +106,34 @@ describe("Offline eintragen, App neu öffnen", () => {
     });
   });
 
+  test("Flugmodus bei geöffneter App: Änderung wird gesendet, sobald das Netz zurück ist", async () => {
+    const qc = newClient();
+    qc.mount();
+    await setupOfflinePersistence(qc);
+    setOsOnline(false); // Flugmodus an, App bleibt offen
+    const obs = new MutationObserver<unknown, unknown, Record<string, unknown>>(qc, {
+      mutationKey: MUTATION_KEYS.planFood,
+    });
+    const done = obs
+      .mutate({
+        date: new Date("2026-10-21T00:00:00Z"),
+        slot: "Abend",
+        ingredientId: "ing-3",
+        amount: 80,
+        unit: "g",
+      })
+      .catch(() => {});
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(addFoodEntry).not.toHaveBeenCalled();
+    expect(qc.getMutationCache().getAll()[0]?.state.isPaused).toBe(true);
+
+    setOsOnline(true); // Flugmodus aus
+    await vi.advanceTimersByTimeAsync(3000);
+    await done;
+    expect(addFoodEntry).toHaveBeenCalledTimes(1);
+    expect(qc.getMutationCache().getAll()[0]?.state.status).toBe("success");
+  });
+
   test("vorgemerkte Änderung wird sofort gesichert, nicht erst nach der Drosselung (App wird gleich geschlossen)", async () => {
     const qc = newClient();
     qc.mount();
