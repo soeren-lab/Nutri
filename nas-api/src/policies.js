@@ -78,6 +78,7 @@ const policies = {
   shopping_list_items: own(),
   target_history: own(),
   user_points: own(),
+  water_entries: own(),
   points_log: own(),
   user_plates: own(),
   user_profile: own(),

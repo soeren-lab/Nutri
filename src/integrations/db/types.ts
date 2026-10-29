@@ -1495,6 +1495,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      water_entries: {
+        Row: {
+          amount_ml: number;
+          created_at: string;
+          date: string;
+          id: string;
+          user_id: string;
+        };
+        Insert: {
+          amount_ml: number;
+          created_at?: string;
+          date?: string;
+          id?: string;
+          user_id: string;
+        };
+        Update: {
+          amount_ml?: number;
+          created_at?: string;
+          date?: string;
+          id?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       user_points: {
         Row: {
           bonus_points: number;

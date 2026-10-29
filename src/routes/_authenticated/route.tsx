@@ -18,6 +18,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { TabBar } from "@/components/TabBar";
 import { GlassAmbientWash } from "@/components/GlassAmbientWash";
 import { useExperimentalMode } from "@/hooks/use-experimental-mode";
+import { useWidgetSync } from "@/hooks/use-widget-sync";
 import { useSwipeNavigation } from "@/hooks/use-swipe-navigation";
 import {
   SwipeRegistryProvider,
@@ -94,6 +95,7 @@ function AuthedLayout() {
 }
 
 function AuthedLayoutInner() {
+  useWidgetSync();
   const { enabled: glassEnabled } = useExperimentalMode();
   const navigate = useNavigate();
   const location = useLocation();

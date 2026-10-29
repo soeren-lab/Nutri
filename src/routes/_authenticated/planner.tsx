@@ -61,6 +61,7 @@ import type { AiMealSuggestion } from "@/lib/aiSuggestions.functions";
 import { db } from "@/integrations/db/client";
 
 import { PlannerHero } from "@/components/PlannerHero";
+import { WaterCard } from "@/components/WaterCard";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { DailyProgressRing } from "@/components/DailyProgressRing";
 
@@ -635,6 +636,7 @@ function PlannerPage() {
           />
           <BatchCookNotes summaries={cookSummaries} />
           <div className="space-y-2">{MEAL_SLOTS.map((slot) => renderSlot(activeDate, slot))}</div>
+          <WaterCard dateIso={toISODate(activeDate)} />
         </section>
       )}
 

@@ -17,6 +17,7 @@ import {
   type MealSlot,
 } from "@/lib/meal-plan";
 import { setItemChecked } from "@/lib/shopping-list";
+import { addWaterEntry, deleteWaterEntry } from "@/lib/water";
 
 /**
  * Stabile Keys für alle offline-fähigen Mutationen. Werden sowohl an den
@@ -32,6 +33,8 @@ export const MUTATION_KEYS = {
   updateMealPlanEntry: ["meal-plan", "update"],
   removeMealPlanEntry: ["meal-plan", "remove"],
   toggleShoppingItem: ["shopping-list", "toggle"],
+  addWater: ["water", "add"],
+  removeWater: ["water", "remove"],
 } as const;
 
 /** Wie `currentUserId()`, aber wirft statt `null` – Mutationen müssen ohne Login laut fehlschlagen. */
@@ -189,6 +192,17 @@ export function registerOfflineMutationDefaults(qc: QueryClient) {
       await deleteMealPlanEntry(id);
       await cleanupBatchGroup(entry?.batch_group_id ?? null).catch(() => {});
     },
+  });
+
+  qc.setMutationDefaults(MUTATION_KEYS.addWater, {
+    ...keepOnNetworkError,
+    mutationFn: (v: { id: string; userId: string; date: string; amountMl: number }) =>
+      addWaterEntry(v),
+  });
+
+  qc.setMutationDefaults(MUTATION_KEYS.removeWater, {
+    ...keepOnNetworkError,
+    mutationFn: (v: { id: string }) => deleteWaterEntry(v.id),
   });
 
   qc.setMutationDefaults(MUTATION_KEYS.toggleShoppingItem, {

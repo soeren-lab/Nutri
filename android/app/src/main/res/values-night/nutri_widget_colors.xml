@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="nutri_widget_bg">#FF1E1B2E</color>
+    <color name="nutri_widget_text">#FFF3F0FF</color>
+    <color name="nutri_widget_text_secondary">#FFB5B0CC</color>
+    <color name="nutri_widget_track">#FF3A3554</color>
+    <color name="nutri_widget_kcal">#FFA78BFA</color>
+    <color name="nutri_widget_protein">#FF60A5FA</color>
+    <color name="nutri_widget_water">#FF22D3EE</color>
+</resources>
