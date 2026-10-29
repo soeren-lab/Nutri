@@ -4,6 +4,8 @@
     android:initialLayout="@layout/nutri_widget"
     android:minWidth="250dp"
     android:minHeight="110dp"
+    android:previewImage="@drawable/widget_preview_medium"
+    android:previewLayout="@layout/nutri_widget"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="4"
     android:targetCellHeight="2"

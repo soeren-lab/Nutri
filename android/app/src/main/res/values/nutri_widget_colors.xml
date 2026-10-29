@@ -7,4 +7,6 @@
     <color name="nutri_widget_kcal">#FF7C3AED</color>
     <color name="nutri_widget_protein">#FF2563EB</color>
     <color name="nutri_widget_water">#FF06B6D4</color>
+    <color name="nutri_widget_carbs">#FFF59E0B</color>
+    <color name="nutri_widget_fat">#FFEC4899</color>
 </resources>

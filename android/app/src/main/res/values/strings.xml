@@ -3,6 +3,8 @@
     <string name="app_name">NUTRI</string>
     <string name="title_activity_main">NUTRI</string>
     <string name="widget_description">Kalorien, Protein und Wasser von heute</string>
+    <string name="widget_description_small">Kalorien von heute, kompakt</string>
+    <string name="widget_description_large">Kalorien, Protein, Wasser, Kohlenhydrate und Fett von heute</string>
     <string name="package_name">com.soeren.nutriapp</string>
     <string name="custom_url_scheme">com.soeren.nutriapp</string>
 </resources>

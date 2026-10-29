@@ -15,7 +15,8 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Startbildschirm-Widget: Kalorien, Protein und Wasser von heute.
+ * Startbildschirm-Widget (mittlere Größe, 4x2): Kalorien, Protein und Wasser von heute.
+ * Die Varianten klein (2x1) und groß (4x3) erben davon und ändern nur das Layout.
  *
  * Die Werte schreibt die App (WidgetBridgePlugin) in SharedPreferences; das Widget liest sie nur.
  * Gehören die gespeicherten Werte zu einem anderen Tag, zeigt das Widget keine alten Zahlen,
@@ -24,19 +25,30 @@ import java.util.Locale;
 public class NutriWidgetProvider extends AppWidgetProvider {
     static final String PREFS = "nutri_widget";
 
+    /** Layout dieser Widget-Größe; Unterklassen überschreiben es. */
+    protected int layoutRes() {
+        return R.layout.nutri_widget;
+    }
+
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
         for (int id : appWidgetIds) {
-            manager.updateAppWidget(id, build(context));
+            manager.updateAppWidget(id, build(context, layoutRes()));
         }
     }
 
-    /** Alle platzierten Widgets neu zeichnen (nach neuen Werten aus der App). */
+    /** Alle platzierten Widgets aller Größen neu zeichnen (nach neuen Werten aus der App). */
     static void refreshAll(Context context) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        int[] ids = manager.getAppWidgetIds(new ComponentName(context, NutriWidgetProvider.class));
+        refresh(context, manager, NutriWidgetSmallProvider.class, R.layout.nutri_widget_small);
+        refresh(context, manager, NutriWidgetProvider.class, R.layout.nutri_widget);
+        refresh(context, manager, NutriWidgetLargeProvider.class, R.layout.nutri_widget_large);
+    }
+
+    private static void refresh(Context context, AppWidgetManager manager, Class<?> provider, int layout) {
+        int[] ids = manager.getAppWidgetIds(new ComponentName(context, provider));
         for (int id : ids) {
-            manager.updateAppWidget(id, build(context));
+            manager.updateAppWidget(id, build(context, layout));
         }
     }
 
@@ -60,8 +72,8 @@ public class NutriWidgetProvider extends AppWidgetProvider {
         return ml + " ml";
     }
 
-    static RemoteViews build(Context context) {
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.nutri_widget);
+    static RemoteViews build(Context context, int layout) {
+        RemoteViews views = new RemoteViews(context.getPackageName(), layout);
         SharedPreferences p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
 
         boolean fresh = today().equals(p.getString("date", ""));
@@ -72,6 +84,10 @@ public class NutriWidgetProvider extends AppWidgetProvider {
             int proteinTarget = p.getInt("proteinTarget", 0);
             int water = p.getInt("water", 0);
             int waterTarget = p.getInt("waterTarget", 0);
+            int carbs = p.getInt("carbs", 0);
+            int carbsTarget = p.getInt("carbsTarget", 0);
+            int fat = p.getInt("fat", 0);
+            int fatTarget = p.getInt("fatTarget", 0);
 
             views.setTextViewText(R.id.widget_kcal,
                     kcalTarget > 0 ? number(kcal) + " / " + number(kcalTarget) + " kcal" : number(kcal) + " kcal");
@@ -85,6 +101,14 @@ public class NutriWidgetProvider extends AppWidgetProvider {
                     waterTarget > 0 ? liters(water) + " / " + liters(waterTarget) : liters(water));
             views.setProgressBar(R.id.widget_water_bar, 100, percent(water, waterTarget), false);
 
+            // Nur im großen Layout vorhanden; fehlende Views ignoriert RemoteViews.
+            views.setTextViewText(R.id.widget_carbs,
+                    carbsTarget > 0 ? carbs + " / " + carbsTarget + " g" : carbs + " g");
+            views.setProgressBar(R.id.widget_carbs_bar, 100, percent(carbs, carbsTarget), false);
+            views.setTextViewText(R.id.widget_fat,
+                    fatTarget > 0 ? fat + " / " + fatTarget + " g" : fat + " g");
+            views.setProgressBar(R.id.widget_fat_bar, 100, percent(fat, fatTarget), false);
+
             views.setViewVisibility(R.id.widget_hint, View.GONE);
         } else {
             views.setTextViewText(R.id.widget_kcal, "–");
@@ -93,6 +117,10 @@ public class NutriWidgetProvider extends AppWidgetProvider {
             views.setProgressBar(R.id.widget_protein_bar, 100, 0, false);
             views.setTextViewText(R.id.widget_water, "–");
             views.setProgressBar(R.id.widget_water_bar, 100, 0, false);
+            views.setTextViewText(R.id.widget_carbs, "–");
+            views.setProgressBar(R.id.widget_carbs_bar, 100, 0, false);
+            views.setTextViewText(R.id.widget_fat, "–");
+            views.setProgressBar(R.id.widget_fat_bar, 100, 0, false);
             views.setViewVisibility(R.id.widget_hint, View.VISIBLE);
         }
 

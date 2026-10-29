@@ -23,6 +23,10 @@ public class WidgetBridgePlugin extends Plugin {
                 .putInt("proteinTarget", call.getInt("proteinTarget", 0))
                 .putInt("water", call.getInt("water", 0))
                 .putInt("waterTarget", call.getInt("waterTarget", 0))
+                .putInt("carbs", call.getInt("carbs", 0))
+                .putInt("carbsTarget", call.getInt("carbsTarget", 0))
+                .putInt("fat", call.getInt("fat", 0))
+                .putInt("fatTarget", call.getInt("fatTarget", 0))
                 .apply();
         NutriWidgetProvider.refreshAll(context);
         call.resolve();

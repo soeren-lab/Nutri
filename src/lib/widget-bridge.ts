@@ -11,6 +11,10 @@ export type WidgetData = {
   proteinTarget: number;
   water: number;
   waterTarget: number;
+  carbs: number;
+  carbsTarget: number;
+  fat: number;
+  fatTarget: number;
 };
 
 type WidgetBridgePlugin = {

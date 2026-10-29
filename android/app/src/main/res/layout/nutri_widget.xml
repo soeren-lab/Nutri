@@ -14,17 +14,15 @@
         android:textColor="@color/nutri_widget_text_secondary"
         android:textSize="11sp"
         android:textStyle="bold" />
-
     <TextView
         android:id="@+id/widget_kcal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="–"
+        android:layout_marginTop="2dp"
+        android:text="1.450 / 2.200 kcal"
         android:textColor="@color/nutri_widget_text"
         android:textSize="18sp"
         android:textStyle="bold" />
-
     <ProgressBar
         android:id="@+id/widget_kcal_bar"
         style="?android:attr/progressBarStyleHorizontal"
@@ -32,38 +30,34 @@
         android:layout_height="6dp"
         android:layout_marginTop="3dp"
         android:max="100"
+        android:progress="66"
         android:progressBackgroundTint="@color/nutri_widget_track"
         android:progressTint="@color/nutri_widget_kcal" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:orientation="horizontal">
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
             android:paddingEnd="6dp">
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Protein"
                 android:textColor="@color/nutri_widget_text_secondary"
                 android:textSize="11sp" />
-
             <TextView
                 android:id="@+id/widget_protein"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="–"
+                android:text="98 / 150 g"
                 android:textColor="@color/nutri_widget_text"
                 android:textSize="13sp"
                 android:textStyle="bold" />
-
             <ProgressBar
                 android:id="@+id/widget_protein_bar"
                 style="?android:attr/progressBarStyleHorizontal"
@@ -71,33 +65,30 @@
                 android:layout_height="5dp"
                 android:layout_marginTop="3dp"
                 android:max="100"
+                android:progress="65"
                 android:progressBackgroundTint="@color/nutri_widget_track"
                 android:progressTint="@color/nutri_widget_protein" />
         </LinearLayout>
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
             android:paddingStart="6dp">
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Wasser"
                 android:textColor="@color/nutri_widget_text_secondary"
                 android:textSize="11sp" />
-
             <TextView
                 android:id="@+id/widget_water"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="–"
+                android:text="1,5 l / 2,5 l"
                 android:textColor="@color/nutri_widget_text"
                 android:textSize="13sp"
                 android:textStyle="bold" />
-
             <ProgressBar
                 android:id="@+id/widget_water_bar"
                 style="?android:attr/progressBarStyleHorizontal"
@@ -105,16 +96,16 @@
                 android:layout_height="5dp"
                 android:layout_marginTop="3dp"
                 android:max="100"
+                android:progress="60"
                 android:progressBackgroundTint="@color/nutri_widget_track"
                 android:progressTint="@color/nutri_widget_water" />
         </LinearLayout>
     </LinearLayout>
-
     <TextView
         android:id="@+id/widget_hint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:text="Öffne NUTRI, um die heutigen Werte zu laden."
         android:textColor="@color/nutri_widget_text_secondary"
         android:textSize="11sp"

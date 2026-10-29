@@ -28,12 +28,16 @@ export function useWidgetSync() {
 
   let kcal = 0;
   let protein = 0;
+  let carbs = 0;
+  let fat = 0;
   for (const entry of entries ?? []) {
     if (entry.date !== todayIso) continue;
     const macros = entryMacros(entry);
     if (!macros) continue;
     kcal += macros.calories;
     protein += macros.protein_g;
+    carbs += macros.carbs_g;
+    fat += macros.fat_g;
   }
   const waterMl = totalWaterMl(water ?? []);
   const [waterGoal, setWaterGoalState] = useState(getWaterGoal);
@@ -46,6 +50,10 @@ export function useWidgetSync() {
   const proteinTarget = Math.round(targets?.protein_g ?? 0);
   const roundedKcal = Math.round(kcal);
   const roundedProtein = Math.round(protein);
+  const roundedCarbs = Math.round(carbs);
+  const roundedFat = Math.round(fat);
+  const carbsTarget = Math.round(targets?.carbs_g ?? 0);
+  const fatTarget = Math.round(targets?.fat_g ?? 0);
   const loaded = entries !== undefined;
 
   useEffect(() => {
@@ -58,6 +66,10 @@ export function useWidgetSync() {
       proteinTarget,
       water: waterMl,
       waterTarget: waterGoal,
+      carbs: roundedCarbs,
+      carbsTarget,
+      fat: roundedFat,
+      fatTarget,
     });
   }, [
     native,
@@ -70,5 +82,9 @@ export function useWidgetSync() {
     proteinTarget,
     waterMl,
     waterGoal,
+    roundedCarbs,
+    carbsTarget,
+    roundedFat,
+    fatTarget,
   ]);
 }
